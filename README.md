@@ -15,7 +15,9 @@ Kvizovka is a strategic word game for the Serbian language with unique rules:
 
 - [Implementation Plan](./Docs/IMPLEMENTATION_PLAN.md) - Complete technical roadmap
 - [Game Rules](./Docs/GAME_RULES.md) - Detailed game rules and scoring
+- [WebStorm Guide](./Docs/WEBSTORM_GUIDE.md) - How to use WebStorm IDE with this project
 - [Step 1: Project Setup](./Docs/STEP_01_PROJECT_SETUP.md) - Initial setup documentation
+- [Step 2: Dependencies](./Docs/STEP_02_DEPENDENCIES.md) - Tailwind CSS & Zustand setup
 
 ## 🚀 Getting Started
 
@@ -45,8 +47,8 @@ npm run preview
 - **React 18** - UI framework
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
-- **Tailwind CSS** - Styling (to be added)
-- **Zustand** - State management (to be added)
+- **Tailwind CSS v4** - Utility-first styling ✅
+- **Zustand** - Lightweight state management ✅
 
 ## 📁 Project Structure
 
@@ -64,10 +66,10 @@ kvizovka/
 
 ## 🎯 Development Status
 
-**Current Phase:** Step 1 - Project Setup ✅
+**Current Phase:** Step 2 - Dependencies ✅
 
 - [x] Initialize Vite + React + TypeScript
-- [ ] Add Tailwind CSS and Zustand
+- [x] Add Tailwind CSS and Zustand
 - [ ] Setup folder structure
 - [ ] Implement game logic
 - [ ] Build UI components

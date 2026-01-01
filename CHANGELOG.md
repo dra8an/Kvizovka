@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Step 2: Add Tailwind CSS and Zustand dependencies
 - Step 3: Setup folder structure and TypeScript config
 - Step 4: Serbian dictionary integration
 - Step 5: Core game engine implementation
@@ -17,6 +16,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Step 8: Drag-and-drop functionality
 - Step 9: Game flow and logic integration
 - Step 10: Testing and polish
+
+---
+
+## [0.2.0] - 2026-01-01
+
+### Added - Step 2: Tailwind CSS and Zustand ✅
+
+#### Dependencies
+- **tailwindcss@4.1.18**: Modern utility-first CSS framework
+- **@tailwindcss/postcss@4.1.18**: PostCSS plugin for Tailwind v4
+- **postcss@8.5.6**: CSS transformation tool
+- **autoprefixer@10.4.23**: Adds vendor prefixes automatically
+- **zustand@5.0.2**: Lightweight state management library
+
+#### Configuration Files
+- **tailwind.config.js**: Tailwind CSS configuration
+  - Custom colors for premium fields (yellow, green, red, blue)
+  - Custom colors for board, tiles, and blockers
+  - Grid templates for 17x17 board
+  - Extended theme with Kvizovka-specific design
+- **postcss.config.js**: PostCSS configuration
+  - Tailwind CSS v4 PostCSS plugin
+  - Autoprefixer for browser compatibility
+
+#### CSS Files
+- **src/index.css**: Main stylesheet with Tailwind
+  - Tailwind v4 import (`@import "tailwindcss"`)
+  - Global styles and resets
+  - Custom component classes (card, btn)
+  - Custom utility classes (text-gradient)
+- **Removed**: src/App.css (replaced by Tailwind)
+
+#### Components Updated
+- **src/App.tsx**: Redesigned with Tailwind CSS
+  - Responsive layout with utility classes
+  - Premium field color demonstration (4 colored boxes)
+  - Zustand counter example (increment/decrement/reset)
+  - Gradient header and footer
+  - Modern card-based design
+- **src/main.tsx**: Updated to import index.css instead of App.css
+
+#### State Management
+- **src/store/exampleStore.ts**: Example Zustand store
+  - Simple counter implementation
+  - Demonstrates Zustand API (create, set, get)
+  - Detailed comments explaining concepts
+  - Comparison with Redux for learning
+
+#### Build Status
+- ✅ TypeScript compiles successfully
+- ✅ Production build: ~146KB JS + 14KB CSS (gzipped: 47KB + 3.6KB)
+- ✅ Development server ready
+- ✅ All dependencies installed (221 packages total)
+
+### Changed
+- Updated App component to use Tailwind classes
+- Replaced custom CSS with Tailwind utility classes
+- Improved visual design with modern colors and spacing
+
+### Project Status
+- **Phase:** Step 2 of 10 - Dependencies installed
+- **Build Status:** ✅ Passing
+- **Dependencies:** 221 packages
+- **Ready for:** Step 3 - Folder structure setup
 
 ---
 

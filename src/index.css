@@ -1,0 +1,72 @@
+/**
+ * Tailwind CSS v4 Base Styles
+ *
+ * Tailwind CSS v4 uses a simpler import syntax.
+ * Just one line imports everything!
+ */
+
+@import "tailwindcss";
+
+/**
+ * Global Styles
+ * These styles apply to the entire application
+ */
+
+@layer base {
+  /* Modern CSS reset */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  /* Set up body */
+  body {
+    @apply antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+  }
+
+  /* Root element should be full height */
+  html, body, #root {
+    @apply h-full;
+  }
+}
+
+/**
+ * Custom Component Classes
+ * Reusable component styles using @layer components
+ */
+
+@layer components {
+  /* Card-style container */
+  .card {
+    @apply bg-white rounded-lg shadow-lg p-6;
+  }
+
+  /* Button base styles */
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+  }
+}
+
+/**
+ * Custom Utility Classes
+ * Small, single-purpose utilities using @layer utilities
+ */
+
+@layer utilities {
+  /* Text gradient utility */
+  .text-gradient {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+}
