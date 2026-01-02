@@ -1,0 +1,802 @@
+{
+  "version": "1.0.0",
+  "language": "sr",
+  "script": "latin",
+  "description": "Serbian word dictionary for Kvizovka game - Starter set with common words",
+  "wordCount": 150,
+  "minWordLength": 4,
+  "categories": {
+    "NOUN": "Nouns in nominative case",
+    "VERB": "Verbs in infinitive form (non-reflexive)",
+    "ADJECTIVE": "Adjectives in positive form",
+    "PRONOUN": "Pronouns",
+    "NUMBER": "Numbers"
+  },
+  "words": [
+    {
+      "word": "KUĆA",
+      "category": "NOUN",
+      "definition": "house, home"
+    },
+    {
+      "word": "VODA",
+      "category": "NOUN",
+      "definition": "water"
+    },
+    {
+      "word": "GRAD",
+      "category": "NOUN",
+      "definition": "city"
+    },
+    {
+      "word": "KNJIGA",
+      "category": "NOUN",
+      "definition": "book"
+    },
+    {
+      "word": "SUNCE",
+      "category": "NOUN",
+      "definition": "sun"
+    },
+    {
+      "word": "MESEC",
+      "category": "NOUN",
+      "definition": "moon, month"
+    },
+    {
+      "word": "DRVO",
+      "category": "NOUN",
+      "definition": "tree, wood"
+    },
+    {
+      "word": "PLANINA",
+      "category": "NOUN",
+      "definition": "mountain"
+    },
+    {
+      "word": "REKA",
+      "category": "NOUN",
+      "definition": "river"
+    },
+    {
+      "word": "MORE",
+      "category": "NOUN",
+      "definition": "sea"
+    },
+    {
+      "word": "NEBO",
+      "category": "NOUN",
+      "definition": "sky"
+    },
+    {
+      "word": "ZEMLJA",
+      "category": "NOUN",
+      "definition": "earth, land, country"
+    },
+    {
+      "word": "VETAR",
+      "category": "NOUN",
+      "definition": "wind"
+    },
+    {
+      "word": "KIŠA",
+      "category": "NOUN",
+      "definition": "rain"
+    },
+    {
+      "word": "SNEG",
+      "category": "NOUN",
+      "definition": "snow"
+    },
+    {
+      "word": "CVET",
+      "category": "NOUN",
+      "definition": "flower"
+    },
+    {
+      "word": "TRAVA",
+      "category": "NOUN",
+      "definition": "grass"
+    },
+    {
+      "word": "ŽIVOTINJA",
+      "category": "NOUN",
+      "definition": "animal"
+    },
+    {
+      "word": "KONJ",
+      "category": "NOUN",
+      "definition": "horse"
+    },
+    {
+      "word": "MAČKA",
+      "category": "NOUN",
+      "definition": "cat"
+    },
+    {
+      "word": "PTICA",
+      "category": "NOUN",
+      "definition": "bird"
+    },
+    {
+      "word": "RIBA",
+      "category": "NOUN",
+      "definition": "fish"
+    },
+    {
+      "word": "ČOVEK",
+      "category": "NOUN",
+      "definition": "person, man"
+    },
+    {
+      "word": "ŽENA",
+      "category": "NOUN",
+      "definition": "woman"
+    },
+    {
+      "word": "DETE",
+      "category": "NOUN",
+      "definition": "child"
+    },
+    {
+      "word": "MAJKA",
+      "category": "NOUN",
+      "definition": "mother"
+    },
+    {
+      "word": "OTAC",
+      "category": "NOUN",
+      "definition": "father"
+    },
+    {
+      "word": "BRAT",
+      "category": "NOUN",
+      "definition": "brother"
+    },
+    {
+      "word": "SESTRA",
+      "category": "NOUN",
+      "definition": "sister"
+    },
+    {
+      "word": "PRIJATELJ",
+      "category": "NOUN",
+      "definition": "friend"
+    },
+    {
+      "word": "ŠKOLA",
+      "category": "NOUN",
+      "definition": "school"
+    },
+    {
+      "word": "UČENIK",
+      "category": "NOUN",
+      "definition": "student, pupil"
+    },
+    {
+      "word": "UČITELJ",
+      "category": "NOUN",
+      "definition": "teacher"
+    },
+    {
+      "word": "AUTO",
+      "category": "NOUN",
+      "definition": "car"
+    },
+    {
+      "word": "AVION",
+      "category": "NOUN",
+      "definition": "airplane"
+    },
+    {
+      "word": "VOZA",
+      "category": "NOUN",
+      "definition": "train"
+    },
+    {
+      "word": "BROD",
+      "category": "NOUN",
+      "definition": "ship"
+    },
+    {
+      "word": "ULICA",
+      "category": "NOUN",
+      "definition": "street"
+    },
+    {
+      "word": "PARK",
+      "category": "NOUN",
+      "definition": "park"
+    },
+    {
+      "word": "MUZEJ",
+      "category": "NOUN",
+      "definition": "museum"
+    },
+    {
+      "word": "POZORIŠTE",
+      "category": "NOUN",
+      "definition": "theater"
+    },
+    {
+      "word": "BIOSKOP",
+      "category": "NOUN",
+      "definition": "cinema"
+    },
+    {
+      "word": "RESTORAN",
+      "category": "NOUN",
+      "definition": "restaurant"
+    },
+    {
+      "word": "HOTEL",
+      "category": "NOUN",
+      "definition": "hotel"
+    },
+    {
+      "word": "BOLNICA",
+      "category": "NOUN",
+      "definition": "hospital"
+    },
+    {
+      "word": "BANKA",
+      "category": "NOUN",
+      "definition": "bank"
+    },
+    {
+      "word": "POŠTA",
+      "category": "NOUN",
+      "definition": "post office"
+    },
+    {
+      "word": "PRODAVNICA",
+      "category": "NOUN",
+      "definition": "store, shop"
+    },
+    {
+      "word": "TRŽNICA",
+      "category": "NOUN",
+      "definition": "market"
+    },
+    {
+      "word": "HLEB",
+      "category": "NOUN",
+      "definition": "bread"
+    },
+    {
+      "word": "VINO",
+      "category": "NOUN",
+      "definition": "wine"
+    },
+    {
+      "word": "PIVO",
+      "category": "NOUN",
+      "definition": "beer"
+    },
+    {
+      "word": "KAFA",
+      "category": "NOUN",
+      "definition": "coffee"
+    },
+    {
+      "word": "MLEKO",
+      "category": "NOUN",
+      "definition": "milk"
+    },
+    {
+      "word": "JABUKA",
+      "category": "NOUN",
+      "definition": "apple"
+    },
+    {
+      "word": "KRUŠKA",
+      "category": "NOUN",
+      "definition": "pear"
+    },
+    {
+      "word": "POMORANDŽA",
+      "category": "NOUN",
+      "definition": "orange"
+    },
+    {
+      "word": "BANANA",
+      "category": "NOUN",
+      "definition": "banana"
+    },
+    {
+      "word": "PARADAJZ",
+      "category": "NOUN",
+      "definition": "tomato"
+    },
+    {
+      "word": "KROMPIR",
+      "category": "NOUN",
+      "definition": "potato"
+    },
+    {
+      "word": "ODEĆA",
+      "category": "NOUN",
+      "definition": "clothes"
+    },
+    {
+      "word": "CIPELE",
+      "category": "NOUN",
+      "definition": "shoes"
+    },
+    {
+      "word": "NOVAC",
+      "category": "NOUN",
+      "definition": "money"
+    },
+    {
+      "word": "VREME",
+      "category": "NOUN",
+      "definition": "time, weather"
+    },
+    {
+      "word": "ŽIVOT",
+      "category": "NOUN",
+      "definition": "life"
+    },
+    {
+      "word": "SMRT",
+      "category": "NOUN",
+      "definition": "death"
+    },
+    {
+      "word": "LJUBAV",
+      "category": "NOUN",
+      "definition": "love"
+    },
+    {
+      "word": "SREĆA",
+      "category": "NOUN",
+      "definition": "happiness, luck"
+    },
+    {
+      "word": "TUGA",
+      "category": "NOUN",
+      "definition": "sadness"
+    },
+    {
+      "word": "STRAH",
+      "category": "NOUN",
+      "definition": "fear"
+    },
+    {
+      "word": "RADOST",
+      "category": "NOUN",
+      "definition": "joy"
+    },
+    {
+      "word": "IGRA",
+      "category": "NOUN",
+      "definition": "game, play"
+    },
+    {
+      "word": "SPORT",
+      "category": "NOUN",
+      "definition": "sport"
+    },
+    {
+      "word": "FUDBAL",
+      "category": "NOUN",
+      "definition": "football, soccer"
+    },
+    {
+      "word": "KOŠARKA",
+      "category": "NOUN",
+      "definition": "basketball"
+    },
+    {
+      "word": "MUZIKA",
+      "category": "NOUN",
+      "definition": "music"
+    },
+    {
+      "word": "PESMA",
+      "category": "NOUN",
+      "definition": "song"
+    },
+    {
+      "word": "PLES",
+      "category": "NOUN",
+      "definition": "dance"
+    },
+    {
+      "word": "SLIKA",
+      "category": "NOUN",
+      "definition": "picture, painting"
+    },
+    {
+      "word": "FILM",
+      "category": "NOUN",
+      "definition": "film, movie"
+    },
+    {
+      "word": "JESTI",
+      "category": "VERB",
+      "definition": "to eat"
+    },
+    {
+      "word": "PITI",
+      "category": "VERB",
+      "definition": "to drink"
+    },
+    {
+      "word": "SPAVATI",
+      "category": "VERB",
+      "definition": "to sleep"
+    },
+    {
+      "word": "HODATI",
+      "category": "VERB",
+      "definition": "to walk"
+    },
+    {
+      "word": "TRČATI",
+      "category": "VERB",
+      "definition": "to run"
+    },
+    {
+      "word": "SKAKATI",
+      "category": "VERB",
+      "definition": "to jump"
+    },
+    {
+      "word": "PLIVATI",
+      "category": "VERB",
+      "definition": "to swim"
+    },
+    {
+      "word": "LETETI",
+      "category": "VERB",
+      "definition": "to fly"
+    },
+    {
+      "word": "VOZITI",
+      "category": "VERB",
+      "definition": "to drive"
+    },
+    {
+      "word": "ČITATI",
+      "category": "VERB",
+      "definition": "to read"
+    },
+    {
+      "word": "PISATI",
+      "category": "VERB",
+      "definition": "to write"
+    },
+    {
+      "word": "GOVORITI",
+      "category": "VERB",
+      "definition": "to speak"
+    },
+    {
+      "word": "SLUŠATI",
+      "category": "VERB",
+      "definition": "to listen"
+    },
+    {
+      "word": "GLEDATI",
+      "category": "VERB",
+      "definition": "to watch, to look"
+    },
+    {
+      "word": "VIDETI",
+      "category": "VERB",
+      "definition": "to see"
+    },
+    {
+      "word": "ČUTI",
+      "category": "VERB",
+      "definition": "to hear"
+    },
+    {
+      "word": "MISLITI",
+      "category": "VERB",
+      "definition": "to think"
+    },
+    {
+      "word": "ZNATI",
+      "category": "VERB",
+      "definition": "to know"
+    },
+    {
+      "word": "UČITI",
+      "category": "VERB",
+      "definition": "to learn, to study"
+    },
+    {
+      "word": "RADITI",
+      "category": "VERB",
+      "definition": "to work"
+    },
+    {
+      "word": "IGRATI",
+      "category": "VERB",
+      "definition": "to play"
+    },
+    {
+      "word": "PEVATI",
+      "category": "VERB",
+      "definition": "to sing"
+    },
+    {
+      "word": "PLESATI",
+      "category": "VERB",
+      "definition": "to dance"
+    },
+    {
+      "word": "VOLETI",
+      "category": "VERB",
+      "definition": "to love"
+    },
+    {
+      "word": "MRZETI",
+      "category": "VERB",
+      "definition": "to hate"
+    },
+    {
+      "word": "SMEJATI",
+      "category": "VERB",
+      "definition": "to laugh"
+    },
+    {
+      "word": "PLAKATI",
+      "category": "VERB",
+      "definition": "to cry"
+    },
+    {
+      "word": "ŽIVETI",
+      "category": "VERB",
+      "definition": "to live"
+    },
+    {
+      "word": "UMRETI",
+      "category": "VERB",
+      "definition": "to die"
+    },
+    {
+      "word": "DATI",
+      "category": "VERB",
+      "definition": "to give"
+    },
+    {
+      "word": "UZETI",
+      "category": "VERB",
+      "definition": "to take"
+    },
+    {
+      "word": "DONETI",
+      "category": "VERB",
+      "definition": "to bring"
+    },
+    {
+      "word": "NOSITI",
+      "category": "VERB",
+      "definition": "to carry, to wear"
+    },
+    {
+      "word": "KUPITI",
+      "category": "VERB",
+      "definition": "to buy"
+    },
+    {
+      "word": "PRODATI",
+      "category": "VERB",
+      "definition": "to sell"
+    },
+    {
+      "word": "OTVORITI",
+      "category": "VERB",
+      "definition": "to open"
+    },
+    {
+      "word": "ZATVORITI",
+      "category": "VERB",
+      "definition": "to close"
+    },
+    {
+      "word": "DOĆI",
+      "category": "VERB",
+      "definition": "to come"
+    },
+    {
+      "word": "VELIKI",
+      "category": "ADJECTIVE",
+      "definition": "big, large, great"
+    },
+    {
+      "word": "MALI",
+      "category": "ADJECTIVE",
+      "definition": "small, little"
+    },
+    {
+      "word": "DOBAR",
+      "category": "ADJECTIVE",
+      "definition": "good"
+    },
+    {
+      "word": "LOŠE",
+      "category": "ADJECTIVE",
+      "definition": "bad"
+    },
+    {
+      "word": "LAKO",
+      "category": "ADJECTIVE",
+      "definition": "easy, light"
+    },
+    {
+      "word": "TEŠKO",
+      "category": "ADJECTIVE",
+      "definition": "hard, difficult, heavy"
+    },
+    {
+      "word": "BRZO",
+      "category": "ADJECTIVE",
+      "definition": "fast, quick"
+    },
+    {
+      "word": "SPORO",
+      "category": "ADJECTIVE",
+      "definition": "slow"
+    },
+    {
+      "word": "TOPLO",
+      "category": "ADJECTIVE",
+      "definition": "warm, hot"
+    },
+    {
+      "word": "HLADNO",
+      "category": "ADJECTIVE",
+      "definition": "cold"
+    },
+    {
+      "word": "NOVI",
+      "category": "ADJECTIVE",
+      "definition": "new"
+    },
+    {
+      "word": "STARI",
+      "category": "ADJECTIVE",
+      "definition": "old"
+    },
+    {
+      "word": "MLAD",
+      "category": "ADJECTIVE",
+      "definition": "young"
+    },
+    {
+      "word": "LAKO",
+      "category": "ADJECTIVE",
+      "definition": "beautiful"
+    },
+    {
+      "word": "RUŽNO",
+      "category": "ADJECTIVE",
+      "definition": "ugly"
+    },
+    {
+      "word": "SREĆAN",
+      "category": "ADJECTIVE",
+      "definition": "happy"
+    },
+    {
+      "word": "TUŽAN",
+      "category": "ADJECTIVE",
+      "definition": "sad"
+    },
+    {
+      "word": "CRVEN",
+      "category": "ADJECTIVE",
+      "definition": "red"
+    },
+    {
+      "word": "PLAV",
+      "category": "ADJECTIVE",
+      "definition": "blue"
+    },
+    {
+      "word": "ZELEN",
+      "category": "ADJECTIVE",
+      "definition": "green"
+    },
+    {
+      "word": "ŽUTO",
+      "category": "ADJECTIVE",
+      "definition": "yellow"
+    },
+    {
+      "word": "CRNO",
+      "category": "ADJECTIVE",
+      "definition": "black"
+    },
+    {
+      "word": "BELO",
+      "category": "ADJECTIVE",
+      "definition": "white"
+    },
+    {
+      "word": "OVAJ",
+      "category": "PRONOUN",
+      "definition": "this"
+    },
+    {
+      "word": "ONAJ",
+      "category": "PRONOUN",
+      "definition": "that"
+    },
+    {
+      "word": "KOJI",
+      "category": "PRONOUN",
+      "definition": "which, who"
+    },
+    {
+      "word": "NEKO",
+      "category": "PRONOUN",
+      "definition": "someone"
+    },
+    {
+      "word": "NEŠTO",
+      "category": "PRONOUN",
+      "definition": "something"
+    },
+    {
+      "word": "NIKO",
+      "category": "PRONOUN",
+      "definition": "nobody"
+    },
+    {
+      "word": "NIŠTA",
+      "category": "PRONOUN",
+      "definition": "nothing"
+    },
+    {
+      "word": "JEDAN",
+      "category": "NUMBER",
+      "definition": "one"
+    },
+    {
+      "word": "ČETIRI",
+      "category": "NUMBER",
+      "definition": "four"
+    },
+    {
+      "word": "SEDAM",
+      "category": "NUMBER",
+      "definition": "seven"
+    },
+    {
+      "word": "OSAM",
+      "category": "NUMBER",
+      "definition": "eight"
+    },
+    {
+      "word": "DEVET",
+      "category": "NUMBER",
+      "definition": "nine"
+    },
+    {
+      "word": "DESET",
+      "category": "NUMBER",
+      "definition": "ten"
+    },
+    {
+      "word": "DVADESET",
+      "category": "NUMBER",
+      "definition": "twenty"
+    },
+    {
+      "word": "TRIDESET",
+      "category": "NUMBER",
+      "definition": "thirty"
+    },
+    {
+      "word": "HILJADA",
+      "category": "NUMBER",
+      "definition": "thousand"
+    }
+  ]
+}

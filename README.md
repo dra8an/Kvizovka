@@ -19,6 +19,7 @@ Kvizovka is a strategic word game for the Serbian language with unique rules:
 - [Step 1: Project Setup](./Docs/STEP_01_PROJECT_SETUP.md) - Initial setup documentation
 - [Step 2: Dependencies](./Docs/STEP_02_DEPENDENCIES.md) - Tailwind CSS & Zustand setup
 - [Step 3: Types & Constants](./Docs/STEP_03_TYPES_AND_CONSTANTS.md) - TypeScript types and game configuration
+- [Step 4: Dictionary](./Docs/STEP_04_DICTIONARY.md) - Serbian word dictionary integration
 
 ## 🚀 Getting Started
 
@@ -61,23 +62,24 @@ kvizovka/
 │   ├── game-engine/   # Game logic (to be added in Step 5)
 │   ├── types/         # TypeScript types ✅
 │   ├── constants/     # Game configuration ✅
+│   ├── utils/         # Utilities (dictionary) ✅
 │   ├── store/         # Zustand state management ✅
 │   └── App.tsx        # Main app component
 ├── public/
-│   └── dictionary/    # Serbian word list (to be added in Step 4)
+│   └── dictionary/    # Serbian word list (150 words) ✅
 └── package.json       # Dependencies
 ```
 
 ## 🎯 Development Status
 
-**Current Phase:** Step 3 - Types & Constants ✅
+**Current Phase:** Step 4 - Dictionary ✅
 
 - [x] Initialize Vite + React + TypeScript
 - [x] Add Tailwind CSS and Zustand
 - [x] Setup folder structure
 - [x] Create type definitions (board, tile, game)
 - [x] Build game constants (board config, tiles, scoring)
-- [ ] Research and add Serbian dictionary
+- [x] Integrate Serbian dictionary (150 words)
 - [ ] Implement game engine classes
 - [ ] Build UI components
 
