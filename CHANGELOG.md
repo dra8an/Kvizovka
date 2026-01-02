@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Step 3: Setup folder structure and TypeScript config
 - Step 4: Serbian dictionary integration
 - Step 5: Core game engine implementation
 - Step 6: State management with Zustand
@@ -16,6 +15,118 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Step 8: Drag-and-drop functionality
 - Step 9: Game flow and logic integration
 - Step 10: Testing and polish
+
+---
+
+## [0.3.0] - 2026-01-01
+
+### Added - Step 3: Folder Structure, Type Definitions & Game Constants ✅
+
+#### Folder Structure Created
+- **src/components/**: UI component folders (Board, TileRack, Timer, ScorePanel, GameControls)
+- **src/types/**: TypeScript type definitions
+- **src/constants/**: Game configuration constants
+- **src/game-engine/**: Game logic classes (empty, ready for Step 5)
+- **src/utils/**: Helper functions (empty)
+- **public/dictionary/**: Serbian word list storage (empty, for Step 4)
+
+#### Type Definition Files (src/types/)
+- **board.types.ts** (208 lines): Board-related types
+  - `BoardSquare` - Individual square on 17×17 grid
+  - `Board` - 2D array representing entire board
+  - `PremiumFieldType` - Union type for multiplier squares
+  - `BlockerTile` - Black blocker tiles interface
+  - `Position`, `Direction`, `PlacedTile`, `Word` - Helper types
+  - Comprehensive JSDoc comments explaining TypeScript concepts
+
+- **tile.types.ts** (230 lines): Tile and dictionary types
+  - `Tile` - Letter tile or joker tile interface
+  - `TileDistribution` - Tile counts and values
+  - `WordCategory` - Enum for valid word types (noun, verb, adjective, pronoun, number)
+  - `DictionaryWord`, `ValidationResult` - Dictionary validation types
+  - Examples of optional properties, enums, interfaces
+
+- **game.types.ts** (436 lines): Game state types
+  - `GameState` - Complete game state (single source of truth)
+  - `Player` - Player information (score, tiles, time, penalties)
+  - `Move` - Single turn/move record
+  - `GameMode`, `GameStatus`, `MoveType` - Enums for game states
+  - `ScoreBreakdown`, `WordScore`, `GameSettings` - Supporting types
+  - Tuple types, literal types, optional properties
+
+- **index.ts** (71 lines): Barrel export
+  - Exports all types from single import location
+  - Cleaner imports throughout codebase
+
+#### Game Constants Files (src/constants/)
+- **board-config.ts** (158 lines): Board layout configuration
+  - `BOARD_SIZE` = 17 (17×17 grid)
+  - `BOARD_CENTER` = {row: 8, col: 8}
+  - `PREMIUM_FIELDS` - Map of 45 premium field positions:
+    - 1× CENTER (starting square)
+    - 16× WORD_MULTIPLIER (X-marked, 2× word score)
+    - 12× DOUBLE_LETTER (yellow, 2× letter)
+    - 8× TRIPLE_LETTER (green, 3× letter)
+    - 8× QUADRUPLE_LETTER (red, 4× letter)
+  - Helper functions: `getPremiumField()`, `isValidPosition()`, `getAdjacentPositions()`
+
+- **tile-distribution.ts** (185 lines): Serbian alphabet distribution
+  - `TILE_DISTRIBUTION` - 238 total tiles:
+    - 228 letter tiles (A-Z plus Serbian special: Č, Ć, Đ, Š, Ž, DŽ, LJ, NJ)
+    - 10 joker/blank tiles
+  - Point values: 1pt (common), 2pt (moderate), 3pt (uncommon), 4pt (rare)
+  - `TILES_PER_PLAYER` = 10
+  - Helper functions: `getTileValue()`, `getTileCount()`, `isDigraph()`
+  - Letter frequency calculations for AI/strategy
+
+- **scoring-rules.ts** (293 lines): Scoring and time rules
+  - Bonuses:
+    - `ALL_TILES_BONUS` = 45 points (use all 10 tiles)
+    - Long word bonuses: 10 letters = +20 pts, up to 16+ letters = +50 pts
+  - Multipliers: Letter (2×/3×/4×), Word (2×)
+  - Time limits: 15/30/35 minutes or unlimited
+  - Time penalties: 1st offense = 1 min, 2nd = 2 min, 3rd+ = 4 min
+  - End game: Unused tiles penalty (joker = -10 pts)
+  - Helper functions: `getLongWordBonus()`, `getInvalidWordPenalty()`, `calculateEndGamePenalty()`
+
+- **index.ts** (18 lines): Barrel export
+  - Exports all constants from single location
+
+#### Documentation
+- **Docs/STEP_03_TYPES_AND_CONSTANTS.md**: Complete Step 3 documentation
+  - What was built (folder structure, types, constants)
+  - TypeScript concepts explained (interfaces, enums, union types, etc.)
+  - Code examples for each type and constant
+  - How to use the types and constants
+  - Learning resources for TypeScript
+  - Build verification results
+
+#### Build Status
+- ✅ TypeScript compiles successfully
+- ✅ Production build: ~146KB JS + 17KB CSS (gzipped: 47KB + 4KB)
+- ✅ 35 modules transformed
+- ✅ All type definitions valid
+- ✅ No compilation errors
+
+### Changed
+- Updated CHANGELOG.md with Step 3 completion
+
+### Fixed
+- Removed duplicate 'A' entry in tile-distribution.ts (TypeScript compilation error)
+
+### Project Status
+- **Phase:** Step 3 of 10 - Foundation complete
+- **Build Status:** ✅ Passing
+- **Type Definitions:** ✅ Complete (8 files, ~1,600 lines)
+- **Constants:** ✅ Complete (board, tiles, scoring)
+- **Ready for:** Step 4 - Serbian dictionary integration
+
+### Notes
+- All files include extensive educational comments for beginner learning
+- Type system provides compile-time safety for all game data
+- Constants separated from logic for easy configuration
+- Folder structure ready for game engine implementation
+- Serbian alphabet fully supported (Latin script with diacritics and digraphs)
 
 ---
 
@@ -235,5 +346,5 @@ Following [Semantic Versioning](https://semver.org/):
 ---
 
 **Last Updated:** 2026-01-01
-**Current Version:** 0.1.0 (Step 1 Complete)
-**Next Milestone:** Step 2 - Dependencies (Tailwind CSS + Zustand)
+**Current Version:** 0.3.0 (Step 3 Complete)
+**Next Milestone:** Step 4 - Serbian Dictionary Integration

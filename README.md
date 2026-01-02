@@ -18,6 +18,7 @@ Kvizovka is a strategic word game for the Serbian language with unique rules:
 - [WebStorm Guide](./Docs/WEBSTORM_GUIDE.md) - How to use WebStorm IDE with this project
 - [Step 1: Project Setup](./Docs/STEP_01_PROJECT_SETUP.md) - Initial setup documentation
 - [Step 2: Dependencies](./Docs/STEP_02_DEPENDENCIES.md) - Tailwind CSS & Zustand setup
+- [Step 3: Types & Constants](./Docs/STEP_03_TYPES_AND_CONSTANTS.md) - TypeScript types and game configuration
 
 ## 🚀 Getting Started
 
@@ -56,22 +57,28 @@ npm run preview
 kvizovka/
 ├── Docs/              # Documentation
 ├── src/               # Source code
-│   ├── components/    # React components (to be added)
-│   ├── game-engine/   # Game logic (to be added)
-│   ├── types/         # TypeScript types (to be added)
+│   ├── components/    # React components (folders created)
+│   ├── game-engine/   # Game logic (to be added in Step 5)
+│   ├── types/         # TypeScript types ✅
+│   ├── constants/     # Game configuration ✅
+│   ├── store/         # Zustand state management ✅
 │   └── App.tsx        # Main app component
-├── public/            # Static assets
+├── public/
+│   └── dictionary/    # Serbian word list (to be added in Step 4)
 └── package.json       # Dependencies
 ```
 
 ## 🎯 Development Status
 
-**Current Phase:** Step 2 - Dependencies ✅
+**Current Phase:** Step 3 - Types & Constants ✅
 
 - [x] Initialize Vite + React + TypeScript
 - [x] Add Tailwind CSS and Zustand
-- [ ] Setup folder structure
-- [ ] Implement game logic
+- [x] Setup folder structure
+- [x] Create type definitions (board, tile, game)
+- [x] Build game constants (board config, tiles, scoring)
+- [ ] Research and add Serbian dictionary
+- [ ] Implement game engine classes
 - [ ] Build UI components
 
 ## 📝 License
