@@ -43,6 +43,16 @@ interface SquareProps {
    * Whether this square is a valid drop target
    */
   isValidDrop?: boolean
+
+  /**
+   * Whether the tile on this square is draggable (for selectedTiles)
+   */
+  isDraggable?: boolean
+
+  /**
+   * Called when user starts dragging a tile from this square
+   */
+  onTileDragStart?: (row: number, col: number) => void
 }
 
 /**
@@ -57,7 +67,7 @@ interface SquareProps {
  * />
  * ```
  */
-export function Square({ square, onDrop, onDragOver, isValidDrop }: SquareProps) {
+export function Square({ square, onDrop, onDragOver, isValidDrop, isDraggable, onTileDragStart }: SquareProps) {
   // Get premium field class based on type
   const getPremiumClass = (): string => {
     if (!square.premiumField) {
@@ -139,24 +149,58 @@ export function Square({ square, onDrop, onDragOver, isValidDrop }: SquareProps)
     // Regular tile or joker
     let letter = ''
     let value = 0
+    let isJoker = false
 
     if ('letter' in tile) {
       // Check if joker
       if ('isJoker' in tile && tile.isJoker) {
-        letter = tile.jokerLetter || '?'
+        letter = tile.jokerLetter || ''  // Show chosen letter or empty
         value = 0 // Jokers have 0 value
+        isJoker = true
       } else {
         letter = tile.letter
         value = tile.value
       }
     }
 
+    // Handle drag start for tile
+    const handleTileDragStart = (e: React.DragEvent) => {
+      if (!isDraggable) {
+        e.preventDefault()
+        return
+      }
+
+      // Store square position in drag data (so we can remove from selectedTiles)
+      e.dataTransfer.effectAllowed = 'move'
+      e.dataTransfer.setData('text/plain', `square:${square.row}:${square.col}`)
+
+      onTileDragStart?.(square.row, square.col)
+    }
+
     return (
-      <div className="absolute inset-1 bg-amber-100 rounded shadow-md flex flex-col items-center justify-center border-2 border-amber-300">
+      <div
+        draggable={isDraggable}
+        onDragStart={handleTileDragStart}
+        className={`absolute inset-1 rounded shadow-md flex flex-col items-center justify-center border-2 ${
+          isJoker
+            ? 'bg-purple-100 border-purple-400'  // Purple for jokers
+            : 'bg-amber-100 border-amber-300'    // Amber for regular tiles
+        } ${
+          isDraggable ? 'cursor-grab active:cursor-grabbing' : ''
+        }`}
+      >
+        {/* Joker icon (top-left corner) */}
+        {isJoker && (
+          <div className="absolute top-0 left-0.5 text-xs">🃏</div>
+        )}
+
         {/* Letter */}
-        <div className="text-xl font-bold text-gray-900">{letter}</div>
+        <div className={`text-xl font-bold ${isJoker ? 'text-purple-900' : 'text-gray-900'}`}>
+          {letter || '?'}
+        </div>
+
         {/* Value (bottom-right corner) */}
-        <div className="absolute bottom-0.5 right-1 text-xs font-semibold text-gray-600">
+        <div className={`absolute bottom-0.5 right-1 text-xs font-semibold ${isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
           {value}
         </div>
       </div>

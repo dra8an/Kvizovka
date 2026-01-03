@@ -31,6 +31,8 @@ import { Tile as TileType } from '../../types'
 export function TileRack() {
   // Subscribe to game store
   const game = useGameStore((state) => state.game)
+  const selectedTiles = useGameStore((state) => state.selectedTiles)
+  const unselectTile = useGameStore((state) => state.unselectTile)
 
   // Local state for drag-and-drop
   const [draggedTile, setDraggedTile] = useState<TileType | null>(null)
@@ -46,6 +48,12 @@ export function TileRack() {
 
   // Get current player
   const currentPlayer = game.players[game.currentPlayerIndex]
+
+  // Filter out tiles that are currently placed on the board (in selectedTiles)
+  const selectedTileIds = new Set(selectedTiles.map((st) => st.tile.id))
+  const availableTiles = currentPlayer.tiles.filter(
+    (tile) => !selectedTileIds.has(tile.id)
+  )
 
   /**
    * Handle drag start
@@ -67,6 +75,39 @@ export function TileRack() {
     console.log('Stopped dragging')
   }
 
+  /**
+   * Handle drop on rack
+   *
+   * When a tile is dropped on the rack, remove it from selectedTiles.
+   */
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+
+    // Get drag data
+    const dragData = e.dataTransfer.getData('text/plain')
+    if (!dragData) return
+
+    // Check if dragging from board (format: "square:row:col")
+    if (dragData.startsWith('square:')) {
+      const [, rowStr, colStr] = dragData.split(':')
+      const row = parseInt(rowStr)
+      const col = parseInt(colStr)
+
+      // Remove tile from board (selectedTiles)
+      unselectTile(row, col)
+      console.log(`Returned tile from board ${row},${col} to hand`)
+    }
+  }
+
+  /**
+   * Handle drag over rack
+   *
+   * Allow drops on the rack.
+   */
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault() // Allow drop
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Player info */}
@@ -74,7 +115,12 @@ export function TileRack() {
         <div>
           <h3 className="text-lg font-bold text-gray-800">{currentPlayer.name}'s Tiles</h3>
           <p className="text-sm text-gray-600">
-            {currentPlayer.tiles.length} tile{currentPlayer.tiles.length !== 1 ? 's' : ''} in hand
+            {availableTiles.length} tile{availableTiles.length !== 1 ? 's' : ''} in hand
+            {selectedTiles.length > 0 && (
+              <span className="ml-2 text-blue-600 font-semibold">
+                ({selectedTiles.length} placed)
+              </span>
+            )}
           </p>
         </div>
         <div className="text-sm text-gray-600">
@@ -83,11 +129,15 @@ export function TileRack() {
       </div>
 
       {/* Tile rack container */}
-      <div className="bg-gradient-to-b from-amber-700 to-amber-800 p-4 rounded-lg shadow-lg">
+      <div
+        className="bg-gradient-to-b from-amber-700 to-amber-800 p-4 rounded-lg shadow-lg"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
         {/* Tiles */}
         <div className="flex gap-2 justify-center flex-wrap">
-          {currentPlayer.tiles.length > 0 ? (
-            currentPlayer.tiles.map((tile) => (
+          {availableTiles.length > 0 ? (
+            availableTiles.map((tile) => (
               <Tile
                 key={tile.id}
                 tile={tile}
@@ -98,7 +148,10 @@ export function TileRack() {
             ))
           ) : (
             <div className="text-amber-200 py-4">
-              No tiles in hand
+              {selectedTiles.length > 0
+                ? 'All tiles placed on board'
+                : 'No tiles in hand'
+              }
             </div>
           )}
         </div>

@@ -17,6 +17,8 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { Square } from './Square'
 import { BOARD_SIZE } from '../../constants'
+import { JokerLetterDialog } from '../JokerLetterDialog/JokerLetterDialog'
+import { Tile as TileType } from '../../types'
 
 /**
  * Board Component
@@ -35,12 +37,26 @@ export function Board() {
   const selectTile = useGameStore((state) => state.selectTile)
   const unselectTile = useGameStore((state) => state.unselectTile)
   const selectedTiles = useGameStore((state) => state.selectedTiles)
+  const setJokerLetter = useGameStore((state) => state.setJokerLetter)
 
   // Local state for drag-and-drop
   const [draggedTileId, setDraggedTileId] = useState<string | null>(null)
   const [hoveredSquare, setHoveredSquare] = useState<{ row: number; col: number } | null>(
     null
   )
+
+  // Local state for joker letter selection
+  const [jokerDialog, setJokerDialog] = useState<{
+    show: boolean
+    tile: TileType | null
+    row: number
+    col: number
+  }>({
+    show: false,
+    tile: null,
+    row: 0,
+    col: 0,
+  })
 
   // If no game, show placeholder
   if (!game) {
@@ -97,12 +113,34 @@ export function Board() {
       return
     }
 
-    // Get tile ID from drag data
-    const tileId = event.dataTransfer.getData('text/plain')
-    if (!tileId) {
-      console.error('No tile ID in drag data')
+    // Get drag data
+    const dragData = event.dataTransfer.getData('text/plain')
+    if (!dragData) {
+      console.error('No drag data')
       return
     }
+
+    // Check if dragging from board (format: "square:row:col")
+    if (dragData.startsWith('square:')) {
+      const [, fromRowStr, fromColStr] = dragData.split(':')
+      const fromRow = parseInt(fromRowStr)
+      const fromCol = parseInt(fromColStr)
+
+      // Remove from old position, add to new position
+      const tileAtOldPos = selectedTiles.find(
+        (st) => st.row === fromRow && st.col === fromCol
+      )
+
+      if (tileAtOldPos) {
+        unselectTile(fromRow, fromCol)
+        selectTile(tileAtOldPos.tile, row, col)
+        console.log(`Moved tile from ${fromRow},${fromCol} to ${row},${col}`)
+      }
+      return
+    }
+
+    // Otherwise, dragging from hand (format: tile ID)
+    const tileId = dragData
 
     // Find the tile in current player's hand
     const currentPlayer = game.players[game.currentPlayerIndex]
@@ -118,8 +156,54 @@ export function Board() {
 
     console.log(`Placed ${tile.isJoker ? 'Joker' : tile.letter} at ${row}, ${col}`)
 
+    // If joker, show letter selection dialog
+    if (tile.isJoker) {
+      setJokerDialog({
+        show: true,
+        tile: tile,
+        row: row,
+        col: col,
+      })
+    }
+
     // Clear dragged tile
     setDraggedTileId(null)
+  }
+
+  /**
+   * Handle joker letter selection
+   */
+  const handleJokerLetterSelected = (letter: string) => {
+    if (jokerDialog.tile) {
+      setJokerLetter(jokerDialog.row, jokerDialog.col, letter)
+      console.log(`Joker at ${jokerDialog.row},${jokerDialog.col} set to ${letter}`)
+    }
+
+    // Close dialog
+    setJokerDialog({ show: false, tile: null, row: 0, col: 0 })
+  }
+
+  /**
+   * Handle joker dialog cancel
+   */
+  const handleJokerDialogCancel = () => {
+    // Remove the joker from board
+    if (jokerDialog.tile) {
+      unselectTile(jokerDialog.row, jokerDialog.col)
+      console.log(`Cancelled joker placement at ${jokerDialog.row},${jokerDialog.col}`)
+    }
+
+    // Close dialog
+    setJokerDialog({ show: false, tile: null, row: 0, col: 0 })
+  }
+
+  /**
+   * Handle drag start from board square
+   *
+   * Called when user starts dragging a tile that's already on the board (selectedTiles).
+   */
+  const handleTileDragStart = (row: number, col: number) => {
+    console.log(`Started dragging tile from board at ${row}, ${col}`)
   }
 
   /**
@@ -165,6 +249,8 @@ export function Board() {
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   isValidDrop={isHovered && isValidDropTarget(rowIndex, colIndex)}
+                  isDraggable={!!selectedTile}
+                  onTileDragStart={handleTileDragStart}
                 />
               )
             })
@@ -195,6 +281,14 @@ export function Board() {
           <span>★ - Center (Start)</span>
         </div>
       </div>
+
+      {/* Joker letter selection dialog */}
+      {jokerDialog.show && (
+        <JokerLetterDialog
+          onSelect={handleJokerLetterSelected}
+          onCancel={handleJokerDialogCancel}
+        />
+      )}
     </div>
   )
 }

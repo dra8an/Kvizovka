@@ -30,11 +30,13 @@ export function GameControls() {
   const game = useGameStore((state) => state.game)
   const selectedTiles = useGameStore((state) => state.selectedTiles)
   const lastValidation = useGameStore((state) => state.lastValidation)
+  const lastPlayedWord = useGameStore((state) => state.lastPlayedWord)
 
   // Game actions
   const makeMove = useGameStore((state) => state.makeMove)
   const skipTurn = useGameStore((state) => state.skipTurn)
   const clearSelection = useGameStore((state) => state.clearSelection)
+  const challengeLastWord = useGameStore((state) => state.challengeLastWord)
   const pauseGame = useGameStore((state) => state.pauseGame)
   const resumeGame = useGameStore((state) => state.resumeGame)
   const endGame = useGameStore((state) => state.endGame)
@@ -125,9 +127,50 @@ export function GameControls() {
     }
   }
 
+  /**
+   * Handle Challenge Word button click
+   *
+   * In Kvizovka, words are not automatically validated.
+   * Players can challenge the opponent's last word.
+   * - If challenge succeeds (word invalid): Move is undone
+   * - If challenge fails (word valid): Challenger loses 3 minutes
+   */
+  const handleChallenge = () => {
+    if (!lastPlayedWord) return
+
+    const confirm = window.confirm(
+      `Challenge the word "${lastPlayedWord.word}"?\n\n` +
+      `⚠️ Warning: If the word is valid, you will lose 3 minutes from your time!`
+    )
+
+    if (!confirm) return
+
+    const result = challengeLastWord()
+
+    if (result) {
+      if (result.success) {
+        alert(
+          `✅ Challenge successful!\n\n` +
+          `The word "${result.word}" is invalid.\n` +
+          `Reason: ${result.reason}\n\n` +
+          `The move has been undone.`
+        )
+      } else {
+        alert(
+          `❌ Challenge failed!\n\n` +
+          `The word "${result.word}" is valid.\n\n` +
+          `You have been penalized 3 minutes.`
+        )
+      }
+    }
+  }
+
   // Check if game is in progress
   const isInProgress = game.status === GameStatus.IN_PROGRESS
   const isPaused = game.status === GameStatus.PAUSED
+
+  // Check if current player can challenge (opponent just played a word)
+  const canChallenge = lastPlayedWord && isInProgress
 
   return (
     <div className="flex flex-col gap-3">
@@ -146,6 +189,16 @@ export function GameControls() {
       >
         Play Word {selectedTiles.length > 0 && `(${selectedTiles.length} tiles)`}
       </button>
+
+      {/* Challenge button (only shown when opponent just played a word) */}
+      {canChallenge && (
+        <button
+          onClick={handleChallenge}
+          className="btn text-lg py-4 font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg animate-pulse"
+        >
+          ⚠️ Challenge Word: "{lastPlayedWord.word}"
+        </button>
+      )}
 
       {/* Secondary actions */}
       <div className="grid grid-cols-2 gap-2">

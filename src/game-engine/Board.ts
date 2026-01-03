@@ -258,15 +258,15 @@ export class Board {
     const tiles: BoardSquare[] = []
 
     if (direction === 'HORIZONTAL') {
-      // Scan left to find start of word
+      // Scan left to find start of word (stop at empty or blocker)
       let startCol = col
-      while (startCol > 0 && !this.isEmpty(row, startCol - 1)) {
+      while (startCol > 0 && !this.isEmpty(row, startCol - 1) && !this.isBlocker(row, startCol - 1)) {
         startCol--
       }
 
-      // Scan right to collect all tiles in word
+      // Scan right to collect all tiles in word (stop at empty or blocker)
       let currentCol = startCol
-      while (currentCol < BOARD_SIZE && !this.isEmpty(row, currentCol)) {
+      while (currentCol < BOARD_SIZE && !this.isEmpty(row, currentCol) && !this.isBlocker(row, currentCol)) {
         const square = this.getSquare(row, currentCol)
         if (square) {
           tiles.push(square)
@@ -275,15 +275,15 @@ export class Board {
       }
     } else {
       // VERTICAL
-      // Scan up to find start
+      // Scan up to find start (stop at empty or blocker)
       let startRow = row
-      while (startRow > 0 && !this.isEmpty(startRow - 1, col)) {
+      while (startRow > 0 && !this.isEmpty(startRow - 1, col) && !this.isBlocker(startRow - 1, col)) {
         startRow--
       }
 
-      // Scan down to collect tiles
+      // Scan down to collect tiles (stop at empty or blocker)
       let currentRow = startRow
-      while (currentRow < BOARD_SIZE && !this.isEmpty(currentRow, col)) {
+      while (currentRow < BOARD_SIZE && !this.isEmpty(currentRow, col) && !this.isBlocker(currentRow, col)) {
         const square = this.getSquare(currentRow, col)
         if (square) {
           tiles.push(square)

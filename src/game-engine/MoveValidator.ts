@@ -44,6 +44,11 @@ export interface MoveValidationResult {
    * Direction of main word (HORIZONTAL or VERTICAL)
    */
   direction?: Direction
+
+  /**
+   * The word text (for challenges)
+   */
+  wordText?: string
 }
 
 /**
@@ -144,50 +149,64 @@ export class MoveValidator {
       }
     }
 
-    // Temporarily place tiles to find words
+    // DEBUG: Log move details
+    console.log('🔍 Move Validation:', {
+      placedTilesCount: placedTiles.length,
+      positions: placedTiles.map(t => `(${t.row},${t.col})`).join(', '),
+      letters: placedTiles.map(t => {
+        const tile = t.tile
+        if ('letter' in tile) {
+          if ('isJoker' in tile && tile.isJoker) {
+            return tile.jokerLetter || '?'
+          }
+          return tile.letter
+        }
+        return '?'
+      }).join(''),
+      direction: direction
+    })
+
+    // Temporarily place tiles to find the main word
     for (const placed of placedTiles) {
       this.board.setTile(placed.row, placed.col, placed.tile)
     }
 
-    // Find all words formed
-    const wordsFormed = this.findAllWordsFormed(placedTiles, direction)
+    // Find ONLY the main word being played (not cross-words)
+    // In Kvizovka, only the word being played needs validation
+    // Cross-words are already validated from previous turns
+    const mainWord = this.findMainWord(placedTiles, direction)
+
+    // IMPORTANT: Extract word string BEFORE removing tiles!
+    // mainWord contains references to BoardSquare objects,
+    // so we must validate while tiles are still on the board
+    const wordText = this.wordValidator.extractWordFromSquares(mainWord)
+
+    console.log('📝 Found main word:', {
+      length: mainWord.length,
+      word: wordText
+    })
 
     // Remove temporary tiles
     for (const placed of placedTiles) {
       this.board.removeTile(placed.row, placed.col)
     }
 
-    // Rule 6: All words must be valid
-    const invalidWords = this.wordValidator.getInvalidWords(wordsFormed)
-
-    if (invalidWords.length > 0) {
-      const invalidWordsList = invalidWords
-        .map((w) => `${w.word} (${w.reason})`)
-        .join(', ')
-
+    // Rule 6: Check minimum word length
+    // NOTE: Dictionary validation is NOT automatic in Kvizovka!
+    // Words can only be challenged by the opponent after being played.
+    if (wordText.length < MIN_WORD_LENGTH) {
       return {
         isValid: false,
-        reason: `Invalid words: ${invalidWordsList}`,
-      }
-    }
-
-    // Rule 7: Must form at least one word of minimum length
-    const hasValidLengthWord = wordsFormed.some(
-      (word) => word.length >= MIN_WORD_LENGTH
-    )
-
-    if (!hasValidLengthWord) {
-      return {
-        isValid: false,
-        reason: `All words must be at least ${MIN_WORD_LENGTH} letters long`,
+        reason: `Word must be at least ${MIN_WORD_LENGTH} letters long`,
       }
     }
 
     // All checks passed!
     return {
       isValid: true,
-      wordsFormed,
+      wordsFormed: [mainWord], // Only return the main word
       direction,
+      wordText, // Include the word text for challenge validation later
     }
   }
 
@@ -392,8 +411,19 @@ export class MoveValidator {
         crossDirection
       )
 
-      // Only count if it's a valid word (2+ tiles)
-      if (crossWord.length >= MIN_WORD_LENGTH) {
+      // Count non-blocker tiles in the cross-word
+      // Blocker tiles don't contribute to word length
+      const nonBlockerCount = crossWord.filter(square => {
+        const tile = square.tile
+        if (!tile) return false
+        // Check if it's a blocker tile
+        if ('type' in tile && tile.type === 'BLOCKER') return false
+        return true
+      }).length
+
+      // Only count cross words that have more than 1 non-blocker tile
+      // A single tile is not a new word - it's just the placed tile itself
+      if (nonBlockerCount > 1) {
         crossWords.push(crossWord)
       }
     }

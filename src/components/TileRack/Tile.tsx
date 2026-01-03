@@ -64,11 +64,11 @@ export function Tile({ tile, onDragStart, onDragEnd, isDragging, disabled }: Til
    * Get the letter to display
    *
    * - Regular tiles: Show the letter (A, B, Č, etc.)
-   * - Joker tiles: Show jokerLetter if set, otherwise "?"
+   * - Joker tiles: Show joker icon 🃏
    */
   const getDisplayLetter = (): string => {
     if (tile.isJoker) {
-      return tile.jokerLetter || '?'
+      return '🃏'
     }
     return tile.letter
   }

@@ -32,6 +32,7 @@ import {
   ScoreCalculator,
   MoveValidator,
   MoveValidationResult,
+  WordValidator,
 } from '../game-engine'
 import { TILES_PER_PLAYER, DEFAULT_TIME_LIMIT } from '../constants'
 
@@ -71,6 +72,15 @@ interface GameStoreState {
    * Useful for showing errors to user
    */
   lastValidation: MoveValidationResult | null
+
+  /**
+   * Last played word (can be challenged by opponent)
+   */
+  lastPlayedWord: {
+    word: string
+    playerIndex: number
+    moveIndex: number
+  } | null
 
   /**
    * Timer interval ID (for stopping timer)
@@ -117,6 +127,17 @@ interface GameStoreState {
   clearSelection: () => void
 
   /**
+   * Set joker letter for a placed joker tile
+   */
+  setJokerLetter: (row: number, col: number, letter: string) => void
+
+  /**
+   * Challenge the last played word
+   * Returns true if challenge successful (word was invalid), false if challenge failed (word was valid)
+   */
+  challengeLastWord: () => { success: boolean; word: string; reason: string } | null
+
+  /**
    * End the current game
    */
   endGame: () => void
@@ -154,13 +175,14 @@ interface GameStoreState {
  */
 const createInitialState = (): Pick<
   GameStoreState,
-  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'timerIntervalId'
+  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'lastPlayedWord' | 'timerIntervalId'
 > => ({
   game: null,
   boardInstance: null,
   tileBagInstance: null,
   selectedTiles: [],
   lastValidation: null,
+  lastPlayedWord: null,
   timerIntervalId: null,
 })
 
@@ -333,6 +355,13 @@ export const useGameStore = create<GameStoreState>()(
 
         game.moveHistory.push(move)
 
+        // Store last played word for challenge
+        const lastPlayedWord = {
+          word: validation.wordText || '',
+          playerIndex: game.currentPlayerIndex,
+          moveIndex: game.moveHistory.length - 1,
+        }
+
         // Switch to next player
         game.currentPlayerIndex = game.currentPlayerIndex === 0 ? 1 : 0
 
@@ -345,6 +374,7 @@ export const useGameStore = create<GameStoreState>()(
             updatedAt: new Date(),
           },
           selectedTiles: [],
+          lastPlayedWord, // Store for challenge
         })
 
         return true
@@ -470,9 +500,26 @@ export const useGameStore = create<GameStoreState>()(
 
       /**
        * Unselect a tile
+       *
+       * Also resets joker letter if removing a joker tile.
        */
       unselectTile: (row: number, col: number) => {
-        const { selectedTiles } = get()
+        const { selectedTiles, game } = get()
+
+        // Find the tile being removed
+        const tileToRemove = selectedTiles.find(
+          (st) => st.row === row && st.col === col
+        )
+
+        // If it's a joker, reset its letter in the player's hand
+        if (tileToRemove && tileToRemove.tile.isJoker && game) {
+          const currentPlayer = game.players[game.currentPlayerIndex]
+          const tileInHand = currentPlayer.tiles.find((t) => t.id === tileToRemove.tile.id)
+
+          if (tileInHand && tileInHand.isJoker) {
+            tileInHand.jokerLetter = undefined
+          }
+        }
 
         set({
           selectedTiles: selectedTiles.filter(
@@ -483,9 +530,125 @@ export const useGameStore = create<GameStoreState>()(
 
       /**
        * Clear all selected tiles
+       *
+       * Also resets joker letters when clearing.
        */
       clearSelection: () => {
+        const { selectedTiles, game } = get()
+
+        // Reset joker letters in player's hand
+        if (game) {
+          const currentPlayer = game.players[game.currentPlayerIndex]
+
+          selectedTiles.forEach((st) => {
+            if (st.tile.isJoker) {
+              // Find the tile in player's hand and reset jokerLetter
+              const tileInHand = currentPlayer.tiles.find((t) => t.id === st.tile.id)
+              if (tileInHand && tileInHand.isJoker) {
+                tileInHand.jokerLetter = undefined
+              }
+            }
+          })
+        }
+
         set({ selectedTiles: [] })
+      },
+
+      /**
+       * Set joker letter for a placed joker tile
+       *
+       * This updates the jokerLetter property of a tile in selectedTiles
+       * and also updates the tile in the player's hand.
+       */
+      setJokerLetter: (row: number, col: number, letter: string) => {
+        const { selectedTiles, game } = get()
+
+        if (!game) return
+
+        // Find the tile in selectedTiles
+        const selectedTile = selectedTiles.find(
+          (st) => st.row === row && st.col === col
+        )
+
+        if (!selectedTile || !selectedTile.tile.isJoker) {
+          return
+        }
+
+        // Update the tile in player's hand (this is the source of truth)
+        const currentPlayer = game.players[game.currentPlayerIndex]
+        const tileInHand = currentPlayer.tiles.find((t) => t.id === selectedTile.tile.id)
+
+        if (tileInHand && tileInHand.isJoker) {
+          tileInHand.jokerLetter = letter
+        }
+
+        // Update selectedTiles to trigger re-render
+        set({
+          selectedTiles: selectedTiles.map((st) =>
+            st.row === row && st.col === col
+              ? { ...st, tile: { ...st.tile, jokerLetter: letter } }
+              : st
+          ),
+        })
+      },
+
+      /**
+       * Challenge the last played word
+       *
+       * In Kvizovka, words are not automatically validated against the dictionary.
+       * Instead, the opponent can challenge the word after it's played.
+       *
+       * If the challenge is successful (word is invalid):
+       * - The move is undone
+       * - The player who played the word loses their turn
+       *
+       * If the challenge fails (word is valid):
+       * - The challenger is penalized 3 minutes from their time
+       * - The move stands
+       */
+      challengeLastWord: () => {
+        const { lastPlayedWord, game } = get()
+
+        if (!lastPlayedWord || !game) {
+          return null
+        }
+
+        // Validate the word against dictionary
+        const wordValidator = new WordValidator()
+        const validation = wordValidator.validateWord(lastPlayedWord.word)
+
+        const result = {
+          success: !validation.isValid,
+          word: lastPlayedWord.word,
+          reason: validation.reason || (validation.isValid ? 'Word is valid' : 'Word is invalid'),
+        }
+
+        if (result.success) {
+          // Challenge successful - word is invalid
+          // TODO: Undo the last move (remove tiles, restore player's hand, revert score)
+          console.log('Challenge successful! Word was invalid:', lastPlayedWord.word)
+
+          // Clear the last played word
+          set({ lastPlayedWord: null })
+        } else {
+          // Challenge failed - word is valid
+          // Penalize challenger by reducing their time by 3 minutes (180 seconds)
+          const currentPlayer = game.players[game.currentPlayerIndex]
+          currentPlayer.timeRemaining = Math.max(0, currentPlayer.timeRemaining - 180)
+
+          console.log(`Challenge failed! Word "${lastPlayedWord.word}" is valid. Challenger penalized 3 minutes.`)
+
+          // Clear the last played word and update game state
+          set({
+            lastPlayedWord: null,
+            game: {
+              ...game,
+              updatedAt: new Date(),
+            },
+          })
+        }
+
+        return result
       },
 
       /**
