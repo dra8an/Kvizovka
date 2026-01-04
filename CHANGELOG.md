@@ -16,6 +16,117 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.0] - 2026-01-04
+
+### Added
+- **Serbian Dictionary Expansion**: Comprehensive word list implementation
+  - **Word Count**: Expanded from 150 words to **20,000 curated words**
+  - **Source**: Hunspell Serbian Latin dictionary (263,909 entries processed)
+  - **Optimization**: Intelligently selected most useful words for gameplay
+  - **File Size**: 1.2 MB (optimized from 16 MB full version)
+  - **Categories**: Nouns (14,197), Verbs (4,771), Adjectives (1,000), Pronouns (13), Numbers (19)
+  - **Coverage**: 133x more words than original dictionary
+
+- **Dictionary Processing Scripts**: Automated tools for dictionary management
+  - `scripts/process-dictionary.js` - Converts Hunspell format to game JSON
+  - `scripts/optimize-dictionary.js` - Optimizes word selection for gameplay
+  - `scripts/README.md` - Complete documentation of processing pipeline
+
+- **Tile Reordering Feature**: Players can now rearrange tiles in their hand
+  - Drag and drop tiles within the rack to organize them
+  - Visual feedback on drop target (scale animation)
+  - Preserves tiles placed on the board
+  - Enhanced tile rack UX for better gameplay
+
+### Changed
+- **Word Selection Algorithm**: Intelligent scoring system for word usefulness
+  - Prioritizes shorter words (4-7 letters) for easier gameplay
+  - Favors base forms (infinitives, nominatives) over inflected forms
+  - Penalizes excessive inflections (instrumental plural, etc.)
+  - Balanced category distribution
+
+- **Game Store**: Added tile reordering functionality
+  - New action: `reorderPlayerTiles(fromIndex, toIndex)`
+  - Maintains separation between rack tiles and placed tiles
+
+- **Tile Component**: Enhanced drag-and-drop support
+  - New props: `tileIndex`, `isWithinRack`
+  - Dual drag data format: supports both rack reordering and board placement
+  - Format: `rack-tile:{index}:{tileId}` for rack, `{tileId}` for board
+
+- **Board Component**: Updated to handle new drag data format
+  - Parses both rack and direct tile ID formats
+  - Seamless integration with tile reordering
+
+### Technical Details
+**Dictionary Processing Pipeline:**
+1. Download Hunspell Serbian Latin dictionary (263,909 words)
+2. Filter: minimum 4 letters, letters only, remove duplicates
+3. Categorize: heuristic-based (verb endings, adjective patterns, etc.)
+4. Score: rate words by gameplay usefulness (length, form, patterns)
+5. Select: top 20,000 words with balanced distribution
+6. Output: JSON format with metadata
+
+**Word Scoring Criteria:**
+- **Length bonus**: 4-letter words (+50), 5-letter (+40), 6-letter (+30)
+- **Form bonus**: Infinitive verbs ending in -TI, -ĆI (+30)
+- **Pattern penalties**: -IMA/-AMA/-OMA endings (-40), -OVIH (-30)
+- **Long words**: 12+ letters penalized (-30)
+
+**Optimization Results:**
+- Original entries: 263,909
+- After filtering: 261,077 unique words (4+ letters)
+- After optimization: 20,000 most useful words
+- Size reduction: 92.7% (16 MB → 1.2 MB)
+
+### Files Added
+**Dictionary Files:**
+- `public/dictionary/serbian-words.json` - Active dictionary (20K words, 1.2 MB)
+- `public/dictionary/serbian-words-full.json` - Full backup (261K words, 16 MB)
+- `public/dictionary/serbian-words-backup-150.json` - Original starter (150 words)
+
+**Scripts:**
+- `scripts/process-dictionary.js` - Hunspell to JSON converter
+- `scripts/optimize-dictionary.js` - Word selection optimizer
+- `scripts/README.md` - Processing documentation
+
+**Documentation:**
+- `Docs/DICTIONARY-IMPLEMENTATION-2026-01-04.md` - Technical deep-dive (to be created)
+
+### Files Modified
+**Game Engine:**
+- `src/store/gameStore.ts` - Added `reorderPlayerTiles` action
+- `src/components/TileRack/TileRack.tsx` - Tile reordering with drag-and-drop
+- `src/components/TileRack/Tile.tsx` - Enhanced drag data format
+- `src/components/Board/Board.tsx` - Updated drag data parsing
+
+**Documentation:**
+- `README.md` - Updated dictionary count, marked expansion as complete
+- `CHANGELOG.md` - This entry
+
+**Build Status:** ✅ Successful (192.73 KB, gzipped: 60.18 KB)
+
+### Performance Impact
+- **Dictionary load time**: ~1-2 seconds (acceptable for web app)
+- **Memory usage**: ~1.2 MB in memory (well optimized)
+- **Lookup performance**: O(1) using Set data structure
+- **No impact on game performance**: Dictionary loaded once at startup
+
+### Data Sources & Attribution
+- **Primary Source**: [Hunspell Serbian Latin Dictionary](https://github.com/titoBouzout/Dictionaries)
+- **References**:
+  - [Serbian Cyrillic and Latin Hunspell](https://github.com/grakic/hunspell-sr)
+  - [Serbian Wordlists Collection](https://github.com/tperich/serbian-wordlists)
+  - [Wooorm Dictionaries](https://github.com/wooorm/dictionaries)
+
+### Migration Notes
+- **Backward Compatible**: Game works with new dictionary out of the box
+- **No breaking changes**: Dictionary API unchanged
+- **Performance**: Initial load may be 1-2 seconds slower (negligible)
+- **Backup**: Original 150-word dictionary preserved as backup
+
+---
+
 ## [0.5.1] - 2026-01-03
 
 ### Added

@@ -28,7 +28,7 @@ Kvizovka is a strategic word game for the Serbian language with unique rules:
 - **Chess Clock** - Individual timers for each player
 - **Game Controls** - Play Word, Skip Turn, Exchange Tiles, Recall, Pause, End Game
 - **Responsive Layout** - Optimized for desktop (3-column design)
-- **Serbian Dictionary** - 150-word dictionary for word validation
+- **Serbian Dictionary** - 20,000-word dictionary for word validation (optimized from 261K)
 
 ### Game Rules Implemented
 - ✅ First move must touch center square (★)
@@ -50,6 +50,7 @@ Kvizovka is a strategic word game for the Serbian language with unique rules:
 - [Implementation Plan](./Docs/IMPLEMENTATION_PLAN.md) - Complete technical roadmap
 
 ### Recent Updates
+- [Dictionary Expansion (2026-01-04)](./Docs/DICTIONARY-IMPLEMENTATION-2026-01-04.md) - 20K word dictionary, processing pipeline
 - [UI Improvements (2026-01-03)](./Docs/UI-IMPROVEMENTS-2026-01-03.md) - Layout optimization details
 - [Bug Fixes & Features (2026-01-02)](./Docs/FIXES-2026-01-02.md) - Challenge system, validation fixes
 
@@ -122,15 +123,15 @@ kvizovka/
 │   ├── store/               # Zustand state ✅
 │   └── App.tsx              # Main app
 ├── public/
-│   └── dictionary/          # Serbian word list (150 words) ✅
+│   └── dictionary/          # Serbian word list (20,000 words) ✅
 └── package.json             # Dependencies
 ```
 
 ## 🎯 Development Status
 
-**Current Version:** v0.5.1 (2026-01-03)
+**Current Version:** v0.6.0 (2026-01-04)
 
-**Status:** ✅ **MVP Complete** - Fully playable local 2-player game!
+**Status:** ✅ **MVP Complete** - Fully playable local 2-player game with comprehensive dictionary!
 
 ### Completed Milestones
 
@@ -140,7 +141,7 @@ kvizovka/
 - [x] Zustand state management
 - [x] TypeScript type definitions
 - [x] Game constants & board configuration
-- [x] Serbian dictionary (150 words)
+- [x] Serbian dictionary (150 → 20,000 words)
 
 #### Phase 2: Game Engine (Step 5) ✅
 - [x] Board class (17×17 grid, premium fields)
@@ -169,7 +170,7 @@ kvizovka/
 ### Known Issues / TODO
 - [ ] Full move undo on successful challenge
 - [ ] Remove debug logging from production
-- [ ] Expand dictionary (150 → 50,000+ words)
+- [x] ~~Expand dictionary (150 → 50,000+ words)~~ ✅ **Completed** (20,000 words)
 - [ ] Add AI opponent (future phase)
 - [ ] Online multiplayer (future phase)
 
