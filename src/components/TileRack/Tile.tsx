@@ -27,9 +27,19 @@ interface TileProps {
   tile: TileType
 
   /**
+   * Index of this tile in the rack (for reordering)
+   */
+  tileIndex?: number
+
+  /**
+   * Whether this tile is within the rack (enables reordering)
+   */
+  isWithinRack?: boolean
+
+  /**
    * Called when drag starts
    */
-  onDragStart?: (tile: TileType) => void
+  onDragStart?: (tile: TileType, index: number) => void
 
   /**
    * Called when drag ends
@@ -54,12 +64,14 @@ interface TileProps {
  * ```tsx
  * <Tile
  *   tile={tileA}
- *   onDragStart={(tile) => handleDragStart(tile)}
+ *   tileIndex={0}
+ *   isWithinRack={true}
+ *   onDragStart={(tile, index) => handleDragStart(tile, index)}
  *   onDragEnd={() => handleDragEnd()}
  * />
  * ```
  */
-export function Tile({ tile, onDragStart, onDragEnd, isDragging, disabled }: TileProps) {
+export function Tile({ tile, tileIndex, isWithinRack, onDragStart, onDragEnd, isDragging, disabled }: TileProps) {
   /**
    * Get the letter to display
    *
@@ -92,12 +104,20 @@ export function Tile({ tile, onDragStart, onDragEnd, isDragging, disabled }: Til
       return
     }
 
-    // Store tile ID in drag data
+    // Store drag data based on context
     e.dataTransfer.effectAllowed = 'move'
-    e.dataTransfer.setData('text/plain', tile.id)
 
-    // Call parent handler
-    onDragStart?.(tile)
+    if (isWithinRack && tileIndex !== undefined) {
+      // When dragging from rack, store both index (for reordering) and tile ID (for board placement)
+      // Format: "rack-tile:{index}:{tileId}"
+      e.dataTransfer.setData('text/plain', `rack-tile:${tileIndex}:${tile.id}`)
+    } else {
+      // When dragging to board, store the tile ID only
+      e.dataTransfer.setData('text/plain', tile.id)
+    }
+
+    // Call parent handler with tile and index
+    onDragStart?.(tile, tileIndex ?? -1)
   }
 
   /**

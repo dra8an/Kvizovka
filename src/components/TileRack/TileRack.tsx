@@ -33,9 +33,12 @@ export function TileRack() {
   const game = useGameStore((state) => state.game)
   const selectedTiles = useGameStore((state) => state.selectedTiles)
   const unselectTile = useGameStore((state) => state.unselectTile)
+  const reorderPlayerTiles = useGameStore((state) => state.reorderPlayerTiles)
 
   // Local state for drag-and-drop
   const [draggedTile, setDraggedTile] = useState<TileType | null>(null)
+  const [draggedFromIndex, setDraggedFromIndex] = useState<number | null>(null)
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null)
 
   // If no game, show placeholder
   if (!game) {
@@ -58,11 +61,12 @@ export function TileRack() {
   /**
    * Handle drag start
    *
-   * Store the dragged tile so we can use it when dropped on board.
+   * Store the dragged tile and its index so we can use it when dropped.
    */
-  const handleDragStart = (tile: TileType) => {
+  const handleDragStart = (tile: TileType, index: number) => {
     setDraggedTile(tile)
-    console.log('Started dragging tile:', tile.letter)
+    setDraggedFromIndex(index)
+    console.log('Started dragging tile:', tile.letter, 'from index', index)
   }
 
   /**
@@ -72,15 +76,17 @@ export function TileRack() {
    */
   const handleDragEnd = () => {
     setDraggedTile(null)
+    setDraggedFromIndex(null)
+    setDropTargetIndex(null)
     console.log('Stopped dragging')
   }
 
   /**
-   * Handle drop on rack
+   * Handle drop on rack container
    *
-   * When a tile is dropped on the rack, remove it from selectedTiles.
+   * When a tile is dropped on the rack container, remove it from selectedTiles.
    */
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDropOnRack = (e: React.DragEvent) => {
     e.preventDefault()
 
     // Get drag data
@@ -100,11 +106,59 @@ export function TileRack() {
   }
 
   /**
-   * Handle drag over rack
+   * Handle drop on a specific tile position (for reordering)
+   *
+   * When a tile is dropped on another tile, reorder them.
+   */
+  const handleDropOnTile = (e: React.DragEvent, toIndex: number) => {
+    e.preventDefault()
+    e.stopPropagation() // Prevent rack container from handling this
+
+    // Get drag data
+    const dragData = e.dataTransfer.getData('text/plain')
+    if (!dragData) return
+
+    // Check if dragging within rack (format: "rack-tile:{index}:{tileId}")
+    if (dragData.startsWith('rack-tile:')) {
+      const parts = dragData.split(':')
+      const fromIndex = parseInt(parts[1])
+
+      if (fromIndex !== toIndex && fromIndex >= 0 && toIndex >= 0) {
+        reorderPlayerTiles(fromIndex, toIndex)
+        console.log(`Reordered tile from index ${fromIndex} to ${toIndex}`)
+      }
+    }
+
+    setDropTargetIndex(null)
+  }
+
+  /**
+   * Handle drag over a tile (for visual feedback)
+   */
+  const handleDragOverTile = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    // Only show drop target if dragging a tile from within the rack
+    const dragData = e.dataTransfer.types.includes('text/plain')
+    if (dragData && draggedFromIndex !== null) {
+      setDropTargetIndex(index)
+    }
+  }
+
+  /**
+   * Handle drag leave from a tile
+   */
+  const handleDragLeaveTile = () => {
+    setDropTargetIndex(null)
+  }
+
+  /**
+   * Handle drag over rack container
    *
    * Allow drops on the rack.
    */
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOverRack = (e: React.DragEvent) => {
     e.preventDefault() // Allow drop
   }
 
@@ -131,20 +185,32 @@ export function TileRack() {
       {/* Tile rack container */}
       <div
         className="bg-gradient-to-b from-amber-700 to-amber-800 py-2 px-3 rounded-lg shadow-lg"
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
+        onDrop={handleDropOnRack}
+        onDragOver={handleDragOverRack}
       >
         {/* Tiles */}
         <div className="flex gap-1.5 justify-center flex-wrap">
           {availableTiles.length > 0 ? (
-            availableTiles.map((tile) => (
-              <Tile
+            availableTiles.map((tile, index) => (
+              <div
                 key={tile.id}
-                tile={tile}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                isDragging={draggedTile?.id === tile.id}
-              />
+                onDrop={(e) => handleDropOnTile(e, index)}
+                onDragOver={(e) => handleDragOverTile(e, index)}
+                onDragLeave={handleDragLeaveTile}
+                className={`
+                  transition-all duration-150
+                  ${dropTargetIndex === index && draggedFromIndex !== index ? 'scale-110' : ''}
+                `}
+              >
+                <Tile
+                  tile={tile}
+                  tileIndex={index}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  isDragging={draggedTile?.id === tile.id}
+                  isWithinRack={true}
+                />
+              </div>
             ))
           ) : (
             <div className="text-amber-200 py-2">

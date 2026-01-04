@@ -132,6 +132,11 @@ interface GameStoreState {
   setJokerLetter: (row: number, col: number, letter: string) => void
 
   /**
+   * Reorder tiles in current player's hand
+   */
+  reorderPlayerTiles: (fromIndex: number, toIndex: number) => void
+
+  /**
    * Challenge the last played word
    * Returns true if challenge successful (word was invalid), false if challenge failed (word was valid)
    */
@@ -598,6 +603,48 @@ export const useGameStore = create<GameStoreState>()(
               ? { ...st, tile: { ...st.tile, jokerLetter: letter } }
               : st
           ),
+        })
+      },
+
+      /**
+       * Reorder tiles in current player's hand
+       *
+       * This allows players to rearrange their tiles in the rack for better organization.
+       */
+      reorderPlayerTiles: (fromIndex: number, toIndex: number) => {
+        const { game, selectedTiles } = get()
+
+        if (!game) return
+
+        const currentPlayer = game.players[game.currentPlayerIndex]
+
+        // Get tiles that are currently available in the rack (not placed on board)
+        const selectedTileIds = new Set(selectedTiles.map((st) => st.tile.id))
+        const availableTiles = currentPlayer.tiles.filter(
+          (tile) => !selectedTileIds.has(tile.id)
+        )
+
+        // Validate indices
+        if (fromIndex < 0 || fromIndex >= availableTiles.length ||
+            toIndex < 0 || toIndex >= availableTiles.length) {
+          return
+        }
+
+        // Remove tile from old position
+        const [movedTile] = availableTiles.splice(fromIndex, 1)
+
+        // Insert at new position
+        availableTiles.splice(toIndex, 0, movedTile)
+
+        // Reconstruct the full tiles array (placed tiles + reordered available tiles)
+        const placedTiles = currentPlayer.tiles.filter((tile) =>
+          selectedTileIds.has(tile.id)
+        )
+
+        currentPlayer.tiles = [...availableTiles, ...placedTiles]
+
+        set({
+          game: { ...game, updatedAt: new Date() },
         })
       },
 

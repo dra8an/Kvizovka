@@ -139,8 +139,19 @@ export function Board() {
       return
     }
 
-    // Otherwise, dragging from hand (format: tile ID)
-    const tileId = dragData
+    // Extract tile ID from drag data
+    // Format can be either:
+    // - "rack-tile:{index}:{tileId}" (dragging from rack)
+    // - "{tileId}" (direct tile ID)
+    let tileId: string
+    if (dragData.startsWith('rack-tile:')) {
+      // Extract tileId from "rack-tile:{index}:{tileId}"
+      const parts = dragData.split(':')
+      tileId = parts[2]
+    } else {
+      // Direct tile ID
+      tileId = dragData
+    }
 
     // Find the tile in current player's hand
     const currentPlayer = game.players[game.currentPlayerIndex]
