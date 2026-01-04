@@ -149,6 +149,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Result:** Premium squares now display their correct colors matching official Kvizovka board.
 
+#### Critical Bug: Blocker Tiles Not Placed at Correct Word Boundaries
+**Issue:** When a word reused letters from existing words, blocker tiles were not placed at the correct boundaries. Missing blockers above/below the complete word.
+
+**Example:**
+- Word "AMEN" played vertically through "A" and "E" from existing "EGAR"
+- New tiles: M, N
+- Reused tiles: A, E
+- Expected: Blocker above A, blocker below N
+- Actual: Blocker above M (WRONG!), blocker below N
+
+**Root Cause & Solution:**
+- **Problem**: `placeBlockers()` received only newly placed tiles [M, N]
+  - Sorted [M, N] and thought M was the first letter
+  - Placed blocker above M instead of above A
+
+- **Solution** (src/game-engine/Board.ts, src/store/gameStore.ts):
+  1. Changed `placeBlockers()` signature from `PlacedTile[]` to `BoardSquare[]`
+  2. Now accepts complete main word including reused letters
+  3. Updated gameStore to pass `validation.wordsFormed[0]` (complete word)
+  4. Added debug logging to track blocker placement
+
+**Result:** Blocker tiles now correctly placed at the start and end of the complete word, including reused letters.
+
 ### Changed
 - **Validation Flow**: Structural validation only (no automatic dictionary check)
 - **Game Rules**: Challenge-based word validation instead of automatic
@@ -158,6 +181,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Premium Square Marking**: Now occurs after score calculation (not during tile placement)
 - **Score Calculation**: Added extensive debug logging for troubleshooting
 - **Styling**: Migrated to Tailwind CSS v4 @theme syntax for custom colors
+- **Blocker Placement**: Changed signature to accept complete word (BoardSquare[]) instead of only new tiles
+- **Blocker Logic**: Now places blockers at correct boundaries for words with reused letters
 
 ### Project Status
 - **Phase:** Steps 5-7 Complete + Challenge System
@@ -179,31 +204,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 2. **Debug Logging in Production**
    - Locations:
-     - `src/game-engine/MoveValidator.ts:148-181`
-     - `src/game-engine/ScoreCalculator.ts:88-142`
-     - `src/game-engine/Board.ts:436`
+     - `src/game-engine/MoveValidator.ts:148-181` (validation)
+     - `src/game-engine/ScoreCalculator.ts:88-142` (scoring)
+     - `src/game-engine/Board.ts:436` (marking squares as used)
+     - `src/game-engine/Board.ts:344,354,364,373` (blocker placement)
+     - `src/store/gameStore.ts:308-312` (blocker placement)
    - Issue: Console logs enabled in production build
    - Solution: Wrap in development check or remove
 
 ### Notes
 - Challenge system follows official Kvizovka rules (no automatic validation)
 - Time penalty is exactly 3 minutes (180 seconds)
-- Blocker tiles now properly mark word boundaries
+- Blocker tiles now properly mark word boundaries (including words with reused letters)
 - Word detection significantly improved for complex board states
-- Debug logging helps diagnose validation and scoring issues
+- Debug logging helps diagnose validation, scoring, and blocker placement issues
 - Full move undo system needed for challenge success completion
 - Premium field multipliers now working correctly (timing bug fixed)
 - Premium square colors migrated to Tailwind v4 syntax
 - Score calculation order critical: place → score → mark used
+- Blocker placement now uses complete word (validation.wordsFormed[0]) not just new tiles
 
 ### Files Modified (15 total)
 **Game Engine:**
 - src/game-engine/MoveValidator.ts (validation logic, word extraction fix)
-- src/game-engine/Board.ts (blocker boundaries, markSquaresAsUsed method)
-- src/game-engine/ScoreCalculator.ts (debug logging)
+- src/game-engine/Board.ts (blocker boundaries, markSquaresAsUsed method, placeBlockers signature change, blocker debug logging)
+- src/game-engine/ScoreCalculator.ts (score calculation debug logging)
 
 **State Management:**
-- src/store/gameStore.ts (challenge mechanism, markSquaresAsUsed call)
+- src/store/gameStore.ts (challenge mechanism, markSquaresAsUsed call, pass complete word to placeBlockers, blocker debug logging)
 
 **UI Components:**
 - src/components/GameControls/GameControls.tsx (challenge button)
@@ -213,7 +241,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - src/constants/board-config.ts (premium positions - user corrected)
 
 **Documentation:**
-- Docs/FIXES-2026-01-02.md (comprehensive bug documentation)
+- Docs/FIXES-2026-01-02.md (comprehensive bug documentation - 5 bugs documented)
 - CHANGELOG.md (this file)
 
 ---

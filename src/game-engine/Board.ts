@@ -301,20 +301,30 @@ export class Board {
    * are placed before the first letter and after the last letter
    * (if those positions are on the board and empty).
    *
-   * @param placedTiles - The tiles that were just placed
+   * @param wordSquares - Complete main word (including reused letters)
    * @param direction - Direction of the word
    *
-   * Example:
+   * IMPORTANT: Pass the complete word (validation.wordsFormed[0]), not just new tiles!
+   * If only new tiles are passed, blockers will be placed incorrectly when
+   * words reuse letters from existing words.
+   *
+   * Example 1:
    * Word "KUĆA" placed at (8,8) to (8,11) horizontally
    * → Blocker placed at (8,7) and (8,12) if empty
+   *
+   * Example 2 (with reused letters):
+   * Existing: "EGAR" horizontal
+   * New word: "AMEN" vertical through "A" and "E"
+   * → Must pass all 4 squares [A,M,E,N], not just [M,N]
+   * → Blocker placed above "A" and below "N"
    */
-  placeBlockers(placedTiles: PlacedTile[], direction: Direction): void {
-    if (placedTiles.length === 0) {
+  placeBlockers(wordSquares: BoardSquare[], direction: Direction): void {
+    if (wordSquares.length === 0) {
       return
     }
 
-    // Sort tiles to find first and last
-    const sorted = [...placedTiles].sort((a, b) => {
+    // Sort squares to find first and last
+    const sorted = [...wordSquares].sort((a, b) => {
       if (direction === 'HORIZONTAL') {
         return a.col - b.col
       } else {
@@ -331,6 +341,9 @@ export class Board {
       if (isValidPosition(first.row, beforeCol) && this.isEmpty(first.row, beforeCol)) {
         const blocker: BlockerTile = { type: 'BLOCKER', id: `blocker-${first.row}-${beforeCol}` }
         this.setTile(first.row, beforeCol, blocker)
+        console.log(`  🔲 Placed blocker at (${first.row},${beforeCol}) before word`)
+      } else {
+        console.log(`  ⚠️ Cannot place blocker at (${first.row},${beforeCol}) - not empty or invalid`)
       }
 
       // Place blocker after last tile
@@ -338,6 +351,9 @@ export class Board {
       if (isValidPosition(last.row, afterCol) && this.isEmpty(last.row, afterCol)) {
         const blocker: BlockerTile = { type: 'BLOCKER', id: `blocker-${last.row}-${afterCol}` }
         this.setTile(last.row, afterCol, blocker)
+        console.log(`  🔲 Placed blocker at (${last.row},${afterCol}) after word`)
+      } else {
+        console.log(`  ⚠️ Cannot place blocker at (${last.row},${afterCol}) - not empty or invalid`)
       }
     } else {
       // VERTICAL
@@ -345,12 +361,18 @@ export class Board {
       if (isValidPosition(beforeRow, first.col) && this.isEmpty(beforeRow, first.col)) {
         const blocker: BlockerTile = { type: 'BLOCKER', id: `blocker-${beforeRow}-${first.col}` }
         this.setTile(beforeRow, first.col, blocker)
+        console.log(`  🔲 Placed blocker at (${beforeRow},${first.col}) before word`)
+      } else {
+        console.log(`  ⚠️ Cannot place blocker at (${beforeRow},${first.col}) - not empty or invalid`)
       }
 
       const afterRow = last.row + 1
       if (isValidPosition(afterRow, last.col) && this.isEmpty(afterRow, last.col)) {
         const blocker: BlockerTile = { type: 'BLOCKER', id: `blocker-${afterRow}-${last.col}` }
         this.setTile(afterRow, last.col, blocker)
+        console.log(`  🔲 Placed blocker at (${afterRow},${last.col}) after word`)
+      } else {
+        console.log(`  ⚠️ Cannot place blocker at (${afterRow},${last.col}) - not empty or invalid`)
       }
     }
   }

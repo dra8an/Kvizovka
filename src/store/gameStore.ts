@@ -302,9 +302,15 @@ export const useGameStore = create<GameStoreState>()(
           boardInstance.setTile(placed.row, placed.col, placed.tile)
         }
 
-        // Place blockers
-        if (validation.direction) {
-          boardInstance.placeBlockers(placedTiles, validation.direction)
+        // Place blockers around the main word (including reused letters)
+        if (validation.direction && validation.wordsFormed && validation.wordsFormed.length > 0) {
+          const mainWord = validation.wordsFormed[0] // First word is the main word
+          console.log('🔲 Placing blockers for main word:', {
+            direction: validation.direction,
+            wordLength: mainWord.length,
+            positions: mainWord.map(sq => `(${sq.row},${sq.col})`).join(', ')
+          })
+          boardInstance.placeBlockers(mainWord, validation.direction)
         }
 
         // Calculate score (premium squares are still unmarked, so multipliers apply)
