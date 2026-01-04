@@ -7,10 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Challenge System**: Full move undo on successful challenge
+  - Tiles are now properly removed from board when challenge succeeds
+  - Blockers placed during the challenged move are removed
+  - Points are deducted from the challenged player
+  - Tiles are returned to the challenged player's hand
+  - Turn switches back to the challenged player (they get to play again)
+  - Premium fields are restored to unused state
+
 ### Planned
 - Step 8: Drag-and-drop polish and enhancements
 - Step 9: Game flow completion (exchange tiles, undo system)
 - Step 10: Testing and polish
+- Remove debug logging from production
 - AI opponent implementation
 - Online multiplayer support
 

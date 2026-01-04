@@ -197,6 +197,12 @@ export interface Move {
   score: number
 
   /**
+   * IDs of tiles drawn after this move (for undo purposes)
+   * Used to remove newly drawn tiles when undoing a challenged move
+   */
+  drawnTileIds?: string[]
+
+  /**
    * Timestamp when move was made
    */
   timestamp: Date

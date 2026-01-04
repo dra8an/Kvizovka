@@ -364,6 +364,7 @@ export const useGameStore = create<GameStoreState>()(
               .join('')
           ),
           score: scoreBreakdown.totalScore,
+          drawnTileIds: newTiles.map((t) => t.id), // Track drawn tiles for undo
           timestamp: new Date(),
         }
 
@@ -663,7 +664,8 @@ export const useGameStore = create<GameStoreState>()(
        * - The move stands
        */
       challengeLastWord: () => {
-        const { lastPlayedWord, game } = get()
+        const state = get()
+        const { lastPlayedWord, game, boardInstance } = state
 
         if (!lastPlayedWord || !game) {
           return null
@@ -681,11 +683,125 @@ export const useGameStore = create<GameStoreState>()(
 
         if (result.success) {
           // Challenge successful - word is invalid
-          // TODO: Undo the last move (remove tiles, restore player's hand, revert score)
           console.log('Challenge successful! Word was invalid:', lastPlayedWord.word)
 
-          // Clear the last played word
-          set({ lastPlayedWord: null })
+          // Get the invalid move from history
+          const invalidMove = game.moveHistory[lastPlayedWord.moveIndex]
+          if (!invalidMove || invalidMove.type !== MoveType.PLACE_TILES) {
+            console.error('Cannot undo: invalid move not found or not a tile placement')
+            set({ lastPlayedWord: null })
+            return result
+          }
+
+          // Get the player who made the invalid move
+          const challengedPlayerIndex = lastPlayedWord.playerIndex
+          const challengedPlayer = game.players[challengedPlayerIndex]
+
+          // 1. Deduct points from challenged player's score
+          challengedPlayer.score -= invalidMove.score
+          console.log(`Deducted ${invalidMove.score} points from ${challengedPlayer.name}`)
+
+          // 2. Remove tiles from board and blockers
+          if (invalidMove.placedTiles && boardInstance) {
+            for (const placed of invalidMove.placedTiles) {
+              // Remove tile from board
+              boardInstance.setTile(placed.row, placed.col, null)
+
+              // Unmark the square as used (restore premium field)
+              const square = boardInstance.getSquare(placed.row, placed.col)
+              if (square) {
+                square.isUsed = false
+              }
+            }
+
+            // Remove blockers (they were placed around the main word)
+            // Note: Blockers were placed by placeBlockers() in makeMove
+            // We need to find and remove them based on the word direction
+            const validation = state.lastValidation
+            if (validation && validation.direction && validation.wordsFormed && validation.wordsFormed.length > 0) {
+              const mainWord = validation.wordsFormed[0]
+
+              // Remove blockers at start and end of word
+              if (validation.direction === 'HORIZONTAL') {
+                const startRow = mainWord[0].row
+                const startCol = mainWord[0].col - 1
+                const endCol = mainWord[mainWord.length - 1].col + 1
+
+                // Remove start blocker (if not at edge)
+                if (startCol >= 0) {
+                  const startSquare = boardInstance.getSquare(startRow, startCol)
+                  if (startSquare && startSquare.tile && 'type' in startSquare.tile && startSquare.tile.type === 'BLOCKER') {
+                    boardInstance.setTile(startRow, startCol, null)
+                  }
+                }
+
+                // Remove end blocker (if not at edge)
+                if (endCol < 17) {
+                  const endSquare = boardInstance.getSquare(startRow, endCol)
+                  if (endSquare && endSquare.tile && 'type' in endSquare.tile && endSquare.tile.type === 'BLOCKER') {
+                    boardInstance.setTile(startRow, endCol, null)
+                  }
+                }
+              } else {
+                // Vertical
+                const startRow = mainWord[0].row - 1
+                const startCol = mainWord[0].col
+                const endRow = mainWord[mainWord.length - 1].row + 1
+
+                // Remove start blocker (if not at edge)
+                if (startRow >= 0) {
+                  const startSquare = boardInstance.getSquare(startRow, startCol)
+                  if (startSquare && startSquare.tile && 'type' in startSquare.tile && startSquare.tile.type === 'BLOCKER') {
+                    boardInstance.setTile(startRow, startCol, null)
+                  }
+                }
+
+                // Remove end blocker (if not at edge)
+                if (endRow < 17) {
+                  const endSquare = boardInstance.getSquare(endRow, startCol)
+                  if (endSquare && endSquare.tile && 'type' in endSquare.tile && endSquare.tile.type === 'BLOCKER') {
+                    boardInstance.setTile(endRow, startCol, null)
+                  }
+                }
+              }
+            }
+          }
+
+          // 3. Remove tiles that were drawn after the invalid move
+          if (invalidMove.drawnTileIds && invalidMove.drawnTileIds.length > 0) {
+            const drawnTileIds = new Set(invalidMove.drawnTileIds)
+            challengedPlayer.tiles = challengedPlayer.tiles.filter(
+              (tile) => !drawnTileIds.has(tile.id)
+            )
+            console.log(`Removed ${invalidMove.drawnTileIds.length} tiles that were drawn during invalid move`)
+          }
+
+          // 4. Return placed tiles to challenged player's hand
+          if (invalidMove.placedTiles) {
+            const tilesToReturn = invalidMove.placedTiles.map(pt => pt.tile)
+            challengedPlayer.tiles.push(...tilesToReturn)
+            console.log(`Returned ${tilesToReturn.length} tiles to ${challengedPlayer.name}'s hand`)
+          }
+
+          // 5. Remove the move from history
+          game.moveHistory.splice(lastPlayedWord.moveIndex, 1)
+
+          // 6. Decrement challenged player's rounds played
+          challengedPlayer.roundsPlayed = Math.max(0, challengedPlayer.roundsPlayed - 1)
+
+          // 7. Switch turn back to challenged player (they get to play again)
+          game.currentPlayerIndex = challengedPlayerIndex as 0 | 1
+          console.log(`Turn switched back to ${challengedPlayer.name}`)
+
+          // Update game state
+          set({
+            lastPlayedWord: null,
+            game: {
+              ...game,
+              board: boardInstance!.getGrid(),
+              updatedAt: new Date(),
+            },
+          })
         } else {
           // Challenge failed - word is valid
           // Penalize challenger by reducing their time by 3 minutes (180 seconds)
