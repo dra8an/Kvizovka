@@ -8,6 +8,18 @@
 @import "tailwindcss";
 
 /**
+ * Custom Theme Colors for Tailwind v4
+ * Define colors using CSS custom properties
+ */
+@theme {
+  /* Premium field colors */
+  --color-premium-yellow: #ffd700;     /* Double letter (2x) - Gold/Yellow */
+  --color-premium-green: #22c55e;      /* Triple letter (3x) - Green */
+  --color-premium-red: #ef4444;        /* Quadruple letter (4x) - Red */
+  --color-premium-blue: #3b82f6;       /* Word multiplier (X) - Blue */
+}
+
+/**
  * Global Styles
  * These styles apply to the entire application
  */

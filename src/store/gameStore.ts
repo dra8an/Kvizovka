@@ -307,13 +307,16 @@ export const useGameStore = create<GameStoreState>()(
           boardInstance.placeBlockers(placedTiles, validation.direction)
         }
 
-        // Calculate score
+        // Calculate score (premium squares are still unmarked, so multipliers apply)
         const calculator = new ScoreCalculator()
         const scoreBreakdown = calculator.calculateMoveScore(
           validation.wordsFormed || [],
           placedTiles,
           placedTiles.length
         )
+
+        // Mark premium squares as used (AFTER scoring, so multipliers don't apply again)
+        boardInstance.markSquaresAsUsed(placedTiles)
 
         // Update current player
         const currentPlayer = game.players[game.currentPlayerIndex]

@@ -144,10 +144,9 @@ export class Board {
 
     square.tile = tile
 
-    // If a tile is placed on a premium field, mark it as used
-    if (tile && square.premiumField && !square.isUsed) {
-      square.isUsed = true
-    }
+    // NOTE: Premium fields are NOT marked as used here!
+    // They are marked as used AFTER score calculation in markSquaresAsUsed()
+    // This ensures multipliers are applied during scoring.
 
     return true
   }
@@ -412,6 +411,31 @@ export class Board {
     }
 
     return false // Not connected to any existing tiles
+  }
+
+  /**
+   * Mark premium squares as used after tiles are placed
+   *
+   * @param placedTiles - Tiles that were just placed
+   *
+   * IMPORTANT: Call this AFTER score calculation!
+   * Premium fields must be unmarked during scoring so multipliers apply.
+   * After scoring, mark them as used so they don't apply again.
+   *
+   * Example:
+   *   1. Place tiles on board (premium squares still isUsed = false)
+   *   2. Calculate score (multipliers applied because !isUsed)
+   *   3. Mark squares as used (prevent future multipliers)
+   */
+  markSquaresAsUsed(placedTiles: PlacedTile[]): void {
+    for (const placed of placedTiles) {
+      const square = this.getSquare(placed.row, placed.col)
+
+      if (square && square.premiumField && !square.isUsed) {
+        square.isUsed = true
+        console.log(`✅ Marked (${placed.row},${placed.col}) ${square.premiumField} as used`)
+      }
+    }
   }
 
   /**

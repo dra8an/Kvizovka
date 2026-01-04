@@ -109,12 +109,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Result:** Words now properly detected when reusing letters from existing words. No more false "Word too short" errors.
 
+#### Critical Bug: Premium Field Multipliers Not Applied
+**Issue:** Premium field multipliers (2x, 3x, 4x letter bonuses and 2x word multipliers) were never being applied to scores when tiles were placed on colored squares.
+
+**Root Cause & Solution:**
+- **Problem**: Timing issue - `isUsed` flag set too early in move execution
+  - `Board.setTile()` immediately marked premium squares as used
+  - Score calculation happened AFTER tiles were placed
+  - Multiplier check failed because `isUsed = true`
+  - All scores calculated as if on normal squares
+
+- **Solution** (src/game-engine/Board.ts, src/store/gameStore.ts):
+  1. Removed auto-marking logic from `setTile()` method
+  2. Added new `markSquaresAsUsed()` method
+  3. Reordered operations: Place tiles → Calculate score → Mark as used
+  4. Premium squares remain unmarked during scoring (multipliers apply)
+  5. Marked as used after scoring (prevents double-application)
+
+- **Debug Logging** (src/game-engine/ScoreCalculator.ts):
+  - Added detailed logging for each tile's score calculation
+  - Shows position, value, premium field type, isUsed status
+  - Logs when multipliers are applied (✅ Applied DOUBLE_LETTER: 2 × 2 = 4)
+  - Logs final score breakdown
+
+**Result:** Premium field multipliers now correctly apply to newly placed tiles. All colored squares (yellow, green, red, blue) provide their intended score bonuses.
+
+#### Visual Bug: Premium Square Colors Not Showing
+**Issue:** Premium squares appeared gray instead of showing their colors (yellow, green, red, blue).
+
+**Root Cause & Solution:**
+- **Problem**: Tailwind CSS v4 uses different syntax than v3
+  - Custom colors defined in `tailwind.config.js` were ignored
+  - Tailwind v4 requires `@theme` directive with CSS custom properties
+
+- **Solution** (src/index.css):
+  - Added `@theme` block with CSS custom properties
+  - Defined all premium field colors: `--color-premium-yellow`, `--color-premium-green`, etc.
+  - Colors: Yellow (#ffd700), Green (#22c55e), Red (#ef4444), Blue (#3b82f6)
+
+**Result:** Premium squares now display their correct colors matching official Kvizovka board.
+
 ### Changed
 - **Validation Flow**: Structural validation only (no automatic dictionary check)
 - **Game Rules**: Challenge-based word validation instead of automatic
 - **MoveValidationResult**: Added `wordText` field for challenges
 - **Board Scanning**: Now respects blocker tile boundaries
 - **Word Detection**: Only main word validated, not cross-words
+- **Premium Square Marking**: Now occurs after score calculation (not during tile placement)
+- **Score Calculation**: Added extensive debug logging for troubleshooting
+- **Styling**: Migrated to Tailwind CSS v4 @theme syntax for custom colors
 
 ### Project Status
 - **Phase:** Steps 5-7 Complete + Challenge System
@@ -135,7 +178,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    - Priority: High
 
 2. **Debug Logging in Production**
-   - Location: `src/game-engine/MoveValidator.ts:148-181`
+   - Locations:
+     - `src/game-engine/MoveValidator.ts:148-181`
+     - `src/game-engine/ScoreCalculator.ts:88-142`
+     - `src/game-engine/Board.ts:436`
    - Issue: Console logs enabled in production build
    - Solution: Wrap in development check or remove
 
@@ -144,22 +190,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Time penalty is exactly 3 minutes (180 seconds)
 - Blocker tiles now properly mark word boundaries
 - Word detection significantly improved for complex board states
-- Debug logging helps diagnose validation issues
+- Debug logging helps diagnose validation and scoring issues
 - Full move undo system needed for challenge success completion
+- Premium field multipliers now working correctly (timing bug fixed)
+- Premium square colors migrated to Tailwind v4 syntax
+- Score calculation order critical: place → score → mark used
 
-### Files Modified (12 total)
+### Files Modified (15 total)
 **Game Engine:**
-- src/game-engine/MoveValidator.ts
-- src/game-engine/Board.ts
+- src/game-engine/MoveValidator.ts (validation logic, word extraction fix)
+- src/game-engine/Board.ts (blocker boundaries, markSquaresAsUsed method)
+- src/game-engine/ScoreCalculator.ts (debug logging)
 
 **State Management:**
-- src/store/gameStore.ts
+- src/store/gameStore.ts (challenge mechanism, markSquaresAsUsed call)
 
 **UI Components:**
-- src/components/GameControls/GameControls.tsx
+- src/components/GameControls/GameControls.tsx (challenge button)
+
+**Styling:**
+- src/index.css (Tailwind v4 @theme directive)
+- src/constants/board-config.ts (premium positions - user corrected)
 
 **Documentation:**
-- Docs/FIXES-2026-01-02.md (new)
+- Docs/FIXES-2026-01-02.md (comprehensive bug documentation)
 - CHANGELOG.md (this file)
 
 ---

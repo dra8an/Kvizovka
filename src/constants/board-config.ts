@@ -3,13 +3,20 @@
  *
  * This file defines the layout of the Kvizovka game board.
  *
- * The board is 17x17 (289 squares total) with 45 premium fields.
+ * The board is 17x17 (289 squares total) with premium fields.
  * Premium fields multiply letter or word scores.
  *
  * Coordinate system:
  * - Row 0 = top, Row 16 = bottom
  * - Col 0 = left, Col 16 = right
  * - Center is at (8, 8) - this is where the first word must be placed
+ *
+ * Color coding (from official Kvizovka board):
+ * - Yellow = 2x letter value (DOUBLE_LETTER)
+ * - Green = 3x letter value (TRIPLE_LETTER)
+ * - Red = 4x letter value (QUADRUPLE_LETTER)
+ * - Blue = 2x word value (WORD_MULTIPLIER, marked with "X")
+ * - Black with star = CENTER (starting square)
  */
 
 import { PremiumFieldType, Coordinate } from '../types'
@@ -34,112 +41,111 @@ export const BOARD_CENTER = {
  *
  * This map stores the position of every premium field on the board.
  * Key = "row,col" (e.g., "8,8" for center)
- * Value = PremiumFieldType ('DOUBLE_LETTER', 'TRIPLE_LETTER', etc.)
+ * Value = PremiumFieldType
  *
- * Why use a Map?
- * - Fast lookup: O(1) to check if a square is premium
- * - Memory efficient: Only stores 45 positions (not all 289 squares)
- *
- * Example usage:
- *   const fieldType = PREMIUM_FIELDS.get('8,8')  // Returns 'CENTER'
- *   const isDouble = PREMIUM_FIELDS.get('0,3') === 'DOUBLE_LETTER'
+ * Layout based on official Kvizovka board image
  */
 export const PREMIUM_FIELDS = new Map<Coordinate, PremiumFieldType>([
   // ========================================
   // CENTER SQUARE (1 position)
   // ========================================
-  // The starting square - first word must touch this
+  // Black square with star - starting square
   ['8,8', 'CENTER'],
 
   // ========================================
-  // WORD MULTIPLIER SQUARES (16 positions)
+  // WORD MULTIPLIER SQUARES - Blue with "X" (12 positions)
   // ========================================
-  // X-marked squares that multiply the entire word score by 2
-  // Pattern: Forms an X shape across the board
+  // Multiply the entire word score by 2
 
-  // Top-left to bottom-right diagonal
-  ['0,0', 'WORD_MULTIPLIER'],
+  // Row 1
   ['2,2', 'WORD_MULTIPLIER'],
-  ['4,4', 'WORD_MULTIPLIER'],
-  ['6,6', 'WORD_MULTIPLIER'],
-  ['10,10', 'WORD_MULTIPLIER'],
-  ['12,12', 'WORD_MULTIPLIER'],
-  ['14,14', 'WORD_MULTIPLIER'],
-  ['16,16', 'WORD_MULTIPLIER'],
-
-  // Top-right to bottom-left diagonal
-  ['0,16', 'WORD_MULTIPLIER'],
+  ['2,8', 'WORD_MULTIPLIER'],
   ['2,14', 'WORD_MULTIPLIER'],
-  ['4,12', 'WORD_MULTIPLIER'],
-  ['6,10', 'WORD_MULTIPLIER'],
-  ['10,6', 'WORD_MULTIPLIER'],
-  ['12,4', 'WORD_MULTIPLIER'],
+
+  // Row 6
+  ['8,2', 'WORD_MULTIPLIER'],
+  ['8,14', 'WORD_MULTIPLIER'],
+
+  // Row 14
   ['14,2', 'WORD_MULTIPLIER'],
-  ['16,0', 'WORD_MULTIPLIER'],
+  ['14,8', 'WORD_MULTIPLIER'],
+  ['14,14', 'WORD_MULTIPLIER'],
 
   // ========================================
-  // DOUBLE LETTER SQUARES - 2x (12 positions)
+  // DOUBLE LETTER SQUARES - Yellow (32 positions)
   // ========================================
-  // Yellow squares with 2 dots
-  // Multiply the letter value by 2 (only applies once, when first covered)
+  // Multiply the letter value by 2
 
-  // Top edge
-  ['0,3', 'DOUBLE_LETTER'],
-  ['0,13', 'DOUBLE_LETTER'],
+  // Row 0 (top)
+  ['0,4', 'DOUBLE_LETTER'],
+  ['0,12', 'DOUBLE_LETTER'],
 
-  // Left edge
-  ['3,0', 'DOUBLE_LETTER'],
-  ['13,0', 'DOUBLE_LETTER'],
+  // Row 2
+  ['2,6', 'DOUBLE_LETTER'],
+  ['2,10', 'DOUBLE_LETTER'],
 
-  // Right edge
-  ['3,16', 'DOUBLE_LETTER'],
-  ['13,16', 'DOUBLE_LETTER'],
+  // Row 4
+  ['4,0', 'DOUBLE_LETTER'],
+  ['4,8', 'DOUBLE_LETTER'],
+  ['4,16', 'DOUBLE_LETTER'],
 
-  // Bottom edge
-  ['16,3', 'DOUBLE_LETTER'],
-  ['16,13', 'DOUBLE_LETTER'],
+  // Row 6
+  ['6,2', 'DOUBLE_LETTER'],
+  ['6,6', 'DOUBLE_LETTER'],
+  ['6,10', 'DOUBLE_LETTER'],
+  ['6,14', 'DOUBLE_LETTER'],
 
-  // Inner positions
-  ['5,5', 'DOUBLE_LETTER'],
-  ['5,11', 'DOUBLE_LETTER'],
-  ['11,5', 'DOUBLE_LETTER'],
-  ['11,11', 'DOUBLE_LETTER'],
+  // Row 8
+  ['8,4', 'DOUBLE_LETTER'],
+  ['8,12', 'DOUBLE_LETTER'],
+
+  // Row 10
+  ['10,2', 'DOUBLE_LETTER'],
+  ['10,6', 'DOUBLE_LETTER'],
+  ['10,10', 'DOUBLE_LETTER'],
+  ['10,14', 'DOUBLE_LETTER'],
+
+  // Row 12
+  ['12,0', 'DOUBLE_LETTER'],
+  ['12,8', 'DOUBLE_LETTER'],
+  ['12,16', 'DOUBLE_LETTER'],
+
+  // Row 14
+  ['14,6', 'DOUBLE_LETTER'],
+  ['14,10', 'DOUBLE_LETTER'],
+
+  // Row 16 (bottom)
+  ['16,4', 'DOUBLE_LETTER'],
+  ['16,12', 'DOUBLE_LETTER'],
 
   // ========================================
-  // TRIPLE LETTER SQUARES - 3x (8 positions)
+  // TRIPLE LETTER SQUARES - Green (4 positions)
   // ========================================
-  // Green squares with 3 dots
   // Multiply the letter value by 3
 
-  // Cross pattern in the middle
-  ['1,8', 'TRIPLE_LETTER'],
-  ['8,1', 'TRIPLE_LETTER'],
-  ['8,15', 'TRIPLE_LETTER'],
-  ['15,8', 'TRIPLE_LETTER'],
-
-  // Inner ring
-  ['5,8', 'TRIPLE_LETTER'],
-  ['8,5', 'TRIPLE_LETTER'],
-  ['8,11', 'TRIPLE_LETTER'],
-  ['11,8', 'TRIPLE_LETTER'],
+  ['4,4', 'TRIPLE_LETTER'],
+  ['4,12', 'TRIPLE_LETTER'],
+  ['12,4', 'TRIPLE_LETTER'],
+  ['12,12', 'TRIPLE_LETTER'],
 
   // ========================================
-  // QUADRUPLE LETTER SQUARES - 4x (8 positions)
+  // QUADRUPLE LETTER SQUARES - Red (8 positions)
   // ========================================
-  // Red squares with 4 dots
-  // Multiply the letter value by 4 (most valuable multiplier!)
+  // Multiply the letter value by 4 (highest multiplier!)
 
-  // Corners near center
-  ['3,3', 'QUADRUPLE_LETTER'],
-  ['3,13', 'QUADRUPLE_LETTER'],
-  ['13,3', 'QUADRUPLE_LETTER'],
-  ['13,13', 'QUADRUPLE_LETTER'],
-
-  // Outer positions
+  // Row 0 (top edge)
+  ['0,0', 'QUADRUPLE_LETTER'],
   ['0,8', 'QUADRUPLE_LETTER'],
+  ['0,16', 'QUADRUPLE_LETTER'],
+
+  // Row 8 (middle edge)
   ['8,0', 'QUADRUPLE_LETTER'],
   ['8,16', 'QUADRUPLE_LETTER'],
+
+  // Row 16 (bottom edge)
+  ['16,0', 'QUADRUPLE_LETTER'],
   ['16,8', 'QUADRUPLE_LETTER'],
+  ['16,16', 'QUADRUPLE_LETTER'],
 ])
 
 /**
@@ -152,7 +158,7 @@ export const PREMIUM_FIELDS = new Map<Coordinate, PremiumFieldType>([
  *
  * Example:
  *   getPremiumField(8, 8)  // Returns 'CENTER'
- *   getPremiumField(0, 0)  // Returns 'WORD_MULTIPLIER'
+ *   getPremiumField(1, 2)  // Returns 'WORD_MULTIPLIER'
  *   getPremiumField(1, 1)  // Returns null (regular square)
  */
 export function getPremiumField(row: number, col: number): PremiumFieldType {

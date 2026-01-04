@@ -85,22 +85,37 @@ export class ScoreCalculator {
         (pt) => pt.row === square.row && pt.col === square.col
       )
 
+      // DEBUG: Log scoring details
+      console.log('💰 Score calculation for tile:', {
+        position: `(${square.row},${square.col})`,
+        letter: 'letter' in tile ? tile.letter : '?',
+        value: tileValue,
+        isNew: isNewTile,
+        premiumField: square.premiumField,
+        isUsed: square.isUsed,
+        willApplyMultiplier: isNewTile && square.premiumField && !square.isUsed
+      })
+
       // Apply premium field multipliers (only for new tiles on unused fields)
       if (isNewTile && square.premiumField && !square.isUsed) {
         switch (square.premiumField) {
           case 'DOUBLE_LETTER':
             baseScore += tileValue * MULTIPLIERS.DOUBLE_LETTER
+            console.log(`  ✅ Applied DOUBLE_LETTER: ${tileValue} × 2 = ${tileValue * 2}`)
             break
           case 'TRIPLE_LETTER':
             baseScore += tileValue * MULTIPLIERS.TRIPLE_LETTER
+            console.log(`  ✅ Applied TRIPLE_LETTER: ${tileValue} × 3 = ${tileValue * 3}`)
             break
           case 'QUADRUPLE_LETTER':
             baseScore += tileValue * MULTIPLIERS.QUADRUPLE_LETTER
+            console.log(`  ✅ Applied QUADRUPLE_LETTER: ${tileValue} × 4 = ${tileValue * 4}`)
             break
           case 'WORD_MULTIPLIER':
             // Word multiplier applies to whole word
             baseScore += tileValue
             wordMultiplier *= MULTIPLIERS.WORD_MULTIPLIER
+            console.log(`  ✅ Applied WORD_MULTIPLIER: word × 2`)
             break
           case 'CENTER':
             // Center is just a normal square (no multiplier)
@@ -112,11 +127,19 @@ export class ScoreCalculator {
       } else {
         // No multiplier - just add tile value
         baseScore += tileValue
+        console.log(`  ➖ No multiplier applied, added ${tileValue}`)
       }
     }
 
     // Apply word multiplier
     const finalScore = baseScore * wordMultiplier
+
+    // DEBUG: Log final score calculation
+    console.log('💰 Final score for word "' + word + '":', {
+      baseScore,
+      wordMultiplier,
+      finalScore
+    })
 
     return {
       word,
