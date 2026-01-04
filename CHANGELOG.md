@@ -16,6 +16,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.1] - 2026-01-03
+
+### Added
+- **Scoresheet Component**: Visual move-by-move tracking for each player
+  - 10 rows (one per round) showing complete game history
+  - Displays: Round number, word played, points scored, running total
+  - Shows empty rows for future moves
+  - Special formatting for SKIP and EXCHANGE moves (italicized)
+  - Compact mode for sidebar display (smaller fonts, tighter spacing)
+  - Final score total displayed in footer
+  - Responsive layout adapts to screen size
+
+### Changed
+- **Game Layout**: Complete redesign for better visibility and maximum board size
+  - **3-Column Layout (Desktop)**: [Scoresheets | Board+Rack | ScorePanel]
+  - Scoresheets moved to left sidebar (280px wide, compact mode)
+  - Board and tile rack in center column
+  - Score panel and controls in right sidebar (300px wide)
+  - **Mobile Layout**: Scoresheets below controls (stacked vertically)
+  - Reduced header and spacing (mb-2 instead of mb-4)
+  - Smaller padding throughout (p-2 on mobile, p-4 on desktop)
+
+- **Board Component**: Optimized for maximum size while keeping rack visible
+  - **Final Size**: `min(90vw, 70vh, 1400px)`
+  - Max width: 1400px (was 700px initially)
+  - Uses 70% of viewport height (was 55vh, then 62vh)
+  - Smaller padding: p-2 on mobile, p-3 on desktop
+  - **Result**: Large, playable board with rack always visible without scrolling
+  - **Evolution**: 700px → 800px → 900px → 1000px → 1200px → 1400px
+
+- **TileRack Component**: Heavily optimized to minimize wasted space
+  - **Padding Reduction**: p-4 → py-2 px-3 (50% less vertical padding)
+  - **Spacing Reduction**:
+    - Outer gap: gap-4 → gap-1.5
+    - Tile spacing: gap-2 → gap-1.5
+    - Info margin: mt-3 → mt-1.5
+  - **Font Sizes**: text-lg → text-base, text-sm → text-xs
+  - **Empty State**: py-4 → py-2
+  - **Result**: Eliminated gray area below rack, maximized board space
+
+- **Game Component Spacing**:
+  - Board/Rack gap: space-y-2 lg:space-y-3 → space-y-1.5
+  - Consistent tight spacing throughout
+
+- **Tile Value Display**: Fixed overlapping on board squares
+  - **Font Size**: text-xs (12px) → text-[9px] (9px) - 25% smaller
+  - **Position**: bottom-0.5 right-1 → bottom-0 right-0.5 (tighter corner)
+  - **Result**: No overlap with letters, clean appearance
+
+- **Scoresheet Compact Mode**:
+  - Smaller text: xs (11px) vs sm (14px)
+  - Tighter spacing: py-1 px-1 vs py-2 px-3
+  - Abbreviated headers: "#", "Pts" instead of "Round", "Points"
+  - Smaller footer: "Final:" instead of "Final Score:"
+  - Player name only (no "'s Scoresheet" suffix)
+
+### Files Modified
+**UI Components:**
+- src/components/Scoresheet/Scoresheet.tsx (new, with compact mode)
+- src/components/Scoresheet/index.ts (new)
+- src/components/Game/Game.tsx (complete layout redesign, tight spacing)
+- src/components/Board/Board.tsx (optimized size: 1400px max, 70vh)
+- src/components/TileRack/TileRack.tsx (minimized padding and spacing)
+- src/components/Board/Square.tsx (tile value positioning fix)
+
+**Build Status:** ✅ Successful (191.47 KB)
+
+### UX Improvements
+- ✅ **Maximum board size** (1400px) while rack stays visible
+- ✅ **Zero scrolling required** - everything visible at once
+- ✅ **Scoresheets always visible** in sidebar (desktop)
+- ✅ **Compact tile rack** - eliminated wasted space
+- ✅ **Clean tile display** - no overlapping point values
+- ✅ **Better use of screen real estate**
+- ✅ **3-column design** maximizes information density
+
+### Technical Details
+**Layout Optimization Process:**
+1. Initial: Board 700px, rack had excessive padding
+2. Reduced rack padding/spacing (p-4 → py-2 px-3)
+3. Increased board iteratively: 700px → 1400px
+4. Adjusted viewport height: 55vh → 70vh
+5. Fixed tile value overlap (smaller font, corner position)
+6. Result: ~100% larger board, no scrolling needed
+
+---
+
 ## [0.5.0] - 2026-01-02
 
 ### Added - Steps 5-7 Complete + Challenge System ✅

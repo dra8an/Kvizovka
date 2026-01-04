@@ -109,12 +109,12 @@ export function TileRack() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-1.5">
       {/* Player info */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-gray-800">{currentPlayer.name}'s Tiles</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="text-base font-bold text-gray-800">{currentPlayer.name}'s Tiles</h3>
+          <p className="text-xs text-gray-600">
             {availableTiles.length} tile{availableTiles.length !== 1 ? 's' : ''} in hand
             {selectedTiles.length > 0 && (
               <span className="ml-2 text-blue-600 font-semibold">
@@ -123,19 +123,19 @@ export function TileRack() {
             )}
           </p>
         </div>
-        <div className="text-sm text-gray-600">
+        <div className="text-xs text-gray-600">
           <p className="font-semibold">Your Turn</p>
         </div>
       </div>
 
       {/* Tile rack container */}
       <div
-        className="bg-gradient-to-b from-amber-700 to-amber-800 p-4 rounded-lg shadow-lg"
+        className="bg-gradient-to-b from-amber-700 to-amber-800 py-2 px-3 rounded-lg shadow-lg"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
       >
         {/* Tiles */}
-        <div className="flex gap-2 justify-center flex-wrap">
+        <div className="flex gap-1.5 justify-center flex-wrap">
           {availableTiles.length > 0 ? (
             availableTiles.map((tile) => (
               <Tile
@@ -147,7 +147,7 @@ export function TileRack() {
               />
             ))
           ) : (
-            <div className="text-amber-200 py-4">
+            <div className="text-amber-200 py-2">
               {selectedTiles.length > 0
                 ? 'All tiles placed on board'
                 : 'No tiles in hand'
@@ -157,7 +157,7 @@ export function TileRack() {
         </div>
 
         {/* Rack info */}
-        <div className="mt-3 text-center">
+        <div className="mt-1.5 text-center">
           <p className="text-xs text-amber-200">
             Drag tiles to the board to place them
           </p>

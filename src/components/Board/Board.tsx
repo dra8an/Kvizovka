@@ -212,17 +212,17 @@ export function Board() {
    * Creates a 17×17 CSS Grid with Square components.
    */
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-2">
       {/* Board container */}
-      <div className="bg-white p-4 rounded-lg shadow-lg">
+      <div className="bg-white p-2 lg:p-3 rounded-lg shadow-lg">
         {/* 17×17 CSS Grid */}
         <div
           className="grid gap-0.5 bg-gray-300 p-0.5 rounded"
           style={{
             gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
             gridTemplateRows: `repeat(${BOARD_SIZE}, 1fr)`,
-            width: 'min(85vw, 85vh)', // Responsive: use smaller of 85% viewport width/height
-            height: 'min(85vw, 85vh)',
+            width: 'min(90vw, 70vh, 1400px)', // Max 1400px, 90% width or 70% height
+            height: 'min(90vw, 70vh, 1400px)',
           }}
         >
           {/* Map each square */}

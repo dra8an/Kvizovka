@@ -199,8 +199,8 @@ export function Square({ square, onDrop, onDragOver, isValidDrop, isDraggable, o
           {letter || '?'}
         </div>
 
-        {/* Value (bottom-right corner) */}
-        <div className={`absolute bottom-0.5 right-1 text-xs font-semibold ${isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
+        {/* Value (bottom-right corner) - smaller and more in corner */}
+        <div className={`absolute bottom-0 right-0.5 text-[9px] font-semibold ${isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
           {value}
         </div>
       </div>

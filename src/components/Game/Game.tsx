@@ -17,6 +17,7 @@ import { Board } from '../Board/Board'
 import { TileRack } from '../TileRack/TileRack'
 import { ScorePanel } from '../ScorePanel/ScorePanel'
 import { GameControls } from '../GameControls/GameControls'
+import { Scoresheet } from '../Scoresheet/Scoresheet'
 import { useGameStore } from '../../store/gameStore'
 import { GameMode, GameStatus } from '../../types'
 
@@ -150,17 +151,36 @@ export function Game() {
 
   // Active game screen
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-2 lg:p-4">
       {/* Header */}
-      <header className="mb-4">
-        <h1 className="text-3xl font-bold text-center text-gray-800">Kvizovka</h1>
+      <header className="mb-2">
+        <h1 className="text-2xl lg:text-3xl font-bold text-center text-gray-800">Kvizovka</h1>
       </header>
 
-      {/* Main game layout */}
-      <div className="max-w-[1600px] mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
-          {/* Left side: Board and controls */}
-          <div className="space-y-4">
+      {/* Main game layout: [Scoresheets] [Board+Rack] [ScorePanel] */}
+      <div className="max-w-[2000px] mx-auto">
+        <div className="grid grid-cols-1 xl:grid-cols-[280px_1fr_300px] gap-2 lg:gap-4">
+          {/* Left sidebar: Scoresheets (desktop only) */}
+          <div className="hidden xl:block space-y-3">
+            {/* Player 1 Scoresheet */}
+            <Scoresheet
+              playerId={game.players[0].id}
+              playerName={game.players[0].name}
+              moves={game.moveHistory}
+              compact
+            />
+
+            {/* Player 2 Scoresheet */}
+            <Scoresheet
+              playerId={game.players[1].id}
+              playerName={game.players[1].name}
+              moves={game.moveHistory}
+              compact
+            />
+          </div>
+
+          {/* Center: Board and Tile Rack */}
+          <div className="space-y-1.5">
             {/* Board */}
             <Board />
 
@@ -168,19 +188,29 @@ export function Game() {
             <TileRack />
 
             {/* Game controls (mobile: show below rack) */}
-            <div className="lg:hidden">
+            <div className="xl:hidden">
               <GameControls />
+            </div>
+
+            {/* Scoresheets (mobile: show below controls) */}
+            <div className="xl:hidden grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+              <Scoresheet
+                playerId={game.players[0].id}
+                playerName={game.players[0].name}
+                moves={game.moveHistory}
+              />
+              <Scoresheet
+                playerId={game.players[1].id}
+                playerName={game.players[1].name}
+                moves={game.moveHistory}
+              />
             </div>
           </div>
 
           {/* Right sidebar: Score panel and controls (desktop) */}
-          <div className="space-y-4">
+          <div className="hidden xl:block space-y-3">
             <ScorePanel />
-
-            {/* Game controls (desktop: show in sidebar) */}
-            <div className="hidden lg:block">
-              <GameControls />
-            </div>
+            <GameControls />
           </div>
         </div>
       </div>
