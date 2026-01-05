@@ -28,6 +28,8 @@ Kvizovka is a strategic word game for the Serbian language with unique rules:
 - **Chess Clock** - Individual timers for each player
 - **Game Controls** - Play Word, Skip Turn, Recall, Pause, End Game
 - **Exchange Tiles** - Select and exchange tiles with visual feedback (cannot exchange consecutively)
+- **Automatic Game End** - Game ends automatically after 10 rounds, time expiry, or no tiles
+- **Enhanced End Screen** - Shows final scores, game stats, and reason for ending
 - **Responsive Layout** - Optimized for desktop (3-column design)
 - **Serbian Dictionary** - 20,000-word dictionary for word validation (optimized from 261K)
 
@@ -40,9 +42,10 @@ Kvizovka is a strategic word game for the Serbian language with unique rules:
 - ✅ Blocker placement at word boundaries
 - ✅ Joker tiles (0 points, can be any letter)
 - ✅ Tile exchange system (cannot exchange two turns in a row)
-- ✅ Move history and undo system
-- ✅ 10 rounds per player
+- ✅ Move history and undo system via challenges
+- ✅ 10 rounds per player with automatic game end
 - ✅ Final scoring with unused tile penalties
+- ✅ Automatic game end detection (rounds completed, time expired, no tiles)
 
 ## 📚 Documentation
 

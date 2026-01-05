@@ -19,7 +19,7 @@ import { ScorePanel } from '../ScorePanel/ScorePanel'
 import { GameControls } from '../GameControls/GameControls'
 import { Scoresheet } from '../Scoresheet/Scoresheet'
 import { useGameStore } from '../../store/gameStore'
-import { GameMode, GameStatus } from '../../types'
+import { GameMode, GameStatus } from '@kvizovka/shared'
 
 /**
  * Game Component

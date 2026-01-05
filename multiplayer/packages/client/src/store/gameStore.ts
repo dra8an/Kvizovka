@@ -23,9 +23,7 @@ import {
   MoveType,
   PlacedTile,
   Tile,
-  Board as BoardType,
-} from '../types'
-import {
+  BoardType,
   Board,
   TileBag,
   createTileBag,
@@ -33,8 +31,9 @@ import {
   MoveValidator,
   MoveValidationResult,
   WordValidator,
-} from '../game-engine'
-import { TILES_PER_PLAYER, DEFAULT_TIME_LIMIT } from '../constants'
+  TILES_PER_PLAYER,
+  DEFAULT_TIME_LIMIT,
+} from '@kvizovka/shared'
 
 /**
  * Game Store State

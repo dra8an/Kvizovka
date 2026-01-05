@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Automatic Game End Detection**: Game now automatically ends when conditions are met
+  - Ends when both players complete 10 rounds
+  - Ends when tile bag is empty and current player has no tiles
+  - Ends when a player's time runs out (already implemented)
+  - Displays reason for game ending on completion screen
+  - Shows unused tiles penalty when applicable
+  - Enhanced end game screen with more details
+
 - **Exchange Tiles Feature**: Full tile exchange functionality
   - Click-to-select interface for choosing tiles to exchange
   - Visual feedback with purple theming when in exchange mode
