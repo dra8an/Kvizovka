@@ -38,9 +38,8 @@ export async function loadDictionary(): Promise<Dictionary> {
 
   try {
     // Path to dictionary file
-    // Dictionary is in the client's public folder for now
-    // We'll copy it to server's assets in production
-    const dictionaryPath = join(__dirname, '../../dictionary/serbian-words.json')
+    // Dictionary is in packages/server/dictionary/ folder
+    const dictionaryPath = join(__dirname, '../dictionary/serbian-words.json')
 
     console.log(`[Dictionary] Reading from: ${dictionaryPath}`)
 
