@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Exchange Tiles Feature**: Full tile exchange functionality
+  - Click-to-select interface for choosing tiles to exchange
+  - Visual feedback with purple theming when in exchange mode
+  - Selected tiles highlighted with purple ring
+  - Confirmation dialog before exchanging
+  - Cannot exchange if tile bag is empty
+  - **Rule enforcement**: Cannot exchange tiles two turns in a row
+  - Must play a word or skip turn before exchanging again
+  - Turn ends after exchange (recorded in move history)
+  - Updated game controls with exchange mode UI
+  - Updated game rules documentation (English and Serbian)
+
 ### Fixed
 - **Challenge System**: Full move undo on successful challenge
   - Tiles are now properly removed from board when challenge succeeds
@@ -15,10 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tiles are returned to the challenged player's hand
   - Turn switches back to the challenged player (they get to play again)
   - Premium fields are restored to unused state
+  - **Fixed tile count bug**: Newly drawn tiles are now properly removed during undo
+    - Previously caused players to have 15 tiles instead of 10 after challenge
+    - Now tracks `drawnTileIds` in move record for proper cleanup
 
 ### Planned
-- Step 8: Drag-and-drop polish and enhancements
-- Step 9: Game flow completion (exchange tiles, undo system)
 - Step 10: Testing and polish
 - Remove debug logging from production
 - AI opponent implementation

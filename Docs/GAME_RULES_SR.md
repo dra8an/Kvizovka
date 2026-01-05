@@ -271,15 +271,31 @@ Rezultat: M(2) + A(1) + [DŽOKER](0) + K(2) + A(1) = 6 poena
 ### Razmena pločica
 
 Umesto postavljanja pločica, igrač može **razmeniti** pločice:
-- Vratiti bilo koji broj pločica u vreću
+- Izabrati bilo koji broj pločica iz svoje ruke
+- Vratiti izabrane pločice u vreću
 - Izvući isti broj novih pločica
 - **Potez se završava** (bez osvojenih poena)
-- Nema kazne (dozvoljena strategija)
+- Nije moguće razmeniti ako je vreća prazna
+- **Nije moguće razmeniti dva puta zaredom** (mora se prvo odigrati reč ili preskočiti potez)
 
 **Kada razmeniti**:
 - Loša kombinacija slova
 - Svi samoglasnici ili svi suglasnici
 - Slova visoke vrednosti koja ne možete koristiti
+- Strateško upravljanje pločicama
+
+**Važno ograničenje**:
+- ❌ **Nije moguće razmeniti pločice dva poteza zaredom**
+- ✅ Nakon razmene, morate odigrati reč ili preskočiti potez
+- ✅ Zatim možete ponovo razmeniti pločice u nekom budućem potezu
+
+**Primer sekvence**:
+```
+Potez 1: Razmena 3 pločice (A, E, I) → Izvlačenje 3 nove pločice → Potez završen
+Potez 2: ❌ Nije moguće ponovo razmeniti! Mora se odigrati reč ili preskočiti potez
+Potez 3: Odigravanje reči "MAČKA" → Osvajanje poena → Potez završen
+Potez 4: ✅ Ponovo je moguće razmeniti ako se želi
+```
 
 ### Preskakanje poteza
 

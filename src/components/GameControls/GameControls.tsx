@@ -15,7 +15,7 @@
  */
 
 import { useGameStore } from '../../store/gameStore'
-import { GameStatus } from '../../types'
+import { GameStatus, MoveType } from '../../types'
 
 /**
  * GameControls Component
@@ -31,6 +31,9 @@ export function GameControls() {
   const selectedTiles = useGameStore((state) => state.selectedTiles)
   const lastValidation = useGameStore((state) => state.lastValidation)
   const lastPlayedWord = useGameStore((state) => state.lastPlayedWord)
+  const isExchangeMode = useGameStore((state) => state.isExchangeMode)
+  const tilesForExchange = useGameStore((state) => state.tilesForExchange)
+  const tileBagInstance = useGameStore((state) => state.tileBagInstance)
 
   // Game actions
   const makeMove = useGameStore((state) => state.makeMove)
@@ -40,6 +43,9 @@ export function GameControls() {
   const pauseGame = useGameStore((state) => state.pauseGame)
   const resumeGame = useGameStore((state) => state.resumeGame)
   const endGame = useGameStore((state) => state.endGame)
+  const enterExchangeMode = useGameStore((state) => state.enterExchangeMode)
+  const exitExchangeMode = useGameStore((state) => state.exitExchangeMode)
+  const exchangeTiles = useGameStore((state) => state.exchangeTiles)
 
   // If no game, don't show controls
   if (!game) {
@@ -97,11 +103,58 @@ export function GameControls() {
   /**
    * Handle Exchange Tiles button click
    *
-   * TODO: Implement tile selection UI for exchange.
-   * For now, just show a message.
+   * Enters exchange mode so player can select tiles to exchange.
    */
   const handleExchangeTiles = () => {
-    alert('Exchange tiles feature coming soon! For now, use Skip Turn.')
+    // Check if tile bag is empty
+    if (tileBagInstance && tileBagInstance.isEmpty()) {
+      alert('Cannot exchange tiles: The tile bag is empty!')
+      return
+    }
+
+    // Try to enter exchange mode
+    const canExchange = enterExchangeMode()
+
+    if (!canExchange) {
+      alert('Cannot exchange tiles two moves in a row!\n\nYou must play a word or skip your turn before exchanging again.')
+      return
+    }
+  }
+
+  /**
+   * Handle Confirm Exchange button click
+   *
+   * Exchanges the selected tiles with new ones from the bag.
+   */
+  const handleConfirmExchange = () => {
+    if (tilesForExchange.length === 0) {
+      alert('Please select at least one tile to exchange!')
+      return
+    }
+
+    const confirm = window.confirm(
+      `Exchange ${tilesForExchange.length} tile${tilesForExchange.length !== 1 ? 's' : ''}?\n\n` +
+      `This will end your turn.`
+    )
+
+    if (!confirm) return
+
+    const success = exchangeTiles(tilesForExchange)
+
+    if (success) {
+      console.log('Tiles exchanged successfully!')
+    } else {
+      alert('Failed to exchange tiles. Please try again.')
+    }
+  }
+
+  /**
+   * Handle Cancel Exchange button click
+   *
+   * Exits exchange mode without exchanging any tiles.
+   */
+  const handleCancelExchange = () => {
+    exitExchangeMode()
   }
 
   /**
@@ -172,61 +225,111 @@ export function GameControls() {
   // Check if current player can challenge (opponent just played a word)
   const canChallenge = lastPlayedWord && isInProgress
 
+  // Check if current player's last move was an exchange
+  const canExchangeTiles = (() => {
+    if (!game || !isInProgress) return false
+
+    const currentPlayerId = game.players[game.currentPlayerIndex].id
+    const playerMoves = game.moveHistory.filter(move => move.playerId === currentPlayerId)
+    const lastPlayerMove = playerMoves[playerMoves.length - 1]
+
+    // Can't exchange if last move was also an exchange
+    return !(lastPlayerMove && lastPlayerMove.type === MoveType.EXCHANGE)
+  })()
+
   return (
     <div className="flex flex-col gap-3">
-      {/* Main action: Play Word */}
-      <button
-        onClick={handlePlayWord}
-        disabled={selectedTiles.length === 0 || !isInProgress}
-        className={`
-          btn text-lg py-4 font-bold
-          ${
-            selectedTiles.length > 0 && isInProgress
-              ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }
-        `}
-      >
-        Play Word {selectedTiles.length > 0 && `(${selectedTiles.length} tiles)`}
-      </button>
+      {/* Exchange Mode UI */}
+      {isExchangeMode ? (
+        <>
+          {/* Confirm Exchange Button */}
+          <button
+            onClick={handleConfirmExchange}
+            disabled={tilesForExchange.length === 0}
+            className={`
+              btn text-lg py-4 font-bold
+              ${
+                tilesForExchange.length > 0
+                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }
+            `}
+          >
+            Confirm Exchange {tilesForExchange.length > 0 && `(${tilesForExchange.length} tiles)`}
+          </button>
 
-      {/* Challenge button (only shown when opponent just played a word) */}
-      {canChallenge && (
-        <button
-          onClick={handleChallenge}
-          className="btn text-lg py-4 font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg animate-pulse"
-        >
-          ⚠️ Challenge Word: "{lastPlayedWord.word}"
-        </button>
+          {/* Cancel Exchange Button */}
+          <button
+            onClick={handleCancelExchange}
+            className="btn bg-red-500 hover:bg-red-600 text-white text-lg py-4 font-bold"
+          >
+            Cancel Exchange
+          </button>
+
+          {/* Info Message */}
+          <div className="p-3 bg-purple-50 border-2 border-purple-300 rounded-lg">
+            <p className="text-sm text-purple-800 font-medium">
+              Click tiles in your rack to select them for exchange.
+            </p>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Main action: Play Word */}
+          <button
+            onClick={handlePlayWord}
+            disabled={selectedTiles.length === 0 || !isInProgress}
+            className={`
+              btn text-lg py-4 font-bold
+              ${
+                selectedTiles.length > 0 && isInProgress
+                  ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }
+            `}
+          >
+            Play Word {selectedTiles.length > 0 && `(${selectedTiles.length} tiles)`}
+          </button>
+
+          {/* Challenge button (only shown when opponent just played a word) */}
+          {canChallenge && (
+            <button
+              onClick={handleChallenge}
+              className="btn text-lg py-4 font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg animate-pulse"
+            >
+              ⚠️ Challenge Word: "{lastPlayedWord.word}"
+            </button>
+          )}
+
+          {/* Secondary actions */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={handleRecallTiles}
+              disabled={selectedTiles.length === 0 || !isInProgress}
+              className="btn btn-secondary"
+            >
+              Recall Tiles
+            </button>
+
+            <button
+              onClick={handleSkipTurn}
+              disabled={!isInProgress}
+              className="btn btn-secondary"
+            >
+              Skip Turn
+            </button>
+          </div>
+
+          {/* Exchange tiles */}
+          <button
+            onClick={handleExchangeTiles}
+            disabled={!canExchangeTiles}
+            className="btn bg-purple-500 hover:bg-purple-600 text-white disabled:bg-gray-300 disabled:text-gray-500"
+          >
+            Exchange Tiles
+          </button>
+        </>
       )}
-
-      {/* Secondary actions */}
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          onClick={handleRecallTiles}
-          disabled={selectedTiles.length === 0 || !isInProgress}
-          className="btn btn-secondary"
-        >
-          Recall Tiles
-        </button>
-
-        <button
-          onClick={handleSkipTurn}
-          disabled={!isInProgress}
-          className="btn btn-secondary"
-        >
-          Skip Turn
-        </button>
-      </div>
-
-      {/* Exchange tiles (TODO) */}
-      <button
-        onClick={handleExchangeTiles}
-        disabled={!isInProgress}
-        className="btn bg-purple-500 hover:bg-purple-600 text-white disabled:bg-gray-300 disabled:text-gray-500"
-      >
-        Exchange Tiles
-      </button>
 
       {/* Game management */}
       <div className="grid grid-cols-2 gap-2 mt-2 pt-3 border-t border-gray-300">

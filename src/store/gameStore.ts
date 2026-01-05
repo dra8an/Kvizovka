@@ -83,6 +83,17 @@ interface GameStoreState {
   } | null
 
   /**
+   * Exchange mode state
+   * When true, player is selecting tiles to exchange
+   */
+  isExchangeMode: boolean
+
+  /**
+   * Tiles selected for exchange
+   */
+  tilesForExchange: Tile[]
+
+  /**
    * Timer interval ID (for stopping timer)
    */
   timerIntervalId: number | null
@@ -110,6 +121,22 @@ interface GameStoreState {
    * Exchange tiles
    */
   exchangeTiles: (tilesToExchange: Tile[]) => boolean
+
+  /**
+   * Enter exchange mode
+   * Returns false if exchange is not allowed (e.g., last move was also an exchange)
+   */
+  enterExchangeMode: () => boolean
+
+  /**
+   * Exit exchange mode
+   */
+  exitExchangeMode: () => void
+
+  /**
+   * Toggle tile selection for exchange
+   */
+  toggleTileForExchange: (tile: Tile) => void
 
   /**
    * Add tile to selection
@@ -180,7 +207,7 @@ interface GameStoreState {
  */
 const createInitialState = (): Pick<
   GameStoreState,
-  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'lastPlayedWord' | 'timerIntervalId'
+  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'timerIntervalId'
 > => ({
   game: null,
   boardInstance: null,
@@ -188,6 +215,8 @@ const createInitialState = (): Pick<
   selectedTiles: [],
   lastValidation: null,
   lastPlayedWord: null,
+  isExchangeMode: false,
+  tilesForExchange: [],
   timerIntervalId: null,
 })
 
@@ -481,9 +510,82 @@ export const useGameStore = create<GameStoreState>()(
             tileBag: tileBagInstance.peekTiles(),
             updatedAt: new Date(),
           },
+          isExchangeMode: false,
+          tilesForExchange: [],
         })
 
         return true
+      },
+
+      /**
+       * Enter exchange mode
+       *
+       * Allows player to select tiles to exchange.
+       * Returns false if exchange is not allowed (e.g., last move was also an exchange).
+       */
+      enterExchangeMode: (): boolean => {
+        const { game } = get()
+
+        if (!game) {
+          return false
+        }
+
+        // Check if current player's last move was an exchange
+        const currentPlayerId = game.players[game.currentPlayerIndex].id
+
+        // Find the last move by this player
+        const playerMoves = game.moveHistory.filter(move => move.playerId === currentPlayerId)
+        const lastPlayerMove = playerMoves[playerMoves.length - 1]
+
+        if (lastPlayerMove && lastPlayerMove.type === MoveType.EXCHANGE) {
+          console.error('Cannot exchange tiles two moves in a row')
+          return false
+        }
+
+        // Clear any placed tiles first
+        get().clearSelection()
+
+        set({
+          isExchangeMode: true,
+          tilesForExchange: [],
+        })
+
+        return true
+      },
+
+      /**
+       * Exit exchange mode
+       *
+       * Cancel tile exchange and return to normal mode.
+       */
+      exitExchangeMode: () => {
+        set({
+          isExchangeMode: false,
+          tilesForExchange: [],
+        })
+      },
+
+      /**
+       * Toggle tile selection for exchange
+       *
+       * Add or remove a tile from the exchange selection.
+       */
+      toggleTileForExchange: (tile: Tile) => {
+        const { tilesForExchange } = get()
+
+        const isAlreadySelected = tilesForExchange.some((t) => t.id === tile.id)
+
+        if (isAlreadySelected) {
+          // Remove from selection
+          set({
+            tilesForExchange: tilesForExchange.filter((t) => t.id !== tile.id),
+          })
+        } else {
+          // Add to selection
+          set({
+            tilesForExchange: [...tilesForExchange, tile],
+          })
+        }
       },
 
       /**
@@ -982,6 +1084,8 @@ export const useGameStore = create<GameStoreState>()(
         // Only persist game state, not instances or intervals
         game: state.game,
         selectedTiles: state.selectedTiles,
+        isExchangeMode: state.isExchangeMode,
+        tilesForExchange: state.tilesForExchange,
       }),
     }
   )

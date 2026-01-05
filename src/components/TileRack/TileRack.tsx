@@ -34,6 +34,9 @@ export function TileRack() {
   const selectedTiles = useGameStore((state) => state.selectedTiles)
   const unselectTile = useGameStore((state) => state.unselectTile)
   const reorderPlayerTiles = useGameStore((state) => state.reorderPlayerTiles)
+  const isExchangeMode = useGameStore((state) => state.isExchangeMode)
+  const tilesForExchange = useGameStore((state) => state.tilesForExchange)
+  const toggleTileForExchange = useGameStore((state) => state.toggleTileForExchange)
 
   // Local state for drag-and-drop
   const [draggedTile, setDraggedTile] = useState<TileType | null>(null)
@@ -162,6 +165,24 @@ export function TileRack() {
     e.preventDefault() // Allow drop
   }
 
+  /**
+   * Handle tile click for exchange mode
+   *
+   * When in exchange mode, clicking a tile toggles its selection.
+   */
+  const handleTileClick = (tile: TileType) => {
+    if (isExchangeMode) {
+      toggleTileForExchange(tile)
+    }
+  }
+
+  /**
+   * Check if a tile is selected for exchange
+   */
+  const isTileSelectedForExchange = (tile: TileType): boolean => {
+    return tilesForExchange.some((t) => t.id === tile.id)
+  }
+
   return (
     <div className="flex flex-col gap-1.5">
       {/* Player info */}
@@ -184,34 +205,56 @@ export function TileRack() {
 
       {/* Tile rack container */}
       <div
-        className="bg-gradient-to-b from-amber-700 to-amber-800 py-2 px-3 rounded-lg shadow-lg"
+        className={`
+          bg-gradient-to-b py-2 px-3 rounded-lg shadow-lg
+          ${isExchangeMode ? 'from-purple-700 to-purple-800' : 'from-amber-700 to-amber-800'}
+        `}
         onDrop={handleDropOnRack}
         onDragOver={handleDragOverRack}
       >
+        {/* Exchange mode banner */}
+        {isExchangeMode && (
+          <div className="mb-2 p-2 bg-purple-900 rounded text-center">
+            <p className="text-sm font-bold text-purple-100">
+              Exchange Mode: Click tiles to select
+            </p>
+            <p className="text-xs text-purple-200 mt-0.5">
+              {tilesForExchange.length} tile{tilesForExchange.length !== 1 ? 's' : ''} selected
+            </p>
+          </div>
+        )}
+
         {/* Tiles */}
         <div className="flex gap-1.5 justify-center flex-wrap">
           {availableTiles.length > 0 ? (
-            availableTiles.map((tile, index) => (
-              <div
-                key={tile.id}
-                onDrop={(e) => handleDropOnTile(e, index)}
-                onDragOver={(e) => handleDragOverTile(e, index)}
-                onDragLeave={handleDragLeaveTile}
-                className={`
-                  transition-all duration-150
-                  ${dropTargetIndex === index && draggedFromIndex !== index ? 'scale-110' : ''}
-                `}
-              >
-                <Tile
-                  tile={tile}
-                  tileIndex={index}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  isDragging={draggedTile?.id === tile.id}
-                  isWithinRack={true}
-                />
-              </div>
-            ))
+            availableTiles.map((tile, index) => {
+              const isSelectedForExchange = isTileSelectedForExchange(tile)
+              return (
+                <div
+                  key={tile.id}
+                  onDrop={(e) => handleDropOnTile(e, index)}
+                  onDragOver={(e) => handleDragOverTile(e, index)}
+                  onDragLeave={handleDragLeaveTile}
+                  onClick={() => handleTileClick(tile)}
+                  className={`
+                    transition-all duration-150
+                    ${dropTargetIndex === index && draggedFromIndex !== index ? 'scale-110' : ''}
+                    ${isExchangeMode ? 'cursor-pointer' : ''}
+                    ${isSelectedForExchange ? 'ring-4 ring-purple-400 rounded scale-105' : ''}
+                  `}
+                >
+                  <Tile
+                    tile={tile}
+                    tileIndex={index}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    isDragging={draggedTile?.id === tile.id}
+                    isWithinRack={true}
+                    disabled={isExchangeMode}
+                  />
+                </div>
+              )
+            })
           ) : (
             <div className="text-amber-200 py-2">
               {selectedTiles.length > 0
@@ -224,8 +267,11 @@ export function TileRack() {
 
         {/* Rack info */}
         <div className="mt-1.5 text-center">
-          <p className="text-xs text-amber-200">
-            Drag tiles to the board to place them
+          <p className={`text-xs ${isExchangeMode ? 'text-purple-200' : 'text-amber-200'}`}>
+            {isExchangeMode
+              ? 'Click tiles to select for exchange'
+              : 'Drag tiles to the board to place them'
+            }
           </p>
         </div>
       </div>

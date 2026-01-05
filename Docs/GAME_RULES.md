@@ -271,15 +271,31 @@ Score: C(3) + A(1) + [JOKER](0) + S(1) = 5 points
 ### Exchanging Tiles
 
 Instead of placing tiles, a player may **exchange** tiles:
-- Return any number of tiles to the bag
+- Select any number of tiles from your hand
+- Return selected tiles to the bag
 - Draw the same number of new tiles
 - **Turn ends** (no points scored)
-- No penalty (allowed strategy)
+- Cannot exchange if tile bag is empty
+- **Cannot exchange on consecutive turns** (must play a word or skip turn first)
 
 **When to exchange**:
 - Bad letter combination
 - All vowels or all consonants
 - High-value letters you can't use
+- Strategic tile management
+
+**Important Restriction**:
+- ❌ **Cannot exchange tiles two moves in a row**
+- ✅ After exchanging, you must play a word or skip your turn
+- ✅ Then you can exchange again on a future turn
+
+**Example sequence**:
+```
+Turn 1: Exchange 3 tiles (A, E, I) → Draw 3 new tiles → Turn ends
+Turn 2: ❌ Cannot exchange again! Must play word or skip
+Turn 3: Play word "MAČKA" → Score points → Turn ends
+Turn 4: ✅ Can exchange again if desired
+```
 
 ### Skipping a Turn
 
