@@ -105,6 +105,12 @@ Node.js backend:
 3. Make client-specific changes in `packages/client/`
 4. Make server-specific changes in `packages/server/`
 
+## Documentation
+
+- [Setup Complete](./Docs/SETUP-COMPLETE.md) - Monorepo setup summary
+- [Step 2 Status](./Docs/STEP-2-STATUS.md) - Server core implementation status
+- [Online Multiplayer Plan](../Docs/ONLINE-MULTIPLAYER-PLAN.md) - Full implementation plan
+
 ## Deployment
 
 See [ONLINE-MULTIPLAYER-PLAN.md](../Docs/ONLINE-MULTIPLAYER-PLAN.md) for deployment instructions to Railway (server) and Vercel (client).

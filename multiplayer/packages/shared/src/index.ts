@@ -20,6 +20,11 @@ export type {
   Move,
   DictionaryWord,
   ValidationResult,
+  Room,
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData,
 } from './types/index.js'
 
 // Export Board type with alias to avoid conflict with Board class

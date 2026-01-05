@@ -14,10 +14,12 @@
     "@hono/node-server": "^1.19.7",
     "@kvizovka/shared": "file:../shared",
     "hono": "^4.0.0",
-    "socket.io": "^4.7.0"
+    "socket.io": "^4.7.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "@types/uuid": "^10.0.0",
     "tsx": "^4.7.0",
     "typescript": "^5.2.2"
   }

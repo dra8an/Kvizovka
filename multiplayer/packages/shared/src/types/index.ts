@@ -22,6 +22,9 @@ export * from './tile.types'
 // Export all game-related types
 export * from './game.types'
 
+// Export all socket event types
+export * from './socket-events'
+
 /**
  * Re-export commonly used types for convenience
  * (These are already exported above, but listing them explicitly

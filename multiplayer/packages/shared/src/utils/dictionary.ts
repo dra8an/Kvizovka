@@ -100,7 +100,7 @@ export class Dictionary {
         throw new Error(`Failed to load dictionary: ${response.statusText}`)
       }
 
-      const data: DictionaryFile = await response.json()
+      const data = await response.json() as DictionaryFile
 
       // Store all words
       this.words = data.words
@@ -138,6 +138,56 @@ export class Dictionary {
       console.error('❌ Failed to load dictionary:', error)
       throw error
     }
+  }
+
+  /**
+   * Load dictionary from parsed data (for server-side usage)
+   *
+   * This method accepts already-parsed dictionary data, avoiding the need for HTTP fetch.
+   * Useful for server-side where dictionary is loaded from filesystem.
+   *
+   * @param data - Parsed dictionary file data
+   *
+   * Example:
+   * ```typescript
+   * const dict = new Dictionary()
+   * const data = JSON.parse(fs.readFileSync('serbian-words.json', 'utf-8'))
+   * dict.loadFromData(data)
+   * ```
+   */
+  loadFromData(data: DictionaryFile): void {
+    // Store all words
+    this.words = data.words
+
+    // Initialize category map
+    this.categoryMap.set(WordCategory.NOUN, new Set())
+    this.categoryMap.set(WordCategory.VERB, new Set())
+    this.categoryMap.set(WordCategory.ADJECTIVE, new Set())
+    this.categoryMap.set(WordCategory.PRONOUN, new Set())
+    this.categoryMap.set(WordCategory.NUMBER, new Set())
+
+    // Build lookup structures
+    for (const word of data.words) {
+      const upperWord = word.word.toUpperCase()
+
+      // Add to word set for fast existence check
+      this.wordSet.add(upperWord)
+
+      // Add to category map
+      const categorySet = this.categoryMap.get(word.category)
+      if (categorySet) {
+        categorySet.add(upperWord)
+      }
+
+      // Add to word-category map
+      this.wordCategoryMap.set(upperWord, word.category)
+    }
+
+    this.loaded = true
+
+    console.log(
+      `✅ Dictionary loaded: ${data.wordCount} words (${data.language} - ${data.script})`
+    )
   }
 
   /**

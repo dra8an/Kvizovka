@@ -129,6 +129,12 @@ export interface Player {
    * Number of rounds this player has completed (0-10)
    */
   roundsPlayed: number
+
+  /**
+   * Whether player exchanged tiles in their last turn
+   * Used to prevent consecutive exchanges
+   */
+  hasExchangedLastTurn: boolean
 }
 
 /**
@@ -201,6 +207,11 @@ export interface Move {
    * Used to remove newly drawn tiles when undoing a challenged move
    */
   drawnTileIds?: string[]
+
+  /**
+   * Number of tiles exchanged (for EXCHANGE moves)
+   */
+  tilesExchanged?: number
 
   /**
    * Timestamp when move was made

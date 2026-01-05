@@ -472,6 +472,17 @@ export class Board {
   }
 
   /**
+   * Set the grid (restore board state)
+   *
+   * @param grid - Board grid to restore
+   *
+   * Useful for server-side when restoring game state
+   */
+  setGrid(grid: BoardType): void {
+    this.grid = grid
+  }
+
+  /**
    * Clone the board (deep copy)
    *
    * @returns A new Board instance with same state
