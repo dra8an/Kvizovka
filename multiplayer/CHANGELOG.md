@@ -13,6 +13,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1] - 2026-01-07
+
+### Added
+- **Scoresheet UI in Online Mode**
+  - Integrated Scoresheet component into OnlineGame
+  - Shows move-by-move history for both players
+  - Desktop: Scoresheets in left sidebar with compact layout
+  - Mobile: Scoresheets below game controls
+  - Displays: Round #, Word, Points, Running Total
+
+### Fixed
+- **Missing Scoresheet Display**
+  - Added Scoresheet component to OnlineGame layout
+  - Changed layout from 2-column to 3-column grid: `xl:grid-cols-[280px_1fr_300px]`
+  - Added scoresheets for both players (you + opponent)
+  - Files: `OnlineGame.tsx`
+
+- **Word Not Displaying in Scoresheet**
+  - Fixed `formedWords` not being populated in move history
+  - Now extracts word strings from `scoreResult.wordScores` when storing moves
+  - Scoresheet correctly displays word text instead of "–"
+  - Changed: `formedWords: scoreResult.wordScores.map(ws => ws.word)`
+  - Files: `game-manager.ts` (line 296)
+
+### Documentation
+- Added `BUG-FIXES-JAN7-2026.md` with detailed analysis of both fixes
+- Updated CHANGELOG.md with version 0.2.1 release notes
+
+---
+
 ## [0.2.0] - 2026-01-05
 
 ### Added
@@ -246,6 +276,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **0.2.1** - Scoresheet UI integration + word display fix (Jan 7, 2026)
 - **0.2.0** - Board/TileRack integration + bug fixes (Jan 5, 2026)
 - **0.1.0** - Client implementation complete (Jan 5, 2026)
 - **0.0.2** - Server core implementation (Jan 5, 2026)

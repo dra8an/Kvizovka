@@ -241,18 +241,18 @@ export class GameManager {
       return { success: false, error: validation.reason || 'Invalid move' }
     }
 
-    // Calculate score
+    // Update board BEFORE calculating score (so wordsFormed have the tiles!)
+    for (const pt of placedTiles) {
+      board.setTile(pt.row, pt.col, pt.tile)
+    }
+
+    // Calculate score (now board has the tiles)
     const scoreCalculator = new ScoreCalculator()
     const scoreResult = scoreCalculator.calculateMoveScore(
       validation.wordsFormed || [],
       placedTiles,
       placedTiles.length
     )
-
-    // Update board
-    for (const pt of placedTiles) {
-      board.setTile(pt.row, pt.col, pt.tile)
-    }
 
     // Place blockers
     if (validation.wordsFormed && validation.wordsFormed.length > 0 && validation.direction) {
@@ -293,6 +293,7 @@ export class GameManager {
       playerId: currentPlayer.id,
       type: MoveType.PLACE_TILES,
       placedTiles,
+      formedWords: scoreResult.wordScores.map(ws => ws.word),
       score: scoreResult.totalScore,
       timestamp: new Date(),
       drawnTileIds,

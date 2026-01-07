@@ -18,6 +18,7 @@ import { useOnlineGameStore } from '../../store/onlineGameStore'
 import { OnlineMenu } from '../OnlineMenu/OnlineMenu'
 import { Board } from '../Board/Board'
 import { TileRack } from '../TileRack/TileRack'
+import { Scoresheet } from '../Scoresheet/Scoresheet'
 import { GameStatus, PlacedTile } from '@kvizovka/shared'
 
 export function OnlineGame() {
@@ -192,50 +193,28 @@ export function OnlineGame() {
       </div>
 
       {/* Main Game Area */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Left Sidebar - Player Info */}
-        <div className="lg:col-span-1 space-y-4">
-          {/* You */}
-          <div className="card">
-            <h3 className="font-bold text-gray-700 mb-2">{you.name} (You)</h3>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Score:</span>
-                <span className="font-semibold">{you.score}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tiles:</span>
-                <span className="font-semibold">{you.tiles.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Rounds:</span>
-                <span className="font-semibold">{you.roundsPlayed}/10</span>
-              </div>
-            </div>
-          </div>
+      <div className="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-[280px_1fr_300px] gap-4">
+        {/* Left Sidebar - Scoresheets */}
+        <div className="hidden xl:block space-y-3">
+          {/* Your Scoresheet */}
+          <Scoresheet
+            playerId={you.id}
+            playerName={`${you.name} (You)`}
+            moves={gameState.moveHistory}
+            compact
+          />
 
-          {/* Opponent */}
-          <div className="card">
-            <h3 className="font-bold text-gray-700 mb-2">{opponent.name}</h3>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Score:</span>
-                <span className="font-semibold">{opponent.score}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tiles:</span>
-                <span className="font-semibold">{opponent.tiles.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Rounds:</span>
-                <span className="font-semibold">{opponent.roundsPlayed}/10</span>
-              </div>
-            </div>
-          </div>
+          {/* Opponent Scoresheet */}
+          <Scoresheet
+            playerId={opponent.id}
+            playerName={opponent.name}
+            moves={gameState.moveHistory}
+            compact
+          />
         </div>
 
-        {/* Center - Board */}
-        <div className="lg:col-span-3">
+        {/* Center - Board and Tiles */}
+        <div className="space-y-4">
           <Board
             boardState={gameState.board}
             playerTiles={you.tiles}
@@ -282,6 +261,26 @@ export function OnlineGame() {
               {gameError}
             </div>
           )}
+
+          {/* Scoresheets (mobile: show below controls) */}
+          <div className="xl:hidden grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+            <Scoresheet
+              playerId={you.id}
+              playerName={`${you.name} (You)`}
+              moves={gameState.moveHistory}
+            />
+            <Scoresheet
+              playerId={opponent.id}
+              playerName={opponent.name}
+              moves={gameState.moveHistory}
+            />
+          </div>
+        </div>
+
+        {/* Right Sidebar - TODO: Add OnlineScorePanel */}
+        <div className="hidden xl:block space-y-3">
+          {/* ScorePanel uses gameStore, need to create OnlineScorePanel */}
+          {/* For now, scoresheets on the left show all scoring info */}
         </div>
       </div>
     </div>
