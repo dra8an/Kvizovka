@@ -271,6 +271,7 @@ export const useGameStore = create<GameStoreState>()(
           timeRemaining: DEFAULT_TIME_LIMIT,
           timePenalties: 0,
           roundsPlayed: 0,
+          hasExchangedLastTurn: false,
         }
 
         const player2: Player = {
@@ -282,6 +283,7 @@ export const useGameStore = create<GameStoreState>()(
           timeRemaining: DEFAULT_TIME_LIMIT,
           timePenalties: 0,
           roundsPlayed: 0,
+          hasExchangedLastTurn: false,
         }
 
         // Create game state

@@ -14,11 +14,18 @@
 import { useState, useEffect } from 'react'
 import { dictionary } from '@kvizovka/shared'
 import { Game } from './components/Game/Game'
+import { GameModeMenu, GameMode as GameModeType } from './components/GameModeMenu/GameModeMenu'
+import { OnlineGame } from './components/OnlineGame/OnlineGame'
+
+type AppView = 'menu' | 'local' | 'online'
 
 function App() {
   // Dictionary state
   const [dictionaryLoaded, setDictionaryLoaded] = useState(false)
   const [dictionaryError, setDictionaryError] = useState<string | null>(null)
+
+  // Game mode state
+  const [view, setView] = useState<AppView>('menu')
 
   // Load dictionary on component mount
   useEffect(() => {
@@ -36,6 +43,16 @@ function App() {
 
     loadDictionary()
   }, [])
+
+  // Handle mode selection
+  const handleModeSelect = (mode: GameModeType) => {
+    setView(mode)
+  }
+
+  // Handle back to menu
+  const handleBackToMenu = () => {
+    setView('menu')
+  }
 
   // If dictionary is still loading, show loading screen
   if (!dictionaryLoaded && !dictionaryError) {
@@ -63,8 +80,20 @@ function App() {
     )
   }
 
-  // Dictionary loaded successfully - show game!
-  return <Game />
+  // Dictionary loaded successfully - show appropriate view
+  if (view === 'menu') {
+    return <GameModeMenu onSelectMode={handleModeSelect} />
+  }
+
+  if (view === 'local') {
+    return <Game />
+  }
+
+  if (view === 'online') {
+    return <OnlineGame />
+  }
+
+  return null
 }
 
 export default App

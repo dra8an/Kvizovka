@@ -16,27 +16,115 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { Square } from './Square'
-import { BOARD_SIZE, Tile as TileType } from '@kvizovka/shared'
+import { BOARD_SIZE, Tile as TileType, BoardType, PlacedTile } from '@kvizovka/shared'
 import { JokerLetterDialog } from '../JokerLetterDialog/JokerLetterDialog'
+
+/**
+ * Board Component Props (for online mode)
+ */
+interface BoardProps {
+  /**
+   * Board state (optional - uses gameStore if not provided)
+   */
+  boardState?: BoardType
+
+  /**
+   * Current player's tiles (optional - uses gameStore if not provided)
+   */
+  playerTiles?: TileType[]
+
+  /**
+   * Currently selected/placed tiles (optional - uses gameStore if not provided)
+   */
+  selectedTiles?: PlacedTile[]
+
+  /**
+   * Callback when tile is placed (optional - uses gameStore if not provided)
+   */
+  onTilePlaced?: (placedTile: PlacedTile) => void
+
+  /**
+   * Callback when tile is removed (optional - uses gameStore if not provided)
+   */
+  onTileRemoved?: (row: number, col: number) => void
+
+  /**
+   * Callback when joker letter is set (optional - uses gameStore if not provided)
+   */
+  onJokerLetterSet?: (row: number, col: number, letter: string) => void
+
+  /**
+   * Disabled state (for online mode when not your turn)
+   */
+  disabled?: boolean
+}
 
 /**
  * Board Component
  *
+ * Supports two modes:
+ * 1. Local mode (no props): Uses gameStore
+ * 2. Online mode (with props): Uses props and callbacks
+ *
  * Example usage:
  * ```tsx
+ * // Local mode
  * <Board />
- * ```
  *
- * The board automatically subscribes to game store,
- * so it updates whenever the board state changes.
+ * // Online mode
+ * <Board
+ *   boardState={gameState.board}
+ *   playerTiles={you.tiles}
+ *   selectedTiles={localSelectedTiles}
+ *   onTilePlaced={(tile) => setLocalSelectedTiles([...localSelectedTiles, tile])}
+ *   onTileRemoved={(row, col) => ...}
+ *   disabled={!isYourTurn}
+ * />
+ * ```
  */
-export function Board() {
-  // Subscribe to game store
-  const game = useGameStore((state) => state.game)
-  const selectTile = useGameStore((state) => state.selectTile)
-  const unselectTile = useGameStore((state) => state.unselectTile)
-  const selectedTiles = useGameStore((state) => state.selectedTiles)
-  const setJokerLetter = useGameStore((state) => state.setJokerLetter)
+export function Board(props: BoardProps = {}) {
+  // Subscribe to game store (for local mode)
+  const storeGame = useGameStore((state) => state.game)
+  const storeSelectTile = useGameStore((state) => state.selectTile)
+  const storeUnselectTile = useGameStore((state) => state.unselectTile)
+  const storeSelectedTiles = useGameStore((state) => state.selectedTiles)
+  const storeSetJokerLetter = useGameStore((state) => state.setJokerLetter)
+
+  // Determine which data source to use (props or store)
+  const isOnlineMode = !!props.boardState
+  const game = storeGame
+  const board = props.boardState || game?.board
+  const playerTiles = props.playerTiles || game?.players[game?.currentPlayerIndex || 0]?.tiles || []
+  const selectedTiles = props.selectedTiles !== undefined ? props.selectedTiles : storeSelectedTiles
+  const disabled = props.disabled || false
+
+  // Actions (use callbacks if provided, otherwise use store)
+  const selectTile = (tile: TileType, row: number, col: number) => {
+    if (disabled) return
+    if (props.onTilePlaced) {
+      props.onTilePlaced({ tile, row, col })
+    } else {
+      storeSelectTile(tile, row, col)
+    }
+  }
+
+  const unselectTile = (row: number, col: number) => {
+    if (disabled) return
+    if (props.onTileRemoved) {
+      props.onTileRemoved(row, col)
+    } else {
+      storeUnselectTile(row, col)
+    }
+  }
+
+  const setJokerLetter = (row: number, col: number, letter: string) => {
+    if (disabled) return
+    if (props.onJokerLetterSet) {
+      props.onJokerLetterSet(row, col, letter)
+    } else {
+      storeSetJokerLetter(row, col, letter)
+    }
+  }
 
   // Local state for drag-and-drop
   const [draggedTileId, setDraggedTileId] = useState<string | null>(null)
@@ -57,17 +145,14 @@ export function Board() {
     col: 0,
   })
 
-  // If no game, show placeholder
-  if (!game) {
+  // If no board, show placeholder
+  if (!board) {
     return (
       <div className="flex items-center justify-center p-12 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">
         <p className="text-gray-500 text-lg">No active game. Start a game to see the board!</p>
       </div>
     )
   }
-
-  // Get board from game state
-  const board = game.board
 
   /**
    * Check if a square is a valid drop target
@@ -103,6 +188,9 @@ export function Board() {
    * We get the tile ID from drag data and call selectTile to add it to selectedTiles.
    */
   const handleDrop = (row: number, col: number, event: React.DragEvent) => {
+    // Don't allow drops if disabled
+    if (disabled) return
+
     // Clear hover state
     setHoveredSquare(null)
 
@@ -153,8 +241,7 @@ export function Board() {
     }
 
     // Find the tile in current player's hand
-    const currentPlayer = game.players[game.currentPlayerIndex]
-    const tile = currentPlayer.tiles.find((t) => t.id === tileId)
+    const tile = playerTiles.find((t) => t.id === tileId)
 
     if (!tile) {
       console.error('Tile not found in player hand')

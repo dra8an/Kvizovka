@@ -243,9 +243,11 @@ async function initializeServer() {
     socket.on('game:make-move', (data, callback) => {
       try {
         const { gameId, placedTiles } = data
+        console.log(`[game:make-move] Received move for game ${gameId}, ${placedTiles.length} tiles`)
         const game = gameManager.getGame(gameId)
 
         if (!game) {
+          console.log(`[game:make-move] ERROR: Game ${gameId} not found`)
           callback({ success: false, error: 'Game not found' })
           return
         }
@@ -254,16 +256,21 @@ async function initializeServer() {
         const playerId = socket.data.playerId
 
         if (!playerId) {
+          console.log(`[game:make-move] ERROR: Player ID not found in socket data`)
           callback({ success: false, error: 'Player ID not found' })
           return
         }
 
+        console.log(`[game:make-move] Processing move for player ${playerId}`)
         const result = gameManager.makeMove(gameId, playerId, placedTiles)
 
         if (!result.success) {
+          console.log(`[game:make-move] Move rejected: ${result.error}`)
           callback({ success: false, error: result.error })
           return
         }
+
+        console.log(`[game:make-move] Move successful! Score: ${result.score}`)
 
         // Broadcast updated state to both players
         const [player1, player2] = game.players

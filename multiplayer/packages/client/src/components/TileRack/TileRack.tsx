@@ -16,27 +16,110 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { Tile } from './Tile'
-import { Tile as TileType } from '@kvizovka/shared'
+import { Tile as TileType, PlacedTile } from '@kvizovka/shared'
+
+/**
+ * TileRack Component Props (for online mode)
+ */
+interface TileRackProps {
+  /**
+   * Tiles to display (optional - uses gameStore if not provided)
+   */
+  tiles?: TileType[]
+
+  /**
+   * Player name (optional - uses gameStore if not provided)
+   */
+  playerName?: string
+
+  /**
+   * Currently placed tiles (optional - uses gameStore if not provided)
+   */
+  selectedTiles?: PlacedTile[]
+
+  /**
+   * Callback when tile is removed from board (optional - uses gameStore if not provided)
+   */
+  onTileRemoved?: (row: number, col: number) => void
+
+  /**
+   * Disabled state (for online mode when not your turn)
+   */
+  disabled?: boolean
+}
 
 /**
  * TileRack Component
  *
+ * Supports two modes:
+ * 1. Local mode (no props): Uses gameStore with full features
+ * 2. Online mode (with props): Simplified display and dragging
+ *
  * Example usage:
  * ```tsx
+ * // Local mode
  * <TileRack />
- * ```
  *
- * The rack automatically shows the current player's tiles.
+ * // Online mode
+ * <TileRack
+ *   tiles={you.tiles}
+ *   playerName={you.name}
+ *   selectedTiles={localSelectedTiles}
+ *   onTileRemoved={(row, col) => ...}
+ *   disabled={!isYourTurn}
+ * />
+ * ```
  */
-export function TileRack() {
-  // Subscribe to game store
-  const game = useGameStore((state) => state.game)
-  const selectedTiles = useGameStore((state) => state.selectedTiles)
-  const unselectTile = useGameStore((state) => state.unselectTile)
-  const reorderPlayerTiles = useGameStore((state) => state.reorderPlayerTiles)
-  const isExchangeMode = useGameStore((state) => state.isExchangeMode)
-  const tilesForExchange = useGameStore((state) => state.tilesForExchange)
-  const toggleTileForExchange = useGameStore((state) => state.toggleTileForExchange)
+export function TileRack(props: TileRackProps = {}) {
+  // Subscribe to game store (for local mode)
+  const storeGame = useGameStore((state) => state.game)
+  const storeSelectedTiles = useGameStore((state) => state.selectedTiles)
+  const storeUnselectTile = useGameStore((state) => state.unselectTile)
+  const storeReorderPlayerTiles = useGameStore((state) => state.reorderPlayerTiles)
+  const storeIsExchangeMode = useGameStore((state) => state.isExchangeMode)
+  const storeTilesForExchange = useGameStore((state) => state.tilesForExchange)
+  const storeToggleTileForExchange = useGameStore((state) => state.toggleTileForExchange)
+
+  // Determine which data source to use (props or store)
+  const isOnlineMode = props.tiles !== undefined
+  const game = storeGame
+  const currentPlayer = game?.players[game?.currentPlayerIndex || 0]
+  const playerName = props.playerName || currentPlayer?.name || 'Player'
+  const selectedTiles = props.selectedTiles !== undefined ? props.selectedTiles : storeSelectedTiles
+  const disabled = props.disabled || false
+
+  // For online mode, use provided tiles directly
+  // For local mode, get from game and filter out selected
+  const selectedTileIds = new Set(selectedTiles.map((st) => st.tile.id))
+  const allPlayerTiles = props.tiles || currentPlayer?.tiles || []
+  const availableTiles = allPlayerTiles.filter((tile) => !selectedTileIds.has(tile.id))
+
+  // Exchange mode only for local mode
+  const isExchangeMode = !isOnlineMode && storeIsExchangeMode
+  const tilesForExchange = !isOnlineMode ? storeTilesForExchange : []
+
+  // Actions
+  const unselectTile = (row: number, col: number) => {
+    if (props.onTileRemoved) {
+      props.onTileRemoved(row, col)
+    } else {
+      storeUnselectTile(row, col)
+    }
+  }
+
+  const reorderPlayerTiles = (fromIndex: number, toIndex: number) => {
+    if (!isOnlineMode) {
+      storeReorderPlayerTiles(fromIndex, toIndex)
+    }
+    // Online mode doesn't support reordering
+  }
+
+  const toggleTileForExchange = (tile: TileType) => {
+    if (!isOnlineMode) {
+      storeToggleTileForExchange(tile)
+    }
+    // Online mode doesn't support exchange mode in TileRack
+  }
 
   // Local state for drag-and-drop
   const [draggedTile, setDraggedTile] = useState<TileType | null>(null)
@@ -51,15 +134,6 @@ export function TileRack() {
       </div>
     )
   }
-
-  // Get current player
-  const currentPlayer = game.players[game.currentPlayerIndex]
-
-  // Filter out tiles that are currently placed on the board (in selectedTiles)
-  const selectedTileIds = new Set(selectedTiles.map((st) => st.tile.id))
-  const availableTiles = currentPlayer.tiles.filter(
-    (tile) => !selectedTileIds.has(tile.id)
-  )
 
   /**
    * Handle drag start
@@ -188,7 +262,7 @@ export function TileRack() {
       {/* Player info */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-bold text-gray-800">{currentPlayer.name}'s Tiles</h3>
+          <h3 className="text-base font-bold text-gray-800">{playerName}'s Tiles</h3>
           <p className="text-xs text-gray-600">
             {availableTiles.length} tile{availableTiles.length !== 1 ? 's' : ''} in hand
             {selectedTiles.length > 0 && (
@@ -198,9 +272,11 @@ export function TileRack() {
             )}
           </p>
         </div>
-        <div className="text-xs text-gray-600">
-          <p className="font-semibold">Your Turn</p>
-        </div>
+        {!disabled && (
+          <div className="text-xs text-gray-600">
+            <p className="font-semibold">Your Turn</p>
+          </div>
+        )}
       </div>
 
       {/* Tile rack container */}
@@ -250,7 +326,7 @@ export function TileRack() {
                     onDragEnd={handleDragEnd}
                     isDragging={draggedTile?.id === tile.id}
                     isWithinRack={true}
-                    disabled={isExchangeMode}
+                    disabled={isExchangeMode || disabled}
                   />
                 </div>
               )
