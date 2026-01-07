@@ -37,6 +37,7 @@ export function OnlineMenu() {
   const [menuView, setMenuView] = useState<MenuView>('choice')
   const [inputName, setInputName] = useState('')
   const [inputRoomCode, setInputRoomCode] = useState('')
+  const [copied, setCopied] = useState(false)
 
   // Connect to server on mount
   // NOTE: We don't disconnect on unmount because the connection
@@ -60,6 +61,18 @@ export function OnlineMenu() {
   // Handle ready
   const handleReady = () => {
     ready()
+  }
+
+  // Handle copy room code
+  const handleCopyRoomCode = async () => {
+    if (!roomCode) return
+    try {
+      await navigator.clipboard.writeText(roomCode)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000) // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy room code:', err)
+    }
   }
 
   // If not connected, show loading
@@ -87,8 +100,21 @@ export function OnlineMenu() {
           {/* Room Code Display */}
           <div className="text-center mb-6">
             <h2 className="text-xl font-bold text-gray-700 mb-3">Room Code</h2>
-            <div className="room-code-display">
-              {roomCode}
+            <div className="flex items-center justify-center gap-3">
+              <div className="room-code-display">
+                {roomCode}
+              </div>
+              <button
+                onClick={handleCopyRoomCode}
+                className="copy-button"
+                title="Copy room code"
+              >
+                {copied ? (
+                  <span className="copy-button-success">✓ Copied!</span>
+                ) : (
+                  <span>📋 Copy</span>
+                )}
+              </button>
             </div>
             <p className="text-sm text-gray-600 mt-3">
               Share this code with your opponent
@@ -394,6 +420,34 @@ const styles = `
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.copy-button {
+  padding: 0.75rem 1.25rem;
+  background: white;
+  color: #4b5563;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 2px solid #d1d5db;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.copy-button:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  transform: translateY(-2px);
+}
+
+.copy-button:active {
+  transform: translateY(0);
+}
+
+.copy-button-success {
+  color: #059669;
+  font-weight: 600;
 }
 `
 
