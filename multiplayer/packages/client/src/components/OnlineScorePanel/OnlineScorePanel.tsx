@@ -1,0 +1,194 @@
+/**
+ * OnlineScorePanel Component
+ *
+ * Props-based version of ScorePanel for online multiplayer.
+ * Displays game scores, timer, and statistics for both players.
+ */
+
+import { GameState } from '@kvizovka/shared'
+
+interface OnlineScorePanelProps {
+  gameState: GameState
+  yourPlayerId: string
+  opponentName: string
+}
+
+export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: OnlineScorePanelProps) {
+  /**
+   * Format time in MM:SS
+   */
+  const formatTime = (ms: number): string => {
+    const totalSeconds = Math.floor(ms / 1000)
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  }
+
+  // Get players
+  const you = gameState.players.find((p) => p.id === yourPlayerId)
+  const opponent = gameState.players.find((p) => p.id !== yourPlayerId)
+
+  if (!you || !opponent) {
+    return (
+      <div className="flex items-center justify-center p-6 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">
+        <p className="text-gray-500">Loading players...</p>
+      </div>
+    )
+  }
+
+  // Determine if it's your turn
+  const isYourTurn = gameState.players[gameState.currentPlayerIndex].id === yourPlayerId
+  const isOpponentTurn = gameState.players[gameState.currentPlayerIndex].id === opponent.id
+
+  // Count tiles remaining in bag
+  const tilesRemaining = gameState.tileBag.length
+
+  // Get last move
+  const lastMove = gameState.moveHistory[gameState.moveHistory.length - 1]
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Game info header */}
+      <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white p-4 rounded-lg shadow-lg">
+        <h2 className="text-xl font-bold mb-2">Game Status</h2>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="opacity-80">Round:</span>{' '}
+            <span className="font-semibold">{gameState.round}/10</span>
+          </div>
+          <div>
+            <span className="opacity-80">Tiles left:</span>{' '}
+            <span className="font-semibold">{tilesRemaining}</span>
+          </div>
+          <div>
+            <span className="opacity-80">Total moves:</span>{' '}
+            <span className="font-semibold">{gameState.moveHistory.length}</span>
+          </div>
+          <div>
+            <span className="opacity-80">Status:</span>{' '}
+            <span className="font-semibold">{gameState.status}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* You (Player 1 style) */}
+      <div
+        className={`
+        p-4 rounded-lg shadow-md transition-all
+        ${
+          isYourTurn
+            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white ring-4 ring-blue-300'
+            : 'bg-white text-gray-800'
+        }
+      `}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-bold">{you.name} (You)</h3>
+          {isYourTurn && (
+            <span className="text-xs font-semibold bg-white text-blue-600 px-2 py-1 rounded">
+              CURRENT TURN
+            </span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <p className={isYourTurn ? 'opacity-90' : 'text-gray-600'}>
+              Score
+            </p>
+            <p className="text-3xl font-bold">{you.score}</p>
+          </div>
+          <div>
+            <p className={isYourTurn ? 'opacity-90' : 'text-gray-600'}>
+              Time Left
+            </p>
+            <p
+              className={`text-2xl font-bold ${
+                you.timeRemaining < 60000 ? 'text-red-300' : ''
+              }`}
+            >
+              {formatTime(you.timeRemaining)}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 text-xs opacity-80">
+          <span>Rounds played: {you.roundsPlayed}</span>
+          <span className="mx-2">•</span>
+          <span>Tiles: {you.tiles.length}</span>
+        </div>
+      </div>
+
+      {/* Opponent (Player 2 style) */}
+      <div
+        className={`
+        p-4 rounded-lg shadow-md transition-all
+        ${
+          isOpponentTurn
+            ? 'bg-gradient-to-r from-green-500 to-green-600 text-white ring-4 ring-green-300'
+            : 'bg-white text-gray-800'
+        }
+      `}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-bold">{opponentName}</h3>
+          {isOpponentTurn && (
+            <span className="text-xs font-semibold bg-white text-green-600 px-2 py-1 rounded">
+              CURRENT TURN
+            </span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <p className={isOpponentTurn ? 'opacity-90' : 'text-gray-600'}>
+              Score
+            </p>
+            <p className="text-3xl font-bold">{opponent.score}</p>
+          </div>
+          <div>
+            <p className={isOpponentTurn ? 'opacity-90' : 'text-gray-600'}>
+              Time Left
+            </p>
+            <p
+              className={`text-2xl font-bold ${
+                opponent.timeRemaining < 60000 ? 'text-red-300' : ''
+              }`}
+            >
+              {formatTime(opponent.timeRemaining)}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 text-xs opacity-80">
+          <span>Rounds played: {opponent.roundsPlayed}</span>
+          <span className="mx-2">•</span>
+          <span>Tiles: {opponent.tiles.length}</span>
+        </div>
+      </div>
+
+      {/* Last move info */}
+      {lastMove && (
+        <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200">
+          <h4 className="text-sm font-bold text-purple-900 mb-1">Last Move</h4>
+          <div className="text-xs text-purple-800">
+            <p>
+              <span className="font-semibold">Type:</span> {lastMove.type}
+            </p>
+            {lastMove.score > 0 && (
+              <p>
+                <span className="font-semibold">Score:</span> +{lastMove.score} points
+              </p>
+            )}
+            {lastMove.formedWords && lastMove.formedWords.length > 0 && (
+              <p>
+                <span className="font-semibold">Words:</span>{' '}
+                {lastMove.formedWords.join(', ')}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

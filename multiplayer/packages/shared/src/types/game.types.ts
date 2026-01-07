@@ -135,6 +135,13 @@ export interface Player {
    * Used to prevent consecutive exchanges
    */
   hasExchangedLastTurn: boolean
+
+  /**
+   * Tile penalty applied at end of game
+   * Sum of unused tile values (jokers = 10 points)
+   * Only set when game ends
+   */
+  tilePenalty?: number
 }
 
 /**

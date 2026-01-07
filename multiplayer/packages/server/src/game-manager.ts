@@ -190,10 +190,16 @@ export class GameManager {
           // Send full data for this player
           return player
         } else {
-          // Hide opponent's tiles
-          return {
-            ...player,
-            tiles: [], // IMPORTANT: Don't send opponent's tiles!
+          // For opponent: hide tiles during gameplay, but show them when game is completed
+          if (gameState.status === GameStatus.COMPLETED) {
+            // Game over - players can see each other's remaining tiles
+            return player
+          } else {
+            // Game in progress - hide opponent's tiles
+            return {
+              ...player,
+              tiles: [], // IMPORTANT: Don't send opponent's tiles during gameplay!
+            }
           }
         }
       }) as [Player, Player],
@@ -278,11 +284,16 @@ export class GameManager {
     const placedTileIds = new Set(placedTiles.map((pt) => pt.tile.id))
     currentPlayer.tiles = currentPlayer.tiles.filter((t) => !placedTileIds.has(t.id))
 
-    // Draw new tiles
-    const tilesToDraw = Math.min(TILES_PER_PLAYER - currentPlayer.tiles.length, game.tileBagInstance.remaining())
-    const newTiles = game.tileBagInstance.draw(tilesToDraw)
-    const drawnTileIds = newTiles.map((t) => t.id)
-    currentPlayer.tiles.push(...newTiles)
+    // Draw new tiles (but not if this is the player's 10th round)
+    let drawnTileIds: string[] = []
+    if (currentPlayer.roundsPlayed < 9) {
+      // Still have more rounds to play, draw tiles
+      const tilesToDraw = Math.min(TILES_PER_PLAYER - currentPlayer.tiles.length, game.tileBagInstance.remaining())
+      const newTiles = game.tileBagInstance.draw(tilesToDraw)
+      drawnTileIds = newTiles.map((t) => t.id)
+      currentPlayer.tiles.push(...newTiles)
+    }
+    // If roundsPlayed === 9, this is move 10, so don't draw tiles
 
     // Increment rounds
     currentPlayer.roundsPlayed++
@@ -416,9 +427,11 @@ export class GameManager {
     // Remove from player
     currentPlayer.tiles = currentPlayer.tiles.filter((t) => !tileIds.includes(t.id))
 
-    // Draw new tiles
-    const newTiles = game.tileBagInstance.draw(tilesToExchange.length)
-    currentPlayer.tiles.push(...newTiles)
+    // Draw new tiles (but not if this is the player's 10th round)
+    if (currentPlayer.roundsPlayed < 9) {
+      const newTiles = game.tileBagInstance.draw(tilesToExchange.length)
+      currentPlayer.tiles.push(...newTiles)
+    }
 
     // Record exchange
     game.moveHistory.push({
@@ -589,9 +602,38 @@ export class GameManager {
     game.status = GameStatus.COMPLETED
     game.endReason = reason as any
 
-    // Determine winner
     const [player1, player2] = game.players
 
+    // Apply tile penalties for unused tiles
+    // Each player loses points equal to the sum of their unused tile values
+    // Jokers have a 10-point penalty
+    const calculateTilePenalty = (tiles: any[]): number => {
+      return tiles.reduce((sum, tile) => {
+        if (tile.isJoker) {
+          return sum + 10  // Joker penalty
+        }
+        return sum + tile.value
+      }, 0)
+    }
+
+    const player1Penalty = calculateTilePenalty(player1.tiles)
+    const player2Penalty = calculateTilePenalty(player2.tiles)
+
+    // Store penalties in player objects (survives sanitization)
+    player1.tilePenalty = player1Penalty
+    player2.tilePenalty = player2Penalty
+
+    if (player1Penalty > 0) {
+      player1.score -= player1Penalty
+      console.log(`[GameManager] ${player1.name} tile penalty: -${player1Penalty} (${player1.tiles.length} tiles left)`)
+    }
+
+    if (player2Penalty > 0) {
+      player2.score -= player2Penalty
+      console.log(`[GameManager] ${player2.name} tile penalty: -${player2Penalty} (${player2.tiles.length} tiles left)`)
+    }
+
+    // Determine winner (after penalties applied)
     if (player1.score > player2.score) {
       game.winner = player1.id
     } else if (player2.score > player1.score) {
@@ -600,7 +642,7 @@ export class GameManager {
     // else: tie (winner stays null)
 
     console.log(`[GameManager] Game ${game.id} ended: ${reason}`)
-    console.log(`[GameManager] Final scores: ${player1.name} ${player1.score}, ${player2.name} ${player2.score}`)
+    console.log(`[GameManager] Final scores (after penalties): ${player1.name} ${player1.score}, ${player2.name} ${player2.score}`)
   }
 
   /**

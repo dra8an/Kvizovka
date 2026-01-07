@@ -20,7 +20,7 @@ import type {
   InterServerEvents,
   SocketData,
 } from '@kvizovka/shared'
-import { WordValidator } from '@kvizovka/shared'
+import { WordValidator, GameStatus } from '@kvizovka/shared'
 
 import { loadDictionary } from './dictionary-loader'
 import { roomManager } from './room-manager'
@@ -434,6 +434,80 @@ async function initializeServer() {
       } catch (error) {
         console.error('[game:challenge] Error:', error)
         callback({ success: false, error: 'Failed to challenge word' })
+      }
+    })
+
+    /**
+     * Force End Game (for testing)
+     */
+    socket.on('game:force-end', (data, callback) => {
+      try {
+        const { gameId } = data
+        const game = gameManager.getGame(gameId)
+
+        if (!game) {
+          callback({ success: false, error: 'Game not found' })
+          return
+        }
+
+        console.log(`[game:force-end] Forcing game ${gameId} to end (test mode)`)
+
+        // Force the game to end with rounds_completed reason
+        game.status = GameStatus.COMPLETED
+        game.endReason = 'rounds_completed'
+
+        // Apply tile penalties
+        const [player1, player2] = game.players
+
+        const calculateTilePenalty = (tiles: any[]): number => {
+          return tiles.reduce((sum, tile) => {
+            if (tile.isJoker) {
+              return sum + 10
+            }
+            return sum + tile.value
+          }, 0)
+        }
+
+        const player1Penalty = calculateTilePenalty(player1.tiles)
+        const player2Penalty = calculateTilePenalty(player2.tiles)
+
+        player1.tilePenalty = player1Penalty
+        player2.tilePenalty = player2Penalty
+
+        if (player1Penalty > 0) {
+          player1.score -= player1Penalty
+        }
+
+        if (player2Penalty > 0) {
+          player2.score -= player2Penalty
+        }
+
+        // Determine winner
+        if (player1.score > player2.score) {
+          game.winner = player1.id
+        } else if (player2.score > player1.score) {
+          game.winner = player2.id
+        }
+
+        console.log(`[game:force-end] Final scores: ${player1.name} ${player1.score}, ${player2.name} ${player2.score}`)
+
+        // Broadcast updated state to both players
+        const room = roomManager.getRoomByPlayer(socket.id)
+
+        if (room && room.gameId === gameId) {
+          io.to(room.hostId).emit('game:state-update', {
+            gameState: gameManager.sanitizeGameState(game, player1.id),
+          })
+
+          io.to(room.guestId!).emit('game:state-update', {
+            gameState: gameManager.sanitizeGameState(game, player2.id),
+          })
+        }
+
+        callback({ success: true })
+      } catch (error) {
+        console.error('[game:force-end] Error:', error)
+        callback({ success: false, error: 'Failed to end game' })
       }
     })
 

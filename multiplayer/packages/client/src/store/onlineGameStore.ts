@@ -19,6 +19,7 @@
 import { create } from 'zustand'
 import {
   GameState,
+  GameStatus,
   PlacedTile,
 } from '@kvizovka/shared'
 import { socketService } from '../services/socket'
@@ -390,6 +391,26 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   },
 
   // ========================================
+  // TEST HELPERS
+  // ========================================
+
+  forceEndGame: () => {
+    const { gameId } = get()
+    if (!gameId) return
+
+    console.log('[OnlineStore] Force ending game (test mode)...')
+    set({ gameError: null })
+
+    socketService.emit('game:force-end', { gameId }, (response) => {
+      if (!response.success) {
+        console.error('[OnlineStore] Force end failed:', response.error)
+        set({ gameError: response.error || 'Failed to end game' })
+      }
+      // Server will send game:state-update event with COMPLETED status
+    })
+  },
+
+  // ========================================
   // RESET
   // ========================================
 
@@ -430,10 +451,12 @@ function setupGameEventHandlers(
   // Game state update
   socketService.on('game:state-update', (data) => {
     console.log('[OnlineStore] State update received')
+    console.log('[OnlineStore] Game status:', data.gameState.status)
     set({ gameState: data.gameState })
 
     // Check if game is finished
-    if (data.gameState.status === 'COMPLETED') {
+    if (data.gameState.status === GameStatus.COMPLETED) {
+      console.log('[OnlineStore] Game completed! Setting view to finished')
       set({ view: 'finished' })
     }
   })
