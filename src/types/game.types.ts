@@ -364,6 +364,17 @@ export interface GameState {
    * Paused during opponent's turn in local mode
    */
   timerRunning: boolean
+
+  /**
+   * Jokers played in the last move that can be stolen
+   * Only valid for the immediate next turn
+   * Cleared after opponent's move
+   */
+  stealableJokers?: Array<{
+    row: number
+    col: number
+    assignedLetter: string
+  }>
 }
 
 /**

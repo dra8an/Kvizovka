@@ -37,9 +37,13 @@ export function TileRack() {
   const isExchangeMode = useGameStore((state) => state.isExchangeMode)
   const tilesForExchange = useGameStore((state) => state.tilesForExchange)
   const toggleTileForExchange = useGameStore((state) => state.toggleTileForExchange)
+  const setDraggedTileInStore = useGameStore((state) => state.setDraggedTile)
+  const setHoveredSquare = useGameStore((state) => state.setHoveredSquare)
+  const draggedTile = useGameStore((state) => state.draggedTile)
+  const hoveredSquare = useGameStore((state) => state.hoveredSquare)
 
   // Local state for drag-and-drop
-  const [draggedTile, setDraggedTile] = useState<TileType | null>(null)
+  const [localDraggedTile, setLocalDraggedTile] = useState<TileType | null>(null)
   const [draggedFromIndex, setDraggedFromIndex] = useState<number | null>(null)
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null)
 
@@ -67,8 +71,9 @@ export function TileRack() {
    * Store the dragged tile and its index so we can use it when dropped.
    */
   const handleDragStart = (tile: TileType, index: number) => {
-    setDraggedTile(tile)
+    setLocalDraggedTile(tile)
     setDraggedFromIndex(index)
+    setDraggedTileInStore(tile) // Update store for board visual feedback
     console.log('Started dragging tile:', tile.letter, 'from index', index)
   }
 
@@ -78,9 +83,11 @@ export function TileRack() {
    * Clear dragged tile state.
    */
   const handleDragEnd = () => {
-    setDraggedTile(null)
+    setLocalDraggedTile(null)
     setDraggedFromIndex(null)
     setDropTargetIndex(null)
+    setDraggedTileInStore(null) // Clear store
+    setHoveredSquare(null) // Clear hovered square
     console.log('Stopped dragging')
   }
 
@@ -183,6 +190,29 @@ export function TileRack() {
     return tilesForExchange.some((t) => t.id === tile.id)
   }
 
+  /**
+   * Get steal state for a tile being dragged over a stealable joker
+   * Returns 'valid' if can steal, 'invalid' if cannot, undefined if not hovering joker
+   */
+  const getStealState = (tile: TileType): 'valid' | 'invalid' | undefined => {
+    // Only check if this tile is being dragged and we're hovering over a square
+    if (!draggedTile || draggedTile.id !== tile.id || !hoveredSquare || !game) {
+      return undefined
+    }
+
+    // Check if the hovered square has a stealable joker
+    const stealableJoker = game.stealableJokers?.find(
+      (j) => j.row === hoveredSquare.row && j.col === hoveredSquare.col
+    )
+
+    if (!stealableJoker) {
+      return undefined // Not hovering over a stealable joker
+    }
+
+    // Check if the tile's letter matches the joker's assigned letter
+    return tile.letter === stealableJoker.assignedLetter ? 'valid' : 'invalid'
+  }
+
   return (
     <div className="flex flex-col gap-1.5">
       {/* Player info */}
@@ -229,6 +259,16 @@ export function TileRack() {
           {availableTiles.length > 0 ? (
             availableTiles.map((tile, index) => {
               const isSelectedForExchange = isTileSelectedForExchange(tile)
+              const stealState = getStealState(tile)
+
+              // Get glow class based on steal state
+              let glowClass = ''
+              if (stealState === 'valid') {
+                glowClass = 'ring-4 ring-green-500 shadow-[0_0_25px_rgba(34,197,94,0.8)] scale-110'
+              } else if (stealState === 'invalid') {
+                glowClass = 'ring-4 ring-red-500 shadow-[0_0_25px_rgba(239,68,68,0.8)] scale-110'
+              }
+
               return (
                 <div
                   key={tile.id}
@@ -241,6 +281,7 @@ export function TileRack() {
                     ${dropTargetIndex === index && draggedFromIndex !== index ? 'scale-110' : ''}
                     ${isExchangeMode ? 'cursor-pointer' : ''}
                     ${isSelectedForExchange ? 'ring-4 ring-purple-400 rounded scale-105' : ''}
+                    ${glowClass}
                   `}
                 >
                   <Tile
@@ -248,7 +289,7 @@ export function TileRack() {
                     tileIndex={index}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
-                    isDragging={draggedTile?.id === tile.id}
+                    isDragging={localDraggedTile?.id === tile.id}
                     isWithinRack={true}
                     disabled={isExchangeMode}
                   />
@@ -277,9 +318,9 @@ export function TileRack() {
       </div>
 
       {/* Debug info (can be removed later) */}
-      {draggedTile && (
+      {localDraggedTile && (
         <div className="text-xs text-gray-500 text-center">
-          Dragging: {draggedTile.isJoker ? 'Joker' : draggedTile.letter} (value: {draggedTile.value})
+          Dragging: {localDraggedTile.isJoker ? 'Joker' : localDraggedTile.letter} (value: {localDraggedTile.value})
         </div>
       )}
     </div>

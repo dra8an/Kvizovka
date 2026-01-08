@@ -94,6 +94,16 @@ interface GameStoreState {
   tilesForExchange: Tile[]
 
   /**
+   * Currently dragged tile (for visual feedback during drag-and-drop)
+   */
+  draggedTile: Tile | null
+
+  /**
+   * Square currently being hovered during drag (for visual feedback)
+   */
+  hoveredSquare: { row: number; col: number } | null
+
+  /**
    * Timer interval ID (for stopping timer)
    */
   timerIntervalId: number | null
@@ -159,6 +169,22 @@ interface GameStoreState {
   setJokerLetter: (row: number, col: number, letter: string) => void
 
   /**
+   * Steal a joker from the board by replacing it with a matching letter tile
+   * Returns true if successful, false if stealing is not allowed
+   */
+  stealJoker: (row: number, col: number, replacementTile: Tile) => boolean
+
+  /**
+   * Set the currently dragged tile (for visual feedback)
+   */
+  setDraggedTile: (tile: Tile | null) => void
+
+  /**
+   * Set the currently hovered square during drag (for visual feedback)
+   */
+  setHoveredSquare: (square: { row: number; col: number } | null) => void
+
+  /**
    * Reorder tiles in current player's hand
    */
   reorderPlayerTiles: (fromIndex: number, toIndex: number) => void
@@ -212,7 +238,7 @@ interface GameStoreState {
  */
 const createInitialState = (): Pick<
   GameStoreState,
-  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'timerIntervalId'
+  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'draggedTile' | 'hoveredSquare' | 'timerIntervalId'
 > => ({
   game: null,
   boardInstance: null,
@@ -222,6 +248,8 @@ const createInitialState = (): Pick<
   lastPlayedWord: null,
   isExchangeMode: false,
   tilesForExchange: [],
+  draggedTile: null,
+  hoveredSquare: null,
   timerIntervalId: null,
 })
 
@@ -416,6 +444,15 @@ export const useGameStore = create<GameStoreState>()(
           moveIndex: game.moveHistory.length - 1,
         }
 
+        // Track jokers played in this move (for stealing next turn)
+        const stealableJokers = placedTiles
+          .filter(pt => pt.tile.isJoker && pt.tile.jokerLetter)
+          .map(pt => ({
+            row: pt.row,
+            col: pt.col,
+            assignedLetter: pt.tile.jokerLetter!
+          }))
+
         // Switch to next player
         game.currentPlayerIndex = game.currentPlayerIndex === 0 ? 1 : 0
 
@@ -426,6 +463,7 @@ export const useGameStore = create<GameStoreState>()(
             board: boardInstance.getGrid(),
             tileBag: state.tileBagInstance!.peekTiles(),
             updatedAt: new Date(),
+            stealableJokers: stealableJokers.length > 0 ? stealableJokers : undefined,
           },
           selectedTiles: [],
           lastPlayedWord, // Store for challenge
@@ -465,7 +503,7 @@ export const useGameStore = create<GameStoreState>()(
         game.currentPlayerIndex = game.currentPlayerIndex === 0 ? 1 : 0
 
         set({
-          game: { ...game, updatedAt: new Date() },
+          game: { ...game, updatedAt: new Date(), stealableJokers: undefined },
           selectedTiles: [],
         })
 
@@ -527,6 +565,7 @@ export const useGameStore = create<GameStoreState>()(
             ...game,
             tileBag: tileBagInstance.peekTiles(),
             updatedAt: new Date(),
+            stealableJokers: undefined,
           },
           isExchangeMode: false,
           tilesForExchange: [],
@@ -728,6 +767,103 @@ export const useGameStore = create<GameStoreState>()(
               : st
           ),
         })
+      },
+
+      /**
+       * Steal a joker from the board
+       */
+      stealJoker: (row: number, col: number, replacementTile: Tile): boolean => {
+        const { game, boardInstance } = get()
+
+        if (!game || !boardInstance) {
+          console.log('[stealJoker] No game or board instance')
+          return false
+        }
+
+        // Check if there are stealable jokers
+        if (!game.stealableJokers || game.stealableJokers.length === 0) {
+          console.log('[stealJoker] No stealable jokers available')
+          return false
+        }
+
+        // Check if this position has a stealable joker
+        const stealableJoker = game.stealableJokers.find(
+          (j) => j.row === row && j.col === col
+        )
+
+        if (!stealableJoker) {
+          console.log('[stealJoker] Position does not have a stealable joker')
+          return false
+        }
+
+        // Check if replacement tile's letter matches the joker's assigned letter
+        if (replacementTile.letter !== stealableJoker.assignedLetter) {
+          console.log('[stealJoker] Replacement tile letter does not match joker letter')
+          return false
+        }
+
+        // Get current player
+        const currentPlayer = game.players[game.currentPlayerIndex]
+
+        // Check if player has the replacement tile
+        const tileIndex = currentPlayer.tiles.findIndex((t) => t.id === replacementTile.id)
+        if (tileIndex === -1) {
+          console.log('[stealJoker] Player does not have replacement tile')
+          return false
+        }
+
+        // Get the joker from the board
+        const square = boardInstance.getSquare(row, col)
+        const squareTile = square.tile
+
+        // Check if the tile exists and is a joker (not a blocker)
+        if (!squareTile || !('isJoker' in squareTile) || !squareTile.isJoker) {
+          console.log('[stealJoker] No joker at specified position')
+          return false
+        }
+
+        const stolenJoker = squareTile
+
+        // Remove replacement tile from player's hand
+        currentPlayer.tiles.splice(tileIndex, 1)
+
+        // Add stolen joker to player's hand (reset its jokerLetter)
+        const resetJoker = { ...stolenJoker, jokerLetter: undefined }
+        currentPlayer.tiles.push(resetJoker)
+
+        // Replace the joker on the board with the replacement tile
+        boardInstance.setTile(row, col, replacementTile)
+
+        // Update game state and clear stealable jokers (joker has been stolen)
+        set({
+          game: {
+            ...game,
+            board: boardInstance.getGrid(),
+            updatedAt: new Date(),
+            stealableJokers: undefined,
+          },
+        })
+
+        console.log('[stealJoker] Successfully stole joker at', row, col)
+        return true
+      },
+
+      /**
+       * Set the currently dragged tile
+       *
+       * Used for visual feedback during drag-and-drop operations.
+       */
+      setDraggedTile: (tile: Tile | null) => {
+        set({ draggedTile: tile })
+      },
+
+      /**
+       * Set the currently hovered square
+       *
+       * Used for visual feedback on the dragged tile during drag-and-drop.
+       */
+      setHoveredSquare: (square: { row: number; col: number } | null) => {
+        set({ hoveredSquare: square })
       },
 
       /**

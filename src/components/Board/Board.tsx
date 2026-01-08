@@ -38,12 +38,11 @@ export function Board() {
   const unselectTile = useGameStore((state) => state.unselectTile)
   const selectedTiles = useGameStore((state) => state.selectedTiles)
   const setJokerLetter = useGameStore((state) => state.setJokerLetter)
-
-  // Local state for drag-and-drop
-  const [draggedTileId, setDraggedTileId] = useState<string | null>(null)
-  const [hoveredSquare, setHoveredSquare] = useState<{ row: number; col: number } | null>(
-    null
-  )
+  const stealJoker = useGameStore((state) => state.stealJoker)
+  const draggedTile = useGameStore((state) => state.draggedTile)
+  const setDraggedTile = useGameStore((state) => state.setDraggedTile)
+  const setHoveredSquare = useGameStore((state) => state.setHoveredSquare)
+  const hoveredSquare = useGameStore((state) => state.hoveredSquare)
 
   // Local state for joker letter selection
   const [jokerDialog, setJokerDialog] = useState<{
@@ -56,6 +55,21 @@ export function Board() {
     tile: null,
     row: 0,
     col: 0,
+  })
+
+  // Local state for joker stealing confirmation
+  const [stealConfirmDialog, setStealConfirmDialog] = useState<{
+    show: boolean
+    row: number
+    col: number
+    tile: TileType | null
+    jokerLetter: string
+  }>({
+    show: false,
+    row: 0,
+    col: 0,
+    tile: null,
+    jokerLetter: '',
   })
 
   // If no game, show placeholder
@@ -91,9 +105,10 @@ export function Board() {
    * Handle drag over square
    *
    * This is called when user drags a tile over a square.
-   * We track which square is being hovered for visual feedback.
+   * We track which square is being hovered for visual feedback on the dragged tile.
    */
-  const handleDragOver = (row: number, col: number) => {
+  const handleDragOver = (row: number, col: number, event: React.DragEvent) => {
+    // Update hovered square in store (TileRack will use this for visual feedback)
     setHoveredSquare({ row, col })
   }
 
@@ -102,16 +117,11 @@ export function Board() {
    *
    * This is called when user drops a tile on a square.
    * We get the tile ID from drag data and call selectTile to add it to selectedTiles.
+   * Also handles joker stealing when dropping a tile on a stealable joker.
    */
   const handleDrop = (row: number, col: number, event: React.DragEvent) => {
     // Clear hover state
     setHoveredSquare(null)
-
-    // Check if valid drop
-    if (!isValidDropTarget(row, col)) {
-      console.log('Invalid drop target')
-      return
-    }
 
     // Get drag data
     const dragData = event.dataTransfer.getData('text/plain')
@@ -162,6 +172,45 @@ export function Board() {
       return
     }
 
+    // Check for joker stealing BEFORE checking if square is empty
+    // A stealable joker means the square is NOT empty, but it's a valid action
+    const square = board[row]?.[col]
+    const stealableJoker = game.stealableJokers?.find(
+      (j) => j.row === row && j.col === col
+    )
+
+    // Check if square has a tile and it's not a blocker
+    const squareTile = square?.tile
+    const isTileAJoker =
+      squareTile && 'isJoker' in squareTile && squareTile.isJoker
+
+    if (stealableJoker && isTileAJoker) {
+      // Check if the tile being dropped matches the joker's assigned letter
+      if (tile.letter === stealableJoker.assignedLetter) {
+        // Show confirmation dialog for joker stealing
+        console.log(`Detected joker stealing attempt at ${row},${col}`)
+        setStealConfirmDialog({
+          show: true,
+          row: row,
+          col: col,
+          tile: tile,
+          jokerLetter: stealableJoker.assignedLetter,
+        })
+        return
+      } else {
+        console.log(
+          `Tile letter ${tile.letter} does not match joker letter ${stealableJoker.assignedLetter}`
+        )
+        return
+      }
+    }
+
+    // Check if valid drop (normal tile placement)
+    if (!isValidDropTarget(row, col)) {
+      console.log('Invalid drop target')
+      return
+    }
+
     // Add tile to selectedTiles
     selectTile(tile, row, col)
 
@@ -178,7 +227,7 @@ export function Board() {
     }
 
     // Clear dragged tile
-    setDraggedTileId(null)
+    setDraggedTile(null)
   }
 
   /**
@@ -209,6 +258,52 @@ export function Board() {
   }
 
   /**
+   * Handle joker steal confirmation
+   */
+  const handleStealConfirm = () => {
+    if (stealConfirmDialog.tile) {
+      const success = stealJoker(
+        stealConfirmDialog.row,
+        stealConfirmDialog.col,
+        stealConfirmDialog.tile
+      )
+
+      if (success) {
+        console.log(
+          `Successfully stole joker at ${stealConfirmDialog.row},${stealConfirmDialog.col}`
+        )
+      } else {
+        console.error('Failed to steal joker')
+      }
+    }
+
+    // Close dialog
+    setStealConfirmDialog({
+      show: false,
+      row: 0,
+      col: 0,
+      tile: null,
+      jokerLetter: '',
+    })
+  }
+
+  /**
+   * Handle joker steal cancel
+   */
+  const handleStealCancel = () => {
+    console.log('User cancelled joker stealing')
+
+    // Close dialog
+    setStealConfirmDialog({
+      show: false,
+      row: 0,
+      col: 0,
+      tile: null,
+      jokerLetter: '',
+    })
+  }
+
+  /**
    * Handle drag start from board square
    *
    * Called when user starts dragging a tile that's already on the board (selectedTiles).
@@ -218,6 +313,43 @@ export function Board() {
   }
 
   /**
+   * Get steal tooltip information
+   */
+  const getStealTooltip = (): { show: boolean; message: string; isValid: boolean } | null => {
+    if (!draggedTile || !hoveredSquare || !game) {
+      return null
+    }
+
+    // Check if hovering over a stealable joker
+    const stealableJoker = game.stealableJokers?.find(
+      (j) => j.row === hoveredSquare.row && j.col === hoveredSquare.col
+    )
+
+    if (!stealableJoker) {
+      return null
+    }
+
+    // Check if letter matches
+    const isValid = draggedTile.letter === stealableJoker.assignedLetter
+
+    if (isValid) {
+      return {
+        show: true,
+        message: `✓ Can steal joker (${stealableJoker.assignedLetter})`,
+        isValid: true,
+      }
+    } else {
+      return {
+        show: true,
+        message: `✗ Cannot steal - need ${stealableJoker.assignedLetter}, have ${draggedTile.letter}`,
+        isValid: false,
+      }
+    }
+  }
+
+  const stealTooltip = getStealTooltip()
+
+  /**
    * Render the board grid
    *
    * Creates a 17×17 CSS Grid with Square components.
@@ -225,7 +357,34 @@ export function Board() {
   return (
     <div className="flex flex-col items-center gap-2">
       {/* Board container */}
-      <div className="bg-white p-2 lg:p-3 rounded-lg shadow-lg">
+      <div className="bg-white p-2 lg:p-3 rounded-lg shadow-lg relative">
+        {/* Joker steal tooltip - positioned over the board */}
+        {stealTooltip && hoveredSquare && (
+          <div
+            className="absolute pointer-events-none z-50"
+            style={{
+              left: `calc(${((hoveredSquare.col + 0.5) / BOARD_SIZE) * 100}%)`,
+              top: `calc(${((hoveredSquare.row + 0.5) / BOARD_SIZE) * 100}% - 50px)`,
+              transform: 'translateX(-50%)',
+            }}
+          >
+            <div
+              className={`
+                px-3 py-1.5 rounded-lg font-semibold text-xs shadow-xl
+                backdrop-blur-sm border-2
+                whitespace-nowrap
+                ${
+                  stealTooltip.isValid
+                    ? 'bg-green-500/90 text-white border-green-300'
+                    : 'bg-red-500/90 text-white border-red-300'
+                }
+              `}
+            >
+              {stealTooltip.message}
+            </div>
+          </div>
+        )}
+
         {/* 17×17 CSS Grid */}
         <div
           className="grid gap-0.5 bg-gray-300 p-0.5 rounded"
@@ -239,10 +398,6 @@ export function Board() {
           {/* Map each square */}
           {board.map((row, rowIndex) =>
             row.map((square, colIndex) => {
-              // Check if this square is being hovered during drag
-              const isHovered =
-                hoveredSquare?.row === rowIndex && hoveredSquare?.col === colIndex
-
               // Check if this square has a tile being placed (from selectedTiles)
               const selectedTile = selectedTiles.find(
                 (st) => st.row === rowIndex && st.col === colIndex
@@ -259,7 +414,7 @@ export function Board() {
                   square={displaySquare}
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
-                  isValidDrop={isHovered && isValidDropTarget(rowIndex, colIndex)}
+                  isValidDrop={false}
                   isDraggable={!!selectedTile}
                   onTileDragStart={handleTileDragStart}
                 />
@@ -299,6 +454,39 @@ export function Board() {
           onSelect={handleJokerLetterSelected}
           onCancel={handleJokerDialogCancel}
         />
+      )}
+
+      {/* Joker stealing confirmation dialog */}
+      {stealConfirmDialog.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <h3 className="text-xl font-bold mb-4">Steal Joker?</h3>
+            <p className="mb-4">
+              Do you want to steal the joker (
+              <span className="font-bold text-blue-600">{stealConfirmDialog.jokerLetter}</span>)
+              from the board?
+            </p>
+            <p className="text-sm text-gray-600 mb-6">
+              You will replace it with your{' '}
+              <span className="font-bold">{stealConfirmDialog.tile?.letter}</span> tile and receive
+              the joker in your hand.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleStealCancel}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition-colors"
+              >
+                No, Cancel
+              </button>
+              <button
+                onClick={handleStealConfirm}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Yes, Steal Joker
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
