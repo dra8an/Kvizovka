@@ -129,6 +129,13 @@ export interface Player {
    * Number of rounds this player has completed (0-10)
    */
   roundsPlayed: number
+
+  /**
+   * Tile penalty applied at end of game
+   * Sum of unused tile values (jokers = 10 points)
+   * Only set when game ends
+   */
+  tilePenalty?: number
 }
 
 /**

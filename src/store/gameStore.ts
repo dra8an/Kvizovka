@@ -366,7 +366,6 @@ export const useGameStore = create<GameStoreState>()(
         // Update current player
         const currentPlayer = game.players[game.currentPlayerIndex]
         currentPlayer.score += scoreBreakdown.totalScore
-        currentPlayer.roundsPlayed++
 
         // Remove used tiles from player's hand
         const usedTileIds = new Set(placedTiles.map((pt) => pt.tile.id))
@@ -374,9 +373,15 @@ export const useGameStore = create<GameStoreState>()(
           (tile) => !usedTileIds.has(tile.id)
         )
 
-        // Draw new tiles
-        const newTiles = state.tileBagInstance!.draw(placedTiles.length)
-        currentPlayer.tiles.push(...newTiles)
+        // Draw new tiles (but not if this is the player's 10th round)
+        let newTiles: any[] = []
+        if (currentPlayer.roundsPlayed < 9) {
+          newTiles = state.tileBagInstance!.draw(placedTiles.length)
+          currentPlayer.tiles.push(...newTiles)
+        }
+
+        // Increment rounds AFTER tile drawing
+        currentPlayer.roundsPlayed++
 
         // Create move record
         const move: Move = {
@@ -496,9 +501,11 @@ export const useGameStore = create<GameStoreState>()(
         tileBagInstance.returnTiles(tilesToExchange)
         tileBagInstance.shuffle()
 
-        // Draw new tiles
-        const newTiles = tileBagInstance.draw(tilesToExchange.length)
-        currentPlayer.tiles.push(...newTiles)
+        // Draw new tiles (but not if this is the player's 10th round)
+        if (currentPlayer.roundsPlayed < 9) {
+          const newTiles = tileBagInstance.draw(tilesToExchange.length)
+          currentPlayer.tiles.push(...newTiles)
+        }
 
         // Create exchange move record
         const move: Move = {
@@ -1001,6 +1008,20 @@ export const useGameStore = create<GameStoreState>()(
         const calculator = new ScoreCalculator()
 
         for (const player of game.players) {
+          // Calculate penalty
+          let penalty = 0
+          for (const tile of player.tiles) {
+            if (tile.isJoker) {
+              penalty += 10 // Joker penalty
+            } else {
+              penalty += tile.value
+            }
+          }
+
+          // Store penalty for UI display
+          player.tilePenalty = penalty
+
+          // Apply penalty to score
           const finalScore = calculator.calculateFinalScore(
             player.score,
             player.tiles

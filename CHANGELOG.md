@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Enhanced Game Completion Screen**: Comprehensive end-game report (2026-01-07)
+  - **Full Scoresheets**: Side-by-side display of all words played by each player across 10 rounds
+  - **Visual Tile Penalties**: Shows remaining tiles with letter and point values using amber-colored badges
+  - **Detailed Penalty Breakdown**: Displays exact penalty amount and tile count for each player
+  - **Improved Layout**: Wide 2-column design matching online multiplayer experience
+  - **Complete Game Stats**: Total moves, rounds completed, and game end reason
+
 - **Automatic Game End Detection**: Game now automatically ends when conditions are met
   - Ends when both players complete 10 rounds
   - Ends when tile bag is empty and current player has no tiles
@@ -29,6 +36,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated game rules documentation (English and Serbian)
 
 ### Fixed
+- **Tile Drawing on Round 10**: Fixed bug where tiles were drawn after final move (2026-01-07)
+  - Players now finish with correct number of tiles remaining
+  - Tiles are no longer drawn after completing round 10
+  - Applies to both regular moves and tile exchanges
+  - Ensures accurate tile penalty calculation at game end
+  - Fixed undefined variable error that caused "square occupied" bugs
+
+- **Tile Penalty Calculation**: Enhanced end-game penalty system (2026-01-07)
+  - Added `tilePenalty` field to Player type for accurate tracking
+  - Server stores calculated penalties (survives state sanitization)
+  - Penalties calculated as: tile values + 10 points per joker
+  - Applied to final scores before determining winner
+
 - **Challenge System**: Full move undo on successful challenge
   - Tiles are now properly removed from board when challenge succeeds
   - Blockers placed during the challenged move are removed
