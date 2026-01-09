@@ -17,7 +17,7 @@
 import { Board } from './Board'
 import { WordValidator } from './WordValidator'
 import { PlacedTile, Direction, BoardSquare } from '../types'
-import { BOARD_CENTER, MIN_WORD_LENGTH } from '../constants'
+import { MIN_WORD_LENGTH } from '../constants'
 
 /**
  * Move Validation Result
@@ -349,7 +349,7 @@ export class MoveValidator {
    * Example:
    * Placing "CAT" horizontally might also form "AX" vertically
    */
-  private findAllWordsFormed(
+  private _findAllWordsFormed(
     placedTiles: PlacedTile[],
     direction: Direction
   ): BoardSquare[][] {

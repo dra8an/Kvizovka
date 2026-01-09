@@ -43,6 +43,16 @@ interface TileRackProps {
   onTileRemoved?: (row: number, col: number) => void
 
   /**
+   * Callback when tile drag starts (for joker stealing tooltip)
+   */
+  onTileDragStart?: (tile: TileType) => void
+
+  /**
+   * Callback when tile drag ends (for joker stealing tooltip)
+   */
+  onTileDragEnd?: () => void
+
+  /**
    * Disabled state (for online mode when not your turn)
    */
   disabled?: boolean
@@ -126,8 +136,8 @@ export function TileRack(props: TileRackProps = {}) {
   const [draggedFromIndex, setDraggedFromIndex] = useState<number | null>(null)
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null)
 
-  // If no game, show placeholder
-  if (!game) {
+  // If no game (local mode only - online mode uses props)
+  if (!isOnlineMode && !game) {
     return (
       <div className="flex items-center justify-center p-6 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">
         <p className="text-gray-500">No active game. Start a game to see your tiles!</p>
@@ -143,6 +153,8 @@ export function TileRack(props: TileRackProps = {}) {
   const handleDragStart = (tile: TileType, index: number) => {
     setDraggedTile(tile)
     setDraggedFromIndex(index)
+    // Notify parent for joker stealing tooltip
+    props.onTileDragStart?.(tile)
     console.log('Started dragging tile:', tile.letter, 'from index', index)
   }
 
@@ -155,6 +167,8 @@ export function TileRack(props: TileRackProps = {}) {
     setDraggedTile(null)
     setDraggedFromIndex(null)
     setDropTargetIndex(null)
+    // Notify parent for joker stealing tooltip
+    props.onTileDragEnd?.()
     console.log('Stopped dragging')
   }
 

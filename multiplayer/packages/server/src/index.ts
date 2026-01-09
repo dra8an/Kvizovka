@@ -270,7 +270,7 @@ async function initializeServer() {
           return
         }
 
-        console.log(`[game:make-move] Move successful! Score: ${result.score}`)
+        console.log(`[game:make-move] Move successful!`)
 
         // Broadcast updated state to both players
         const [player1, player2] = game.players
@@ -434,6 +434,54 @@ async function initializeServer() {
       } catch (error) {
         console.error('[game:challenge] Error:', error)
         callback({ success: false, error: 'Failed to challenge word' })
+      }
+    })
+
+    /**
+     * Steal Joker
+     */
+    socket.on('game:steal-joker', (data, callback) => {
+      try {
+        const { gameId, row, col, replacementTileId } = data
+        const game = gameManager.getGame(gameId)
+
+        if (!game) {
+          callback({ success: false, error: 'Game not found' })
+          return
+        }
+
+        const playerId = socket.data.playerId
+
+        if (!playerId) {
+          callback({ success: false, error: 'Player ID not found' })
+          return
+        }
+
+        const result = gameManager.stealJoker(gameId, playerId, row, col, replacementTileId)
+
+        if (!result.success) {
+          callback({ success: false, error: result.error })
+          return
+        }
+
+        // Broadcast state
+        const [player1, player2] = game.players
+        const room = roomManager.getRoomByPlayer(socket.id)
+
+        if (room && room.gameId === gameId) {
+          io.to(room.hostId).emit('game:state-update', {
+            gameState: gameManager.sanitizeGameState(game, player1.id),
+          })
+
+          io.to(room.guestId!).emit('game:state-update', {
+            gameState: gameManager.sanitizeGameState(game, player2.id),
+          })
+        }
+
+        callback({ success: true })
+      } catch (error) {
+        console.error('[game:steal-joker] Error:', error)
+        callback({ success: false, error: 'Failed to steal joker' })
       }
     })
 

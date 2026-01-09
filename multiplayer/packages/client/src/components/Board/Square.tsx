@@ -37,7 +37,7 @@ interface SquareProps {
   /**
    * Called when user drags over this square
    */
-  onDragOver?: (row: number, col: number) => void
+  onDragOver?: (row: number, col: number, event: React.DragEvent) => void
 
   /**
    * Whether this square is a valid drop target
@@ -120,7 +120,7 @@ export function Square({ square, onDrop, onDragOver, isValidDrop, isDraggable, o
   // Handle drag over (for drop zone highlighting)
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault() // Allow drop
-    onDragOver?.(square.row, square.col)
+    onDragOver?.(square.row, square.col, e)
   }
 
   // Handle drop

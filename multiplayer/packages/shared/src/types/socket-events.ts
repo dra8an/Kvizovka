@@ -120,9 +120,25 @@ export interface ClientToServerEvents {
   ) => void
 
   /**
+   * Steal a joker from the board
+   */
+  'game:steal-joker': (
+    data: { gameId: string; row: number; col: number; replacementTileId: string },
+    callback: (response: { success: boolean; error?: string }) => void
+  ) => void
+
+  /**
    * Recall tiles (undo placement before submitting)
    */
   'game:recall-tiles': (
+    data: { gameId: string },
+    callback: (response: { success: boolean; error?: string }) => void
+  ) => void
+
+  /**
+   * Force end game (for testing)
+   */
+  'game:force-end': (
     data: { gameId: string },
     callback: (response: { success: boolean; error?: string }) => void
   ) => void

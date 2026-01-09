@@ -13,6 +13,108 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.2] - 2026-01-09
+
+### Added
+- **Joker Stealing Feature in Online Multiplayer**
+  - Server-authoritative joker stealing validation
+  - Real-time visual feedback with tooltips during drag
+  - Confirmation dialog before executing steal
+  - Stealable jokers tracked in game state for one turn only
+  - Green tooltip (✓) when dragging matching letter over stealable joker
+  - Red tooltip (✗) when dragging non-matching letter over stealable joker
+  - Tooltip positioned dynamically above hovered joker tile
+  - Automatic clearing of stealable jokers after opponent's move
+
+### Implementation Details
+
+**Shared Package (`packages/shared/`)**
+- Added `stealableJokers` field to `GameState` interface
+  - Tracks jokers from last move that can be stolen
+  - Contains: row, col, assignedLetter
+  - Cleared automatically after opponent's next action
+- Added `game:steal-joker` to socket event types
+  - Client → Server: `{ gameId, row, col, replacementTileId }`
+  - Server validates and executes steal
+
+**Server (`packages/server/`)**
+- `game-manager.ts`: Added `stealJoker()` method
+  - Validates steal attempt (correct letter, your turn, valid position)
+  - Removes replacement tile from player's hand
+  - Replaces joker on board with replacement tile
+  - Returns joker (with no assigned letter) to player's hand
+  - Clears stealable jokers after successful steal
+- Updated `makeMove()` to track jokers in placed tiles
+- Updated `skipTurn()` and `exchangeTiles()` to clear stealable jokers
+- Added WebSocket event handler for `game:steal-joker`
+  - Broadcasts updated game state to both players after steal
+
+**Client (`packages/client/`)**
+- `onlineGameStore.ts`: Added `stealJoker()` action
+  - Emits `game:steal-joker` event to server
+  - Error handling for failed steal attempts
+- `Board.tsx`: Enhanced with joker stealing UI
+  - Added `draggedTile` and `gameState` props
+  - Detection of stealable jokers on drop
+  - Confirmation dialog with steal details
+  - Real-time tooltip showing valid/invalid steal state
+  - Tooltip follows cursor over joker tiles
+- `TileRack.tsx`: Added drag callbacks
+  - `onTileDragStart` - notifies parent when drag begins
+  - `onTileDragEnd` - notifies parent when drag ends
+  - Enables tooltip to track dragged tile
+- `OnlineGame.tsx`: Drag state management
+  - Tracks currently dragged tile in state
+  - Passes dragged tile to Board for tooltip
+  - Coordinates TileRack and Board communication
+
+### Technical Highlights
+- **Security**: All validation happens server-side (prevents cheating)
+- **Real-time Feedback**: Tooltip updates instantly as tile hovers over board
+- **State Synchronization**: Dragged tile tracked via React state (not drag events)
+  - Solves browser security restriction on `dataTransfer.getData()` during dragover
+- **User Experience**: Clear visual feedback (green=valid, red=invalid) before drop
+
+### Files Changed
+- `packages/shared/src/types/game.types.ts` - Added stealableJokers to GameState
+- `packages/shared/src/types/socket-events.ts` - Added game:steal-joker event
+- `packages/server/src/game-manager.ts` - Implemented stealJoker logic
+- `packages/server/src/index.ts` - Added WebSocket handler
+- `packages/client/src/store/onlineGameStore.ts` - Added stealJoker action
+- `packages/client/src/components/Board/Board.tsx` - Added tooltip & confirmation dialog
+- `packages/client/src/components/Board/Square.tsx` - Updated onDragOver signature
+- `packages/client/src/components/TileRack/TileRack.tsx` - Added drag callbacks
+- `packages/client/src/components/OnlineGame/OnlineGame.tsx` - Drag state management
+
+### Fixed
+- **TileRack "No active game" Error**
+  - Fixed check for game existence in online mode
+  - TileRack now only checks `game` in local mode
+  - Online mode uses `tiles` prop directly
+  - Files: `TileRack.tsx` (line 130)
+
+- **Build Errors**
+  - Removed unused imports in shared game engine files
+  - Added `forceEndGame` to OnlineGameStore interface
+  - Added `game:force-end` to socket event types
+  - Disabled `noUnusedLocals` and `noUnusedParameters` in shared tsconfig
+  - Fixed `result.score` reference in server index.ts
+
+### Tested
+- ✅ Joker stealing with matching letter tile
+- ✅ Rejection of non-matching letter tiles
+- ✅ Tooltip appears and follows cursor
+- ✅ Green tooltip for valid steal
+- ✅ Red tooltip for invalid steal
+- ✅ Confirmation dialog before steal
+- ✅ Joker returned to hand with no assigned letter
+- ✅ Replacement tile placed on board correctly
+- ✅ Stealable jokers cleared after steal
+- ✅ Stealable jokers cleared after skip/exchange
+- ✅ Server-side validation prevents cheating
+
+---
+
 ## [0.2.1] - 2026-01-07
 
 ### Added

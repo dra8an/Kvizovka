@@ -313,6 +313,17 @@ export class GameManager {
     // Update board
     game.board = board.getGrid()
 
+    // Track stealable jokers from this move
+    const stealableJokers = placedTiles
+      .filter(pt => pt.tile.isJoker && pt.tile.jokerLetter)
+      .map(pt => ({
+        row: pt.row,
+        col: pt.col,
+        assignedLetter: pt.tile.jokerLetter!
+      }))
+
+    game.stealableJokers = stealableJokers.length > 0 ? stealableJokers : undefined
+
     // Switch turn
     game.currentPlayerIndex = (game.currentPlayerIndex + 1) % 2 as 0 | 1
 
@@ -362,6 +373,9 @@ export class GameManager {
 
     currentPlayer.roundsPlayed++
     currentPlayer.hasExchangedLastTurn = false
+
+    // Clear stealable jokers (opponent's turn)
+    game.stealableJokers = undefined
 
     // Switch turn
     game.currentPlayerIndex = (game.currentPlayerIndex + 1) % 2 as 0 | 1
@@ -446,6 +460,9 @@ export class GameManager {
     currentPlayer.roundsPlayed++
     currentPlayer.hasExchangedLastTurn = true
 
+    // Clear stealable jokers (opponent's turn)
+    game.stealableJokers = undefined
+
     // Switch turn
     game.currentPlayerIndex = (game.currentPlayerIndex + 1) % 2 as 0 | 1
     game.updatedAt = new Date()
@@ -504,6 +521,97 @@ export class GameManager {
       console.log(`[GameManager] Challenge failed - word was valid`)
       return { success: true, challengeSucceeded: false, gameState: this.sanitizeGameState(game, playerId) }
     }
+  }
+
+  /**
+   * Steal a joker from the board
+   *
+   * @param gameId - Game ID
+   * @param playerId - Player stealing the joker
+   * @param row - Row position of the joker
+   * @param col - Column position of the joker
+   * @param replacementTileId - ID of the tile to replace the joker with
+   * @returns Move result
+   */
+  stealJoker(gameId: string, playerId: string, row: number, col: number, replacementTileId: string): MoveResult {
+    const game = this.games.get(gameId)
+
+    if (!game) {
+      return { success: false, error: 'Game not found' }
+    }
+
+    if (game.status !== GameStatus.IN_PROGRESS) {
+      return { success: false, error: 'Game is not in progress' }
+    }
+
+    const currentPlayer = game.players[game.currentPlayerIndex]
+
+    if (currentPlayer.id !== playerId) {
+      return { success: false, error: 'Not your turn' }
+    }
+
+    // Check if there's a stealable joker at this position
+    if (!game.stealableJokers || game.stealableJokers.length === 0) {
+      return { success: false, error: 'No stealable jokers available' }
+    }
+
+    const stealableJoker = game.stealableJokers.find(j => j.row === row && j.col === col)
+
+    if (!stealableJoker) {
+      return { success: false, error: 'No stealable joker at this position' }
+    }
+
+    // Find the replacement tile in player's hand
+    const replacementTile = currentPlayer.tiles.find(t => t.id === replacementTileId)
+
+    if (!replacementTile) {
+      return { success: false, error: 'Replacement tile not found in hand' }
+    }
+
+    // Validate that the replacement tile matches the joker's assigned letter
+    if (replacementTile.letter !== stealableJoker.assignedLetter) {
+      return { success: false, error: `Replacement tile must be ${stealableJoker.assignedLetter}, but got ${replacementTile.letter}` }
+    }
+
+    // Get the joker from the board
+    const board = new Board()
+    board.setGrid(game.board)
+    const square = board.getSquare(row, col)
+
+    if (!square || !square.tile) {
+      return { success: false, error: 'No tile at this position' }
+    }
+
+    const tile = square.tile
+    if (!('isJoker' in tile) || !tile.isJoker) {
+      return { success: false, error: 'Tile is not a joker' }
+    }
+
+    const stolenJoker = tile
+
+    // Remove replacement tile from player's hand
+    const tileIndex = currentPlayer.tiles.findIndex(t => t.id === replacementTileId)
+    currentPlayer.tiles.splice(tileIndex, 1)
+
+    // Reset the joker's assigned letter and add it to player's hand
+    const resetJoker = { ...stolenJoker, jokerLetter: undefined }
+    currentPlayer.tiles.push(resetJoker)
+
+    // Replace joker on board with the replacement tile
+    board.setTile(row, col, replacementTile)
+
+    // Update game board
+    game.board = board.getGrid()
+
+    // Clear stealable jokers (steal was successful)
+    game.stealableJokers = undefined
+
+    // Update metadata
+    game.updatedAt = new Date()
+
+    console.log(`[GameManager] ${currentPlayer.name} stole a joker at (${row}, ${col}) with ${replacementTile.letter}`)
+
+    return { success: true, gameState: this.sanitizeGameState(game, playerId) }
   }
 
   /**

@@ -17,10 +17,8 @@ import {
   BoardSquare,
   Tile,
   BlockerTile,
-  Position,
   Direction,
   PlacedTile,
-  Word,
 } from '../types'
 import {
   BOARD_SIZE,

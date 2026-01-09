@@ -53,7 +53,6 @@ export class ScoreCalculator {
     newlyPlacedTiles: PlacedTile[]
   ): WordScore {
     let baseScore = 0
-    let letterMultiplier = 1
     let wordMultiplier = 1
 
     // Build word text for display

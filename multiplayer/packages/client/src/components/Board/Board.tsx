@@ -54,6 +54,22 @@ interface BoardProps {
   onJokerLetterSet?: (row: number, col: number, letter: string) => void
 
   /**
+   * Callback when joker is stolen (optional - uses gameStore if not provided)
+   */
+  onJokerSteal?: (row: number, col: number, replacementTileId: string) => void
+
+  /**
+   * Game state (optional - uses gameStore if not provided)
+   * Needed for checking stealable jokers
+   */
+  gameState?: any
+
+  /**
+   * Currently dragged tile (for joker stealing tooltip)
+   */
+  draggedTile?: TileType | null
+
+  /**
    * Disabled state (for online mode when not your turn)
    */
   disabled?: boolean
@@ -132,6 +148,9 @@ export function Board(props: BoardProps = {}) {
     null
   )
 
+  // Use dragged tile from props (online mode) or local state (local mode)
+  const currentDraggedTile = props.draggedTile !== undefined ? props.draggedTile : null
+
   // Local state for joker letter selection
   const [jokerDialog, setJokerDialog] = useState<{
     show: boolean
@@ -143,6 +162,19 @@ export function Board(props: BoardProps = {}) {
     tile: null,
     row: 0,
     col: 0,
+  })
+
+  // Local state for joker stealing confirmation
+  const [stealConfirmDialog, setStealConfirmDialog] = useState<{
+    show: boolean
+    row: number
+    col: number
+    replacementTile: TileType | null
+  }>({
+    show: false,
+    row: 0,
+    col: 0,
+    replacementTile: null,
   })
 
   // If no board, show placeholder
@@ -177,7 +209,7 @@ export function Board(props: BoardProps = {}) {
    * This is called when user drags a tile over a square.
    * We track which square is being hovered for visual feedback.
    */
-  const handleDragOver = (row: number, col: number) => {
+  const handleDragOver = (row: number, col: number, event: React.DragEvent) => {
     setHoveredSquare({ row, col })
   }
 
@@ -193,12 +225,6 @@ export function Board(props: BoardProps = {}) {
 
     // Clear hover state
     setHoveredSquare(null)
-
-    // Check if valid drop
-    if (!isValidDropTarget(row, col)) {
-      console.log('Invalid drop target')
-      return
-    }
 
     // Get drag data
     const dragData = event.dataTransfer.getData('text/plain')
@@ -248,6 +274,38 @@ export function Board(props: BoardProps = {}) {
       return
     }
 
+    // Check if trying to steal a joker
+    const currentGame = props.gameState || storeGame
+    if (currentGame?.stealableJokers && currentGame.stealableJokers.length > 0) {
+      const stealableJoker = currentGame.stealableJokers.find(
+        (j: any) => j.row === row && j.col === col
+      )
+
+      if (stealableJoker) {
+        // Attempting to steal a joker - check if tile matches
+        if (tile.letter === stealableJoker.assignedLetter) {
+          // Valid steal - show confirmation dialog
+          setStealConfirmDialog({
+            show: true,
+            row,
+            col,
+            replacementTile: tile,
+          })
+          return
+        } else {
+          // Invalid steal - tile doesn't match
+          console.log(`Cannot steal joker: need ${stealableJoker.assignedLetter}, have ${tile.letter}`)
+          return
+        }
+      }
+    }
+
+    // Check if valid drop for regular placement
+    if (!isValidDropTarget(row, col)) {
+      console.log('Invalid drop target')
+      return
+    }
+
     // Add tile to selectedTiles
     selectTile(tile, row, col)
 
@@ -292,6 +350,59 @@ export function Board(props: BoardProps = {}) {
 
     // Close dialog
     setJokerDialog({ show: false, tile: null, row: 0, col: 0 })
+  }
+
+  /**
+   * Handle steal confirmation
+   */
+  const handleStealConfirm = () => {
+    const { row, col, replacementTile } = stealConfirmDialog
+
+    if (replacementTile) {
+      if (props.onJokerSteal) {
+        // Online mode - call callback
+        props.onJokerSteal(row, col, replacementTile.id)
+      } else {
+        // Local mode - call store
+        // Note: stealJoker should be added to gameStore for local mode
+        // For now, this will only work in online mode
+        console.warn('Joker stealing in local mode not yet implemented in multiplayer client')
+      }
+    }
+
+    // Close dialog
+    setStealConfirmDialog({ show: false, row: 0, col: 0, replacementTile: null })
+  }
+
+  /**
+   * Handle steal cancel
+   */
+  const handleStealCancel = () => {
+    setStealConfirmDialog({ show: false, row: 0, col: 0, replacementTile: null })
+  }
+
+  /**
+   * Get tooltip for joker stealing
+   */
+  const getStealTooltip = (): { show: boolean; message: string; isValid: boolean } | null => {
+    if (!currentDraggedTile || !hoveredSquare) return null
+
+    const currentGame = props.gameState || storeGame
+    if (!currentGame?.stealableJokers) return null
+
+    const stealableJoker = currentGame.stealableJokers.find(
+      (j: any) => j.row === hoveredSquare.row && j.col === hoveredSquare.col
+    )
+
+    if (!stealableJoker) return null
+
+    const isValid = currentDraggedTile.letter === stealableJoker.assignedLetter
+
+    if (isValid) {
+      return { show: true, message: `✓ Can steal joker (${stealableJoker.assignedLetter})`, isValid: true }
+    } else {
+      return { show: true, message: `✗ Cannot steal - need ${stealableJoker.assignedLetter}, have ${currentDraggedTile.letter}`, isValid: false }
+    }
   }
 
   /**
@@ -378,6 +489,59 @@ export function Board(props: BoardProps = {}) {
           <span>★ - Center (Start)</span>
         </div>
       </div>
+
+      {/* Tooltip for joker stealing */}
+      {(() => {
+        const stealTooltip = getStealTooltip()
+        return stealTooltip && hoveredSquare && (
+          <div
+            className="absolute pointer-events-none z-50"
+            style={{
+              left: `calc(${((hoveredSquare.col + 0.5) / BOARD_SIZE) * 100}%)`,
+              top: `calc(${((hoveredSquare.row + 0.5) / BOARD_SIZE) * 100}% - 80px)`,
+              transform: 'translateX(-50%)',
+            }}
+          >
+            <div className={`px-3 py-1.5 rounded-lg font-semibold text-xs shadow-xl backdrop-blur-sm border-2 whitespace-nowrap ${
+              stealTooltip.isValid
+                ? 'bg-green-500/90 text-white border-green-300'
+                : 'bg-red-500/90 text-white border-red-300'
+            }`}>
+              {stealTooltip.message}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Steal confirmation dialog */}
+      {stealConfirmDialog.show && stealConfirmDialog.replacementTile && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md shadow-2xl">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Steal Joker?</h3>
+            <p className="text-gray-700 mb-4">
+              Do you want to steal the joker at position ({stealConfirmDialog.row}, {stealConfirmDialog.col})
+              by replacing it with your <span className="font-bold">{stealConfirmDialog.replacementTile.letter}</span> tile?
+            </p>
+            <p className="text-sm text-gray-600 mb-6">
+              You will receive the joker back into your hand (with no assigned letter).
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleStealConfirm}
+                className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded"
+              >
+                Yes, Steal Joker
+              </button>
+              <button
+                onClick={handleStealCancel}
+                className="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Joker letter selection dialog */}
       {jokerDialog.show && (

@@ -34,12 +34,16 @@ export function OnlineGame() {
     gameError,
     makeMove,
     skipTurn,
+    stealJoker,
     reset,
     forceEndGame,
   } = useOnlineGameStore()
 
   // Local UI state for tile placement
   const [selectedTiles, setSelectedTiles] = useState<PlacedTile[]>([])
+
+  // Local UI state for joker stealing tooltip
+  const [draggedTile, setDraggedTile] = useState<any>(null)
 
   // Clear selected tiles when game state updates (after successful move)
   useEffect(() => {
@@ -323,6 +327,21 @@ export function OnlineGame() {
     }))
   }
 
+  // Handle joker steal
+  const handleJokerSteal = (row: number, col: number, replacementTileId: string) => {
+    stealJoker(row, col, replacementTileId)
+  }
+
+  // Handle tile drag start (for joker stealing tooltip)
+  const handleTileDragStart = (tile: any) => {
+    setDraggedTile(tile)
+  }
+
+  // Handle tile drag end (for joker stealing tooltip)
+  const handleTileDragEnd = () => {
+    setDraggedTile(null)
+  }
+
   // Handle recall tiles
   const handleRecallTiles = () => {
     setSelectedTiles([])
@@ -382,6 +401,9 @@ export function OnlineGame() {
               onTilePlaced={handleTilePlaced}
               onTileRemoved={handleTileRemoved}
               onJokerLetterSet={handleJokerLetterSet}
+              onJokerSteal={handleJokerSteal}
+              gameState={gameState}
+              draggedTile={draggedTile}
               disabled={!isYourTurn}
             />
 
@@ -391,6 +413,8 @@ export function OnlineGame() {
               playerName={you.name}
               selectedTiles={selectedTiles}
               onTileRemoved={handleTileRemoved}
+              onTileDragStart={handleTileDragStart}
+              onTileDragEnd={handleTileDragEnd}
               disabled={!isYourTurn}
             />
 

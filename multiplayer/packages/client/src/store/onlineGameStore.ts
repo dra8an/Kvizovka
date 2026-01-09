@@ -170,6 +170,16 @@ interface OnlineGameStore {
    */
   challengeWord: () => void
 
+  /**
+   * Steal a joker from the board
+   */
+  stealJoker: (row: number, col: number, replacementTileId: string) => void
+
+  /**
+   * Force end game (for testing)
+   */
+  forceEndGame: () => void
+
   // ========================================
   // ACTIONS - RESET
   // ========================================
@@ -385,6 +395,22 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
       if (!response.success) {
         console.error('[OnlineStore] Challenge failed:', response.error)
         set({ gameError: response.error || 'Failed to challenge' })
+      }
+      // Server will send game:state-update event
+    })
+  },
+
+  stealJoker: (row: number, col: number, replacementTileId: string) => {
+    const { gameId } = get()
+    if (!gameId) return
+
+    console.log('[OnlineStore] Stealing joker...', { row, col, replacementTileId })
+    set({ gameError: null })
+
+    socketService.emit('game:steal-joker', { gameId, row, col, replacementTileId }, (response) => {
+      if (!response.success) {
+        console.error('[OnlineStore] Steal failed:', response.error)
+        set({ gameError: response.error || 'Failed to steal joker' })
       }
       // Server will send game:state-update event
     })
