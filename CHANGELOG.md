@@ -8,6 +8,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Joker Stealing Feature**: Complete implementation of joker stealing rule (2026-01-08)
+  - **Rule Implementation**: Player can steal joker from opponent's last move
+    - Only jokers played in the immediately previous turn can be stolen
+    - Must have the matching letter tile in hand (if joker was assigned 'K', need 'K' tile)
+    - Drag matching letter tile onto the joker to initiate steal
+    - Joker returns to player's hand (reset, no assigned letter)
+    - Matching letter tile replaces joker on board
+  - **Visual Feedback**: Real-time steal validation during drag
+    - **Green glow**: Dragged tile glows green when hovering over stealable joker with matching letter
+    - **Red glow**: Dragged tile glows red when hovering over joker with non-matching letter
+    - Glow includes thick ring and shadow effect for maximum visibility
+    - Applied to tile in rack (not hidden under cursor)
+  - **Floating Tooltip**: Context-aware feedback during drag
+    - Appears above hovered joker on board
+    - Positioned 80px above tile center
+    - Semi-transparent with backdrop blur
+    - Green tooltip: "✓ Can steal joker (K)"
+    - Red tooltip: "✗ Cannot steal - need K, have A"
+    - Follows cursor smoothly as you hover between squares
+  - **Confirmation Dialog**: Prevents accidental stealing
+    - Shows which joker letter is being stolen
+    - Shows which tile will replace it
+    - "Yes, Steal Joker" / "No, Cancel" buttons
+  - **State Management**: Zustand store integration
+    - `stealableJokers` array tracks position and assigned letter
+    - Populated when jokers are played in `makeMove`
+    - Cleared after `skipTurn`, `exchangeTiles`, or successful steal
+    - `draggedTile` tracks currently dragged tile for visual feedback
+    - `hoveredSquare` tracks hovered board position
+  - **Type Safety**: Full TypeScript support
+    - Added `stealableJokers` field to `GameState` interface
+    - `stealJoker()` action with comprehensive validation
+    - Proper type guards for `Tile` vs `BlockerTile`
+  - **Turn Enforcement**: Automatic state clearing
+    - Stealable jokers cleared after any move/skip/exchange
+    - Ensures jokers can only be stolen on immediate next turn
+    - No lingering stealable state across multiple turns
+
 - **Enhanced Game Completion Screen**: Comprehensive end-game report (2026-01-07)
   - **Full Scoresheets**: Side-by-side display of all words played by each player across 10 rounds
   - **Visual Tile Penalties**: Shows remaining tiles with letter and point values using amber-colored badges
@@ -928,6 +966,6 @@ Following [Semantic Versioning](https://semver.org/):
 
 ---
 
-**Last Updated:** 2026-01-02
-**Current Version:** 0.5.0 (Steps 5-7 Complete + Challenge System)
-**Next Milestone:** Step 8 - Drag-and-Drop Polish & Step 9 - Game Flow Completion
+**Last Updated:** 2026-01-08
+**Current Version:** 0.6.1 (Joker Stealing Feature Complete)
+**Next Milestone:** Step 9 - Game Flow Completion & Online Multiplayer

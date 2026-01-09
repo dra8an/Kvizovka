@@ -364,7 +364,7 @@ export function Board() {
             className="absolute pointer-events-none z-50"
             style={{
               left: `calc(${((hoveredSquare.col + 0.5) / BOARD_SIZE) * 100}%)`,
-              top: `calc(${((hoveredSquare.row + 0.5) / BOARD_SIZE) * 100}% - 50px)`,
+              top: `calc(${((hoveredSquare.row + 0.5) / BOARD_SIZE) * 100}% - 80px)`,
               transform: 'translateX(-50%)',
             }}
           >
