@@ -14,6 +14,7 @@
  * Buttons are enabled/disabled based on game state.
  */
 
+import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { GameStatus, MoveType } from '@kvizovka/shared'
 
@@ -26,6 +27,10 @@ import { GameStatus, MoveType } from '@kvizovka/shared'
  * ```
  */
 export function GameControls() {
+  // Local state for custom messages
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [infoMessage, setInfoMessage] = useState<{ title: string; message: string } | null>(null)
+
   // Subscribe to game store
   const game = useGameStore((state) => state.game)
   const selectedTiles = useGameStore((state) => state.selectedTiles)
@@ -58,17 +63,20 @@ export function GameControls() {
    * Attempts to submit the currently placed tiles as a move.
    */
   const handlePlayWord = () => {
+    // Clear any previous messages
+    setErrorMessage(null)
+    setInfoMessage(null)
+
     if (selectedTiles.length === 0) {
-      alert('Please place some tiles on the board first!')
+      setErrorMessage('Please place some tiles on the board first!')
       return
     }
 
     const success = makeMove(selectedTiles)
 
     if (!success) {
-      // Show error message from validation
-      const reason = lastValidation?.reason || 'Invalid move'
-      alert(`Cannot play word: ${reason}`)
+      // Error message will be shown via lastValidation display
+      console.log('Move rejected by validation')
     } else {
       console.log('Move accepted!')
     }
@@ -106,9 +114,13 @@ export function GameControls() {
    * Enters exchange mode so player can select tiles to exchange.
    */
   const handleExchangeTiles = () => {
+    // Clear any previous messages
+    setErrorMessage(null)
+    setInfoMessage(null)
+
     // Check if tile bag is empty
     if (tileBagInstance && tileBagInstance.isEmpty()) {
-      alert('Cannot exchange tiles: The tile bag is empty!')
+      setErrorMessage('Cannot exchange tiles: The tile bag is empty!')
       return
     }
 
@@ -116,7 +128,7 @@ export function GameControls() {
     const canExchange = enterExchangeMode()
 
     if (!canExchange) {
-      alert('Cannot exchange tiles two moves in a row!\n\nYou must play a word or skip your turn before exchanging again.')
+      setErrorMessage('Cannot exchange tiles two moves in a row!\n\nYou must play a word or skip your turn before exchanging again.')
       return
     }
   }
@@ -127,8 +139,12 @@ export function GameControls() {
    * Exchanges the selected tiles with new ones from the bag.
    */
   const handleConfirmExchange = () => {
+    // Clear any previous messages
+    setErrorMessage(null)
+    setInfoMessage(null)
+
     if (tilesForExchange.length === 0) {
-      alert('Please select at least one tile to exchange!')
+      setErrorMessage('Please select at least one tile to exchange!')
       return
     }
 
@@ -144,7 +160,7 @@ export function GameControls() {
     if (success) {
       console.log('Tiles exchanged successfully!')
     } else {
-      alert('Failed to exchange tiles. Please try again.')
+      setErrorMessage('Failed to exchange tiles. Please try again.')
     }
   }
 
@@ -202,18 +218,15 @@ export function GameControls() {
 
     if (result) {
       if (result.success) {
-        alert(
-          `✅ Challenge successful!\n\n` +
-          `The word "${result.word}" is invalid.\n` +
-          `Reason: ${result.reason}\n\n` +
-          `The move has been undone.`
-        )
+        setInfoMessage({
+          title: '✅ Challenge successful!',
+          message: `The word "${result.word}" is invalid.\nReason: ${result.reason}\n\nThe move has been undone.`
+        })
       } else {
-        alert(
-          `❌ Challenge failed!\n\n` +
-          `The word "${result.word}" is valid.\n\n` +
-          `You have been penalized 3 minutes.`
-        )
+        setInfoMessage({
+          title: '❌ Challenge failed!',
+          message: `The word "${result.word}" is valid.\n\nYou have been penalized 3 minutes.`
+        })
       }
     }
   }
@@ -356,6 +369,35 @@ export function GameControls() {
           <p className="text-sm text-red-800 font-medium">
             ❌ {lastValidation.reason}
           </p>
+        </div>
+      )}
+
+      {/* Custom error message display */}
+      {errorMessage && (
+        <div className="mt-2 p-3 bg-red-50 border-2 border-red-300 rounded-lg">
+          <p className="text-sm text-red-800 font-medium whitespace-pre-line">
+            ❌ {errorMessage}
+          </p>
+        </div>
+      )}
+
+      {/* Custom info message display (for challenge results) */}
+      {infoMessage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4">
+            <h3 className="text-xl font-bold mb-3 text-gray-800">
+              {infoMessage.title}
+            </h3>
+            <p className="text-gray-700 whitespace-pre-line mb-6">
+              {infoMessage.message}
+            </p>
+            <button
+              onClick={() => setInfoMessage(null)}
+              className="btn bg-blue-500 hover:bg-blue-600 text-white w-full py-3 font-bold"
+            >
+              OK
+            </button>
+          </div>
         </div>
       )}
 

@@ -14,6 +14,7 @@
  * Buttons are enabled/disabled based on game state.
  */
 
+import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { GameStatus, MoveType } from '../../types'
 
@@ -26,6 +27,11 @@ import { GameStatus, MoveType } from '../../types'
  * ```
  */
 export function GameControls() {
+  // Local state for custom modal dialog
+  const [modalMessage, setModalMessage] = useState<{ title: string; message: string; type: 'error' | 'info' } | null>(null)
+  // Local state for confirmation dialog (with callback)
+  const [confirmDialog, setConfirmDialog] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null)
+
   // Subscribe to game store
   const game = useGameStore((state) => state.game)
   const selectedTiles = useGameStore((state) => state.selectedTiles)
@@ -59,16 +65,26 @@ export function GameControls() {
    */
   const handlePlayWord = () => {
     if (selectedTiles.length === 0) {
-      alert('Please place some tiles on the board first!')
+      setModalMessage({
+        title: 'No Tiles Placed',
+        message: 'Please place some tiles on the board first!',
+        type: 'error'
+      })
       return
     }
 
     const success = makeMove(selectedTiles)
 
     if (!success) {
-      // Show error message from validation
-      const reason = lastValidation?.reason || 'Invalid move'
-      alert(`Cannot play word: ${reason}`)
+      // Get the fresh validation reason from the store (after makeMove updated it)
+      const freshValidation = useGameStore.getState().lastValidation
+      const reason = freshValidation?.reason || 'Invalid move'
+      setModalMessage({
+        title: 'Cannot Play Word',
+        message: reason,
+        type: 'error'
+      })
+      // Note: lastValidation error will also show below buttons after modal is closed
     } else {
       console.log('Move accepted!')
     }
@@ -81,14 +97,19 @@ export function GameControls() {
    */
   const handleSkipTurn = () => {
     if (selectedTiles.length > 0) {
-      const confirm = window.confirm(
-        'You have tiles placed on the board. Skip turn anyway? (Tiles will be returned to rack)'
-      )
-      if (!confirm) return
+      setConfirmDialog({
+        title: 'Skip Turn?',
+        message: 'You have tiles placed on the board. Skip turn anyway? (Tiles will be returned to rack)',
+        onConfirm: () => {
+          skipTurn()
+          clearSelection()
+          setConfirmDialog(null)
+        }
+      })
+    } else {
+      skipTurn()
+      clearSelection()
     }
-
-    skipTurn()
-    clearSelection()
   }
 
   /**
@@ -108,7 +129,11 @@ export function GameControls() {
   const handleExchangeTiles = () => {
     // Check if tile bag is empty
     if (tileBagInstance && tileBagInstance.isEmpty()) {
-      alert('Cannot exchange tiles: The tile bag is empty!')
+      setModalMessage({
+        title: 'Cannot Exchange Tiles',
+        message: 'The tile bag is empty!',
+        type: 'error'
+      })
       return
     }
 
@@ -116,7 +141,11 @@ export function GameControls() {
     const canExchange = enterExchangeMode()
 
     if (!canExchange) {
-      alert('Cannot exchange tiles two moves in a row!\n\nYou must play a word or skip your turn before exchanging again.')
+      setModalMessage({
+        title: 'Cannot Exchange Tiles',
+        message: 'Cannot exchange tiles two moves in a row!\n\nYou must play a word or skip your turn before exchanging again.',
+        type: 'error'
+      })
       return
     }
   }
@@ -128,24 +157,31 @@ export function GameControls() {
    */
   const handleConfirmExchange = () => {
     if (tilesForExchange.length === 0) {
-      alert('Please select at least one tile to exchange!')
+      setModalMessage({
+        title: 'No Tiles Selected',
+        message: 'Please select at least one tile to exchange!',
+        type: 'error'
+      })
       return
     }
 
-    const confirm = window.confirm(
-      `Exchange ${tilesForExchange.length} tile${tilesForExchange.length !== 1 ? 's' : ''}?\n\n` +
-      `This will end your turn.`
-    )
-
-    if (!confirm) return
-
-    const success = exchangeTiles(tilesForExchange)
-
-    if (success) {
-      console.log('Tiles exchanged successfully!')
-    } else {
-      alert('Failed to exchange tiles. Please try again.')
-    }
+    setConfirmDialog({
+      title: 'Exchange Tiles?',
+      message: `Exchange ${tilesForExchange.length} tile${tilesForExchange.length !== 1 ? 's' : ''}?\n\nThis will end your turn.`,
+      onConfirm: () => {
+        const success = exchangeTiles(tilesForExchange)
+        if (success) {
+          console.log('Tiles exchanged successfully!')
+        } else {
+          setModalMessage({
+            title: 'Exchange Failed',
+            message: 'Failed to exchange tiles. Please try again.',
+            type: 'error'
+          })
+        }
+        setConfirmDialog(null)
+      }
+    })
   }
 
   /**
@@ -172,12 +208,14 @@ export function GameControls() {
    * Handle End Game button click
    */
   const handleEndGame = () => {
-    const confirm = window.confirm(
-      'Are you sure you want to end the game? Final scores will be calculated.'
-    )
-    if (confirm) {
-      endGame()
-    }
+    setConfirmDialog({
+      title: 'End Game?',
+      message: 'Are you sure you want to end the game? Final scores will be calculated.',
+      onConfirm: () => {
+        endGame()
+        setConfirmDialog(null)
+      }
+    })
   }
 
   /**
@@ -191,31 +229,29 @@ export function GameControls() {
   const handleChallenge = () => {
     if (!lastPlayedWord) return
 
-    const confirm = window.confirm(
-      `Challenge the word "${lastPlayedWord.word}"?\n\n` +
-      `⚠️ Warning: If the word is valid, you will lose 3 minutes from your time!`
-    )
-
-    if (!confirm) return
-
-    const result = challengeLastWord()
-
-    if (result) {
-      if (result.success) {
-        alert(
-          `✅ Challenge successful!\n\n` +
-          `The word "${result.word}" is invalid.\n` +
-          `Reason: ${result.reason}\n\n` +
-          `The move has been undone.`
-        )
-      } else {
-        alert(
-          `❌ Challenge failed!\n\n` +
-          `The word "${result.word}" is valid.\n\n` +
-          `You have been penalized 3 minutes.`
-        )
+    setConfirmDialog({
+      title: `Challenge Word "${lastPlayedWord.word}"?`,
+      message: `⚠️ Warning: If the word is valid, you will lose 3 minutes from your time!`,
+      onConfirm: () => {
+        const result = challengeLastWord()
+        if (result) {
+          if (result.success) {
+            setModalMessage({
+              title: '✅ Challenge Successful!',
+              message: `The word "${result.word}" is invalid.\nReason: ${result.reason}\n\nThe move has been undone.`,
+              type: 'info'
+            })
+          } else {
+            setModalMessage({
+              title: '❌ Challenge Failed!',
+              message: `The word "${result.word}" is valid.\n\nYou have been penalized 3 minutes.`,
+              type: 'error'
+            })
+          }
+        }
+        setConfirmDialog(null)
       }
-    }
+    })
   }
 
   // Check if game is in progress
@@ -350,12 +386,96 @@ export function GameControls() {
         </button>
       </div>
 
-      {/* Validation error display */}
+      {/* Validation error display (always shown below buttons) */}
       {lastValidation && !lastValidation.isValid && (
         <div className="mt-2 p-3 bg-red-50 border-2 border-red-300 rounded-lg">
           <p className="text-sm text-red-800 font-medium">
             ❌ {lastValidation.reason}
           </p>
+        </div>
+      )}
+
+      {/* Custom modal dialog (popup over board, not full screen) */}
+      {modalMessage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setModalMessage(null)}
+        >
+          <div
+            className={`bg-white rounded-xl shadow-2xl p-5 max-w-sm mx-4 border-2 relative ${
+              modalMessage.type === 'error' ? 'border-red-300' : 'border-blue-300'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className={`text-2xl ${
+                modalMessage.type === 'error' ? 'text-red-500' : 'text-blue-500'
+              }`}>
+                {modalMessage.type === 'error' ? '⚠️' : 'ℹ️'}
+              </div>
+              <div className="flex-1">
+                <h3 className={`text-lg font-semibold ${
+                  modalMessage.type === 'error' ? 'text-red-700' : 'text-blue-700'
+                }`}>
+                  {modalMessage.title}
+                </h3>
+                <p className="text-gray-600 whitespace-pre-line text-sm mt-1">
+                  {modalMessage.message}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setModalMessage(null)}
+              className={`btn w-full py-2 font-medium text-white text-sm rounded-lg ${
+                modalMessage.type === 'error'
+                  ? 'bg-red-500 hover:bg-red-600'
+                  : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Custom confirmation dialog (Yes/No) */}
+      {confirmDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setConfirmDialog(null)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl p-5 max-w-sm mx-4 border-2 border-yellow-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="text-2xl text-yellow-500">
+                ❓
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-yellow-700">
+                  {confirmDialog.title}
+                </h3>
+                <p className="text-gray-600 whitespace-pre-line text-sm mt-1">
+                  {confirmDialog.message}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setConfirmDialog(null)}
+                className="btn py-2 font-medium text-gray-700 text-sm rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDialog.onConfirm}
+                className="btn py-2 font-medium text-white text-sm rounded-lg bg-yellow-500 hover:bg-yellow-600"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -13,6 +13,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.3] - 2026-01-09
+
+### Added
+- **Custom Modal Dialogs (UI Improvement)**
+  - Replaced all browser alerts and confirms with custom modal dialogs
+  - No more "localhost says..." prefix in dialogs
+  - Professional, game-integrated popup design
+  - Three types of modals:
+    - Error modals (red border with ⚠️ icon) for invalid moves and errors
+    - Info modals (blue border with ℹ️ icon) for informational messages
+    - Confirmation modals (yellow border with ❓ icon) for Yes/No decisions
+  - Modals appear over the game board without blocking the entire screen
+  - Click outside modal or on OK/Cancel buttons to dismiss
+  - Error messages persist below buttons after closing modal
+
+### Implementation Details
+
+**Local Game (`/src/components/GameControls/`)**
+- Added `modalMessage` state for error/info popups
+- Added `confirmDialog` state for confirmation dialogs
+- Replaced all `alert()` calls with `setModalMessage()`
+- Replaced all `window.confirm()` calls with `setConfirmDialog()`
+- Real-time validation errors now show in both modal and persistent message below buttons
+- Fixed validation error display by fetching fresh state: `useGameStore.getState().lastValidation`
+
+**Multiplayer Online Game (`packages/client/src/`)**
+- `OnlineGameControls.tsx`: Added confirmation dialogs for Skip Turn and Leave Game
+- `OnlineGame.tsx`: Added error and info modals
+  - Error modal triggered by `useEffect` when `gameError` changes
+  - Server-side validation errors now show in popup dialog
+  - Info modal for "Play Again" coming soon message
+- Consistent modal styling across all dialogs
+
+### User Experience Improvements
+- **Before**: Browser alerts showed "localhost:5177 says..." or "localhost:5173 says..."
+- **After**: Clean, branded modal dialogs with icons and color-coded borders
+- Error messages are more visible and user-friendly
+- Confirmations use intuitive Cancel/Confirm buttons instead of OK/Cancel
+- Game board remains visible behind modal (no full-screen blackout)
+
+### Files Changed
+- `/src/components/GameControls/GameControls.tsx` - Added custom modals for local game
+- `packages/client/src/components/OnlineGameControls/OnlineGameControls.tsx` - Added confirmation dialogs
+- `packages/client/src/components/OnlineGame/OnlineGame.tsx` - Added error and info modals
+
+### Visual Design
+- **Error modals**: Red border (border-red-300), red title (text-red-700), ⚠️ icon
+- **Info modals**: Blue border (border-blue-300), blue title (text-blue-700), ℹ️ icon
+- **Confirmation modals**: Yellow border (border-yellow-300), yellow title (text-yellow-700), ❓ icon
+- All modals: White background, rounded corners, shadow, compact max-width
+- Buttons: Color-matched to modal type, full-width for single buttons, 2-column grid for Cancel/Confirm
+
+### Tested
+- ✅ Invalid move shows error popup + persistent message below buttons
+- ✅ Skip turn with tiles shows confirmation dialog
+- ✅ Leave game shows confirmation dialog
+- ✅ End game shows confirmation dialog
+- ✅ Exchange tiles shows confirmation dialog
+- ✅ Challenge word shows confirmation, then result dialog
+- ✅ Play Again shows info modal
+- ✅ Modals can be dismissed by clicking outside or on buttons
+- ✅ Error persists below buttons after closing modal
+- ✅ No more "localhost says..." prefix
+
+---
+
 ## [0.2.2] - 2026-01-09
 
 ### Added
@@ -378,6 +444,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **0.2.3** - Custom modal dialogs (UI improvement) (Jan 9, 2026)
+- **0.2.2** - Joker stealing feature in online multiplayer (Jan 9, 2026)
 - **0.2.1** - Scoresheet UI integration + word display fix (Jan 7, 2026)
 - **0.2.0** - Board/TileRack integration + bug fixes (Jan 5, 2026)
 - **0.1.0** - Client implementation complete (Jan 5, 2026)

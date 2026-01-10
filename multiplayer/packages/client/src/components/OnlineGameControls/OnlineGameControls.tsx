@@ -5,6 +5,7 @@
  * Provides buttons for game actions in online mode.
  */
 
+import { useState } from 'react'
 import { PlacedTile } from '@kvizovka/shared'
 
 interface OnlineGameControlsProps {
@@ -28,6 +29,8 @@ export function OnlineGameControls({
   onBackToMenu,
   onEndGameTest,
 }: OnlineGameControlsProps) {
+  // Local state for custom confirmation dialog
+  const [confirmDialog, setConfirmDialog] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null)
   /**
    * Handle Play Word button click
    */
@@ -43,12 +46,17 @@ export function OnlineGameControls({
    */
   const handleSkipTurn = () => {
     if (selectedTiles.length > 0) {
-      const confirm = window.confirm(
-        'You have tiles placed on the board. Skip turn anyway? (Tiles will be returned to rack)'
-      )
-      if (!confirm) return
+      setConfirmDialog({
+        title: 'Skip Turn?',
+        message: 'You have tiles placed on the board. Skip turn anyway? (Tiles will be returned to rack)',
+        onConfirm: () => {
+          onSkipTurn()
+          setConfirmDialog(null)
+        }
+      })
+    } else {
+      onSkipTurn()
     }
-    onSkipTurn()
   }
 
   /**
@@ -62,12 +70,14 @@ export function OnlineGameControls({
    * Handle Back to Menu
    */
   const handleBackToMenu = () => {
-    const confirm = window.confirm(
-      'Are you sure you want to leave the game? This will disconnect you from the match.'
-    )
-    if (confirm) {
-      onBackToMenu()
-    }
+    setConfirmDialog({
+      title: 'Leave Game?',
+      message: 'Are you sure you want to leave the game? This will disconnect you from the match.',
+      onConfirm: () => {
+        onBackToMenu()
+        setConfirmDialog(null)
+      }
+    })
   }
 
   return (
@@ -143,6 +153,47 @@ export function OnlineGameControls({
           <p className="text-sm text-red-800 font-medium">
             ❌ {gameError}
           </p>
+        </div>
+      )}
+
+      {/* Custom confirmation dialog (Yes/No) */}
+      {confirmDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setConfirmDialog(null)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl p-5 max-w-sm mx-4 border-2 border-yellow-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="text-2xl text-yellow-500">
+                ❓
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-yellow-700">
+                  {confirmDialog.title}
+                </h3>
+                <p className="text-gray-600 whitespace-pre-line text-sm mt-1">
+                  {confirmDialog.message}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setConfirmDialog(null)}
+                className="btn py-2 font-medium text-gray-700 text-sm rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDialog.onConfirm}
+                className="btn py-2 font-medium text-white text-sm rounded-lg bg-yellow-500 hover:bg-yellow-600"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

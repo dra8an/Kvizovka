@@ -45,6 +45,10 @@ export function OnlineGame() {
   // Local UI state for joker stealing tooltip
   const [draggedTile, setDraggedTile] = useState<any>(null)
 
+  // Local state for custom modal dialog
+  const [infoModal, setInfoModal] = useState<{ title: string; message: string } | null>(null)
+  const [errorModal, setErrorModal] = useState<{ title: string; message: string } | null>(null)
+
   // Clear selected tiles when game state updates (after successful move)
   useEffect(() => {
     // When the server sends updated game state, clear our local placement
@@ -52,6 +56,16 @@ export function OnlineGame() {
       setSelectedTiles([])
     }
   }, [gameState?.round, gameState?.currentPlayerIndex])
+
+  // Show error modal when gameError is set
+  useEffect(() => {
+    if (gameError) {
+      setErrorModal({
+        title: 'Cannot Play Word',
+        message: gameError
+      })
+    }
+  }, [gameError])
 
   // If not in playing or finished view, show menu/waiting
   if (view !== 'playing' && view !== 'finished') {
@@ -257,7 +271,10 @@ export function OnlineGame() {
               <button
                 onClick={() => {
                   // TODO: Implement play again feature
-                  alert('Play Again feature coming soon! Both players would need to agree.')
+                  setInfoModal({
+                    title: 'Play Again',
+                    message: 'Play Again feature coming soon! Both players would need to agree.'
+                  })
                 }}
                 className="btn-primary w-full text-lg py-3"
               >
@@ -467,6 +484,72 @@ export function OnlineGame() {
           </div>
         </div>
       </div>
+
+      {/* Custom info modal */}
+      {infoModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setInfoModal(null)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl p-5 max-w-sm mx-4 border-2 border-blue-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="text-2xl text-blue-500">
+                ℹ️
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-blue-700">
+                  {infoModal.title}
+                </h3>
+                <p className="text-gray-600 whitespace-pre-line text-sm mt-1">
+                  {infoModal.message}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setInfoModal(null)}
+              className="btn w-full py-2 font-medium text-white text-sm rounded-lg bg-blue-500 hover:bg-blue-600"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Custom error modal */}
+      {errorModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setErrorModal(null)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl p-5 max-w-sm mx-4 border-2 border-red-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="text-2xl text-red-500">
+                ⚠️
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-red-700">
+                  {errorModal.title}
+                </h3>
+                <p className="text-gray-600 whitespace-pre-line text-sm mt-1">
+                  {errorModal.message}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setErrorModal(null)}
+              className="btn w-full py-2 font-medium text-white text-sm rounded-lg bg-red-500 hover:bg-red-600"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
