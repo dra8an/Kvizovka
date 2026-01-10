@@ -194,7 +194,8 @@ export class MoveValidator {
     // Rule 6: Check minimum word length
     // NOTE: Dictionary validation is NOT automatic in Kvizovka!
     // Words can only be challenged by the opponent after being played.
-    if (wordText.length < MIN_WORD_LENGTH) {
+    // IMPORTANT: Count TILES, not string characters (for digraphs like DŽ, LJ, NJ)
+    if (mainWord.length < MIN_WORD_LENGTH) {
       return {
         isValid: false,
         reason: `Word must be at least ${MIN_WORD_LENGTH} letters long`,

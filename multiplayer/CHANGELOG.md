@@ -13,6 +13,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.4] - 2026-01-09
+
+### Fixed
+- **Serbian Digraph Validation Bug**
+  - Fixed word length validation to count **tiles** instead of **string characters**
+  - Serbian digraphs (DŽ, LJ, NJ) are single tiles but represented as 2 characters in strings
+  - **Bug**: Word "DŽOG" (3 tiles: DŽ+O+G) was incorrectly accepted as 4-letter word
+  - **Fix**: Now correctly counts as 3 tiles and gets rejected for being too short
+  - Affects minimum word length validation (4 tiles required)
+
+### Technical Details
+- Changed validation in `MoveValidator.ts` line 198
+- **Before**: `if (wordText.length < MIN_WORD_LENGTH)` ❌ (counts characters: "DŽOG" = 4)
+- **After**: `if (mainWord.length < MIN_WORD_LENGTH)` ✅ (counts tiles: "DŽOG" = 3)
+- `mainWord` is an array of `BoardSquare` objects (one per tile)
+- `wordText` is a string representation (digraphs = 2 characters)
+
+### Serbian Digraphs Affected
+- **DŽ** (dž) - Single tile, but 2 characters in string
+- **LJ** (lj) - Single tile, but 2 characters in string
+- **NJ** (nj) - Single tile, but 2 characters in string
+
+### Files Changed
+- `packages/shared/src/game-engine/MoveValidator.ts` - Fixed validation (multiplayer)
+- `src/game-engine/MoveValidator.ts` - Fixed validation (local game)
+
+### Example
+```
+Word: DŽOG
+Tiles: [DŽ] [O] [G] = 3 tiles
+String: "DŽOG" = 4 characters
+Before fix: Accepted (4 chars ≥ 4) ❌
+After fix: Rejected (3 tiles < 4) ✅
+```
+
+---
+
 ## [0.2.3] - 2026-01-09
 
 ### Added
@@ -444,6 +481,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **0.2.4** - Fixed Serbian digraph validation bug (Jan 9, 2026)
 - **0.2.3** - Custom modal dialogs (UI improvement) (Jan 9, 2026)
 - **0.2.2** - Joker stealing feature in online multiplayer (Jan 9, 2026)
 - **0.2.1** - Scoresheet UI integration + word display fix (Jan 7, 2026)
