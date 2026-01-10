@@ -193,9 +193,20 @@ export class ScoreCalculator {
     }
 
     // Check for long-word bonus
+    // IMPORTANT: Count TILES, not string characters (for digraphs like DŽ, LJ, NJ)
     let longWordBonus = 0
-    for (const wordScore of wordScores) {
-      const bonus = getLongWordBonus(wordScore.word.length)
+    for (let i = 0; i < allWords.length; i++) {
+      const wordSquares = allWords[i]
+
+      // Count non-blocker tiles
+      const tileCount = wordSquares.filter(square => {
+        const tile = square.tile
+        if (!tile) return false
+        if ('type' in tile && tile.type === 'BLOCKER') return false
+        return true
+      }).length
+
+      const bonus = getLongWordBonus(tileCount)
       if (bonus > longWordBonus) {
         longWordBonus = bonus // Use highest bonus if multiple long words
       }

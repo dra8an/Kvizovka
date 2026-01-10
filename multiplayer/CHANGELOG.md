@@ -13,6 +13,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.5] - 2026-01-09
+
+### Fixed
+- **Serbian Digraph Scoring Bug (Long Word Bonus)**
+  - Fixed long word bonus calculation to count **tiles** instead of **string characters**
+  - Same bug as 0.2.4 but for scoring instead of validation
+  - **Bug**: Word "DŽUNGLAMA" (9 tiles) was incorrectly counted as 10 characters → received 10-tile bonus (+20pts)
+  - **Fix**: Now correctly counts as 9 tiles → receives 9-tile bonus (none, as bonus starts at 10 tiles)
+  - Affects long word bonuses: 10 tiles = +20pts, 11 tiles = +30pts, 12 tiles = +40pts, 13+ tiles = +50pts
+
+### Technical Details
+- Changed scoring in `ScoreCalculator.ts` lines 194-213
+- **Before**: `getLongWordBonus(wordScore.word.length)` ❌ (counts characters)
+- **After**: `getLongWordBonus(tileCount)` where tileCount filters non-blocker tiles ✅
+- Explicitly filters out blocker tiles when counting
+- Uses `allWords` array (BoardSquare[][]) to count tiles directly
+
+### Files Changed
+- `packages/shared/src/game-engine/ScoreCalculator.ts` - Fixed scoring (multiplayer)
+- `src/game-engine/ScoreCalculator.ts` - Fixed scoring (local game)
+
+### Example
+```
+Word: DŽUNGLAMA
+Tiles: [DŽ] [U] [N] [G] [L] [A] [M] [A] = 8 tiles
+String: "DŽUNGLAMA" = 9 characters
+Before fix: 9-char bonus = none (but wrong count) ❌
+After fix: 8-tile bonus = none (correct count) ✅
+
+Word: NEDŽELJNOM
+Tiles: [N] [E] [DŽ] [E] [LJ] [N] [O] [M] = 8 tiles
+String: "NEDŽELJNOM" = 10 characters
+Before fix: 10-char bonus = +20pts ❌ (incorrect bonus!)
+After fix: 8-tile bonus = none ✅ (correct!)
+```
+
+---
+
 ## [0.2.4] - 2026-01-09
 
 ### Fixed
