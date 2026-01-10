@@ -6,7 +6,8 @@
  * This is the MOST IMPORTANT security component:
  * - Validates ALL moves on the server
  * - Calculates ALL scores on the server
- * - Hides opponent tiles and tile bag from clients
+ * - Hides tile bag from clients
+ * - Shows opponent tiles (Kvizovka rule: players can see each other's tiles)
  * - Prevents cheating by never trusting client input
  */
 
@@ -33,7 +34,8 @@ import { v4 as uuidv4 } from 'uuid'
  * Server Game State
  *
  * This is the FULL game state stored on the server.
- * Clients receive a SANITIZED version without opponent tiles/tile bag.
+ * Clients receive a SANITIZED version without the tile bag.
+ * (In Kvizovka, players CAN see opponent's tiles)
  */
 interface ServerGameState extends GameState {
   /**
@@ -173,9 +175,8 @@ export class GameManager {
    * Sanitize game state for a specific player
    *
    * CRITICAL SECURITY FUNCTION:
-   * - Hides opponent's tiles
    * - Hides tile bag
-   * - Only shows player's own tiles
+   * - Shows opponent's tiles (Kvizovka rule: unlike Scrabble, players see each other's tiles)
    *
    * @param gameState - Full server game state
    * @param playerId - Player ID who will receive this state
@@ -185,24 +186,9 @@ export class GameManager {
     const sanitized: GameState = {
       ...gameState,
       tileBag: [], // Never send tile bag to clients
-      players: gameState.players.map((player) => {
-        if (player.id === playerId) {
-          // Send full data for this player
-          return player
-        } else {
-          // For opponent: hide tiles during gameplay, but show them when game is completed
-          if (gameState.status === GameStatus.COMPLETED) {
-            // Game over - players can see each other's remaining tiles
-            return player
-          } else {
-            // Game in progress - hide opponent's tiles
-            return {
-              ...player,
-              tiles: [], // IMPORTANT: Don't send opponent's tiles during gameplay!
-            }
-          }
-        }
-      }) as [Player, Player],
+      // IMPORTANT: In Kvizovka, players CAN see each other's tiles (unlike Scrabble)
+      // This is a key strategic element of the game
+      players: gameState.players as [Player, Player],
     }
 
     // Remove server-only fields

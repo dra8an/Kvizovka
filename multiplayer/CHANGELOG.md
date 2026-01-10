@@ -13,6 +13,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.6] - 2026-01-10
+
+### Added
+- **Opponent Tiles Display in ScorePanel**
+  - Both players' tiles now visible in the ScorePanel sidebar
+  - Compact 6x6 tiles fit in a single row
+  - Strategic visibility: Unlike Scrabble, Kvizovka allows players to see opponent's tiles
+  - Tiles adapt styling based on current turn (colored background vs gray)
+  - Shows tile letter, value, and joker indicator
+
+### Fixed
+- **Server Tile Visibility**
+  - Fixed server to send opponent's tiles to clients (Kvizovka rule)
+  - **Before**: Server sanitized opponent tiles (empty array) ❌
+  - **After**: Server sends all player tiles (Kvizovka strategy) ✅
+  - This is a key strategic element that differs from Scrabble
+
+- **Build Warnings**
+  - Fixed CSS minification warnings about WebSocket event names (`room:create`, `room:join`, etc.)
+  - Switched from esbuild to lightningcss minifier in Vite config
+  - Clean build with no warnings
+
+### Changed
+- Moved opponent tiles from standalone component to integrated ScorePanel display
+- Tiles are now smaller (6x6 instead of 8x8) with tighter spacing
+- Font sizes adjusted: letter 10px, value 6px, joker emoji 6px
+
+### Technical Details
+- Updated `OnlineScorePanel.tsx` to display both players' tiles
+- Updated `ScorePanel.tsx` (local game) with same tile display
+- Modified `game-manager.ts` sanitization to preserve opponent tiles
+- Changed `vite.config.ts`: added `cssMinify: 'lightningcss'`
+
+### Files Changed
+- `packages/client/src/components/OnlineScorePanel/OnlineScorePanel.tsx` - Added tiles display
+- `packages/client/src/components/OnlineGame/OnlineGame.tsx` - Removed OpponentTiles component
+- `packages/server/src/game-manager.ts` - Removed tile sanitization (lines 183-190)
+- `src/components/ScorePanel/ScorePanel.tsx` - Added tiles display (local game)
+- `src/components/Game/Game.tsx` - Removed OpponentTiles component (local game)
+- `vite.config.ts` - Switched to lightningcss minifier
+
+### UX Improvements
+- All player information consolidated in one place (ScorePanel)
+- Better space utilization - tiles fit in one row
+- Clear visual distinction between current/non-current player tiles
+- Maintains strategic gameplay element of seeing opponent's tiles
+
+---
+
 ## [0.2.5] - 2026-01-09
 
 ### Fixed

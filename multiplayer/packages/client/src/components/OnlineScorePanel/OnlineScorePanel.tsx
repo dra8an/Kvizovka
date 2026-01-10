@@ -117,6 +117,36 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
           <span className="mx-2">•</span>
           <span>Tiles: {you.tiles.length}</span>
         </div>
+
+        {/* Your tiles */}
+        <div className="mt-3 pt-3 border-t border-white/20">
+          <p className="text-xs opacity-80 mb-2">Tiles:</p>
+          <div className="flex flex-wrap gap-0.5">
+            {you.tiles.map((tile, index) => (
+              <div
+                key={`${tile.id}-${index}`}
+                className={`relative w-6 h-6 rounded shadow-sm flex items-center justify-center ${
+                  isYourTurn
+                    ? 'bg-white/20 border border-white/30'
+                    : 'bg-gray-100 border border-gray-300'
+                }`}
+                title={tile.isJoker ? `Joker${tile.jokerLetter ? ` (${tile.jokerLetter})` : ''}` : tile.letter}
+              >
+                <span className={`text-[10px] font-bold ${isYourTurn ? 'text-white' : 'text-gray-700'}`}>
+                  {tile.isJoker ? (tile.jokerLetter || '*') : tile.letter}
+                </span>
+                <span className={`absolute bottom-0 right-0.5 text-[6px] font-semibold ${isYourTurn ? 'text-white/80' : 'text-gray-600'}`}>
+                  {tile.value}
+                </span>
+                {tile.isJoker && (
+                  <span className="absolute top-0 right-0 text-[6px]" title="Joker">
+                    ✨
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Opponent (Player 2 style) */}
@@ -164,6 +194,36 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
           <span>Rounds played: {opponent.roundsPlayed}</span>
           <span className="mx-2">•</span>
           <span>Tiles: {opponent.tiles.length}</span>
+        </div>
+
+        {/* Opponent tiles */}
+        <div className="mt-3 pt-3 border-t border-white/20">
+          <p className="text-xs opacity-80 mb-2">Tiles:</p>
+          <div className="flex flex-wrap gap-0.5">
+            {opponent.tiles.map((tile, index) => (
+              <div
+                key={`${tile.id}-${index}`}
+                className={`relative w-6 h-6 rounded shadow-sm flex items-center justify-center ${
+                  isOpponentTurn
+                    ? 'bg-white/20 border border-white/30'
+                    : 'bg-gray-100 border border-gray-300'
+                }`}
+                title={tile.isJoker ? `Joker${tile.jokerLetter ? ` (${tile.jokerLetter})` : ''}` : tile.letter}
+              >
+                <span className={`text-[10px] font-bold ${isOpponentTurn ? 'text-white' : 'text-gray-700'}`}>
+                  {tile.isJoker ? (tile.jokerLetter || '*') : tile.letter}
+                </span>
+                <span className={`absolute bottom-0 right-0.5 text-[6px] font-semibold ${isOpponentTurn ? 'text-white/80' : 'text-gray-600'}`}>
+                  {tile.value}
+                </span>
+                {tile.isJoker && (
+                  <span className="absolute top-0 right-0 text-[6px]" title="Joker">
+                    ✨
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

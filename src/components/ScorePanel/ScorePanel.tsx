@@ -145,6 +145,36 @@ export function ScorePanel() {
           <span className="mx-2">•</span>
           <span>Tiles: {player1.tiles.length}</span>
         </div>
+
+        {/* Player 1 tiles */}
+        <div className="mt-3 pt-3 border-t border-white/20">
+          <p className="text-xs opacity-80 mb-2">Tiles:</p>
+          <div className="flex flex-wrap gap-0.5">
+            {player1.tiles.map((tile, index) => (
+              <div
+                key={`${tile.id}-${index}`}
+                className={`relative w-6 h-6 rounded shadow-sm flex items-center justify-center ${
+                  game.currentPlayerIndex === 0
+                    ? 'bg-white/20 border border-white/30'
+                    : 'bg-gray-100 border border-gray-300'
+                }`}
+                title={tile.isJoker ? `Joker${tile.jokerLetter ? ` (${tile.jokerLetter})` : ''}` : tile.letter}
+              >
+                <span className={`text-[10px] font-bold ${game.currentPlayerIndex === 0 ? 'text-white' : 'text-gray-700'}`}>
+                  {tile.isJoker ? (tile.jokerLetter || '*') : tile.letter}
+                </span>
+                <span className={`absolute bottom-0 right-0.5 text-[6px] font-semibold ${game.currentPlayerIndex === 0 ? 'text-white/80' : 'text-gray-600'}`}>
+                  {tile.value}
+                </span>
+                {tile.isJoker && (
+                  <span className="absolute top-0 right-0 text-[6px]" title="Joker">
+                    ✨
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Player 2 */}
@@ -192,6 +222,36 @@ export function ScorePanel() {
           <span>Rounds played: {player2.roundsPlayed}</span>
           <span className="mx-2">•</span>
           <span>Tiles: {player2.tiles.length}</span>
+        </div>
+
+        {/* Player 2 tiles */}
+        <div className="mt-3 pt-3 border-t border-white/20">
+          <p className="text-xs opacity-80 mb-2">Tiles:</p>
+          <div className="flex flex-wrap gap-0.5">
+            {player2.tiles.map((tile, index) => (
+              <div
+                key={`${tile.id}-${index}`}
+                className={`relative w-6 h-6 rounded shadow-sm flex items-center justify-center ${
+                  game.currentPlayerIndex === 1
+                    ? 'bg-white/20 border border-white/30'
+                    : 'bg-gray-100 border border-gray-300'
+                }`}
+                title={tile.isJoker ? `Joker${tile.jokerLetter ? ` (${tile.jokerLetter})` : ''}` : tile.letter}
+              >
+                <span className={`text-[10px] font-bold ${game.currentPlayerIndex === 1 ? 'text-white' : 'text-gray-700'}`}>
+                  {tile.isJoker ? (tile.jokerLetter || '*') : tile.letter}
+                </span>
+                <span className={`absolute bottom-0 right-0.5 text-[6px] font-semibold ${game.currentPlayerIndex === 1 ? 'text-white/80' : 'text-gray-600'}`}>
+                  {tile.value}
+                </span>
+                {tile.isJoker && (
+                  <span className="absolute top-0 right-0 text-[6px]" title="Joker">
+                    ✨
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
