@@ -1,0 +1,21 @@
+{
+  "errors": {
+    "invalidMove": "Invalid move",
+    "notYourTurn": "It's not your turn",
+    "noTilesPlaced": "No tiles placed on the board",
+    "invalidWord": "Invalid word: {{word}}",
+    "mustConnectToCenter": "First word must cover the center square",
+    "mustConnectToExisting": "New tiles must connect to existing words",
+    "gapInWord": "Words cannot have gaps",
+    "notEnoughTiles": "Not enough tiles to exchange (minimum 7 required)",
+    "invalidPosition": "Invalid tile position",
+    "tileAlreadyPlaced": "A tile is already placed at this position"
+  },
+  "success": {
+    "wordValid": "Word is valid!",
+    "challengeSuccessful": "Challenge successful! Invalid word: {{word}}",
+    "challengeFailed": "Challenge failed. The word is valid.",
+    "tilesExchanged": "{{count}} tile exchanged",
+    "tilesExchanged_plural": "{{count}} tiles exchanged"
+  }
+}

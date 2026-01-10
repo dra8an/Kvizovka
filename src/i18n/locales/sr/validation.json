@@ -1,0 +1,21 @@
+{
+  "errors": {
+    "invalidMove": "Неисправан потез",
+    "notYourTurn": "Није твој потез",
+    "noTilesPlaced": "Ниједна плочица није постављена на табли",
+    "invalidWord": "Неважећа реч: {{word}}",
+    "mustConnectToCenter": "Прва реч мора покрити централно поље",
+    "mustConnectToExisting": "Нове плочице морају бити повезане са постојећим речима",
+    "gapInWord": "Речи не могу имати празнине",
+    "notEnoughTiles": "Недовољно плочица за замену (потребно минимум 7)",
+    "invalidPosition": "Неисправна позиција плочице",
+    "tileAlreadyPlaced": "Плочица је већ постављена на овој позицији"
+  },
+  "success": {
+    "wordValid": "Реч је исправна!",
+    "challengeSuccessful": "Изазов успешан! Неважећа реч: {{word}}",
+    "challengeFailed": "Изазов неуспешан. Реч је важећа.",
+    "tilesExchanged": "{{count}} плочица замењена",
+    "tilesExchanged_plural": "{{count}} плочица замењено"
+  }
+}

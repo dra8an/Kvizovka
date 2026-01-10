@@ -1,0 +1,56 @@
+{
+  "buttons": {
+    "start": "Започни Нову Игру",
+    "playAgain": "Играј Поново",
+    "playWord": "Одиграј Реч",
+    "recallTiles": "Врати Плочице",
+    "skipTurn": "Прескочи Потез",
+    "exchange": "Замени Плочице",
+    "confirmExchange": "Потврди Замену",
+    "cancelExchange": "Откажи Замену",
+    "challenge": "Изазови Реч",
+    "pause": "Паузирај",
+    "resume": "Настави",
+    "endGame": "Заврши Игру",
+    "ok": "У реду",
+    "cancel": "Откажи",
+    "confirm": "Потврди"
+  },
+  "labels": {
+    "score": "Резултат",
+    "timeLeft": "Преостало Време",
+    "tilesLeft": "Преостало плочица",
+    "tiles": "Плочице",
+    "rounds": "Одиграно рунди",
+    "totalMoves": "Укупно потеза",
+    "status": "Статус",
+    "round": "Рунда",
+    "player": "Играч",
+    "opponent": "Противник",
+    "yourTurn": "Твој Потез",
+    "currentTurn": "ТЕКУЋИ ПОТЕЗ",
+    "gameStatus": "Статус Игре",
+    "lastMove": "Последњи Потез",
+    "type": "Тип",
+    "points": "поена",
+    "words": "Речи",
+    "final": "Коначно",
+    "word": "Реч",
+    "pts": "Поена",
+    "total": "Укупно",
+    "joker": "Квизовац"
+  },
+  "defaultNames": {
+    "player1": "Играч 1",
+    "player2": "Играч 2"
+  },
+  "plurals": {
+    "tile": "плочица",
+    "tile_plural": "плочице",
+    "tilesInHand": "{{count}} плочица у руци",
+    "tilesInHand_plural": "{{count}} плочица у руци",
+    "tilesPlaced": "({{count}} постављено)",
+    "tilesSelected": "{{count}} плочица изабрана",
+    "tilesSelected_plural": "{{count}} плочица изабрано"
+  }
+}

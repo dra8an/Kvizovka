@@ -15,6 +15,7 @@
  */
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useGameStore } from '../../store/gameStore'
 import { GameStatus, MoveType } from '../../types'
 
@@ -27,6 +28,8 @@ import { GameStatus, MoveType } from '../../types'
  * ```
  */
 export function GameControls() {
+  const { t } = useTranslation(['common', 'dialogs', 'game'])
+
   // Local state for custom modal dialog
   const [modalMessage, setModalMessage] = useState<{ title: string; message: string; type: 'error' | 'info' } | null>(null)
   // Local state for confirmation dialog (with callback)
@@ -66,8 +69,8 @@ export function GameControls() {
   const handlePlayWord = () => {
     if (selectedTiles.length === 0) {
       setModalMessage({
-        title: 'No Tiles Placed',
-        message: 'Please place some tiles on the board first!',
+        title: t('dialogs:errors.noTilesPlaced.title'),
+        message: t('dialogs:errors.noTilesPlaced.message'),
         type: 'error'
       })
       return
@@ -78,9 +81,9 @@ export function GameControls() {
     if (!success) {
       // Get the fresh validation reason from the store (after makeMove updated it)
       const freshValidation = useGameStore.getState().lastValidation
-      const reason = freshValidation?.reason || 'Invalid move'
+      const reason = freshValidation?.reason || t('validation:errors.invalidMove')
       setModalMessage({
-        title: 'Cannot Play Word',
+        title: t('dialogs:errors.cannotPlayWord.title'),
         message: reason,
         type: 'error'
       })
@@ -98,8 +101,8 @@ export function GameControls() {
   const handleSkipTurn = () => {
     if (selectedTiles.length > 0) {
       setConfirmDialog({
-        title: 'Skip Turn?',
-        message: 'You have tiles placed on the board. Skip turn anyway? (Tiles will be returned to rack)',
+        title: t('dialogs:confirmations.skipTurn.title'),
+        message: t('dialogs:confirmations.skipTurn.message'),
         onConfirm: () => {
           skipTurn()
           clearSelection()
@@ -130,8 +133,8 @@ export function GameControls() {
     // Check if tile bag is empty
     if (tileBagInstance && tileBagInstance.isEmpty()) {
       setModalMessage({
-        title: 'Cannot Exchange Tiles',
-        message: 'The tile bag is empty!',
+        title: t('dialogs:errors.cannotExchange.title'),
+        message: t('dialogs:errors.cannotExchange.emptyBag'),
         type: 'error'
       })
       return
@@ -142,8 +145,8 @@ export function GameControls() {
 
     if (!canExchange) {
       setModalMessage({
-        title: 'Cannot Exchange Tiles',
-        message: 'Cannot exchange tiles two moves in a row!\n\nYou must play a word or skip your turn before exchanging again.',
+        title: t('dialogs:errors.cannotExchange.title'),
+        message: t('dialogs:errors.cannotExchange.consecutiveExchange'),
         type: 'error'
       })
       return
@@ -158,24 +161,24 @@ export function GameControls() {
   const handleConfirmExchange = () => {
     if (tilesForExchange.length === 0) {
       setModalMessage({
-        title: 'No Tiles Selected',
-        message: 'Please select at least one tile to exchange!',
+        title: t('dialogs:errors.noTilesSelected.title'),
+        message: t('dialogs:errors.noTilesSelected.message'),
         type: 'error'
       })
       return
     }
 
     setConfirmDialog({
-      title: 'Exchange Tiles?',
-      message: `Exchange ${tilesForExchange.length} tile${tilesForExchange.length !== 1 ? 's' : ''}?\n\nThis will end your turn.`,
+      title: t('dialogs:confirmations.exchangeTiles.title'),
+      message: t('dialogs:confirmations.exchangeTiles.message', { count: tilesForExchange.length }),
       onConfirm: () => {
         const success = exchangeTiles(tilesForExchange)
         if (success) {
           console.log('Tiles exchanged successfully!')
         } else {
           setModalMessage({
-            title: 'Exchange Failed',
-            message: 'Failed to exchange tiles. Please try again.',
+            title: t('dialogs:errors.exchangeFailed.title'),
+            message: t('dialogs:errors.exchangeFailed.message'),
             type: 'error'
           })
         }
@@ -209,8 +212,8 @@ export function GameControls() {
    */
   const handleEndGame = () => {
     setConfirmDialog({
-      title: 'End Game?',
-      message: 'Are you sure you want to end the game? Final scores will be calculated.',
+      title: t('dialogs:confirmations.endGame.title'),
+      message: t('dialogs:confirmations.endGame.message'),
       onConfirm: () => {
         endGame()
         setConfirmDialog(null)
@@ -230,21 +233,21 @@ export function GameControls() {
     if (!lastPlayedWord) return
 
     setConfirmDialog({
-      title: `Challenge Word "${lastPlayedWord.word}"?`,
-      message: `⚠️ Warning: If the word is valid, you will lose 3 minutes from your time!`,
+      title: t('dialogs:confirmations.challenge.title', { word: lastPlayedWord.word }),
+      message: t('dialogs:confirmations.challenge.message'),
       onConfirm: () => {
         const result = challengeLastWord()
         if (result) {
           if (result.success) {
             setModalMessage({
-              title: '✅ Challenge Successful!',
-              message: `The word "${result.word}" is invalid.\nReason: ${result.reason}\n\nThe move has been undone.`,
+              title: t('dialogs:results.challengeSuccess.title'),
+              message: t('dialogs:results.challengeSuccess.message', { word: result.word, reason: result.reason }),
               type: 'info'
             })
           } else {
             setModalMessage({
-              title: '❌ Challenge Failed!',
-              message: `The word "${result.word}" is valid.\n\nYou have been penalized 3 minutes.`,
+              title: t('dialogs:results.challengeFailed.title'),
+              message: t('dialogs:results.challengeFailed.message', { word: result.word }),
               type: 'error'
             })
           }
@@ -291,7 +294,7 @@ export function GameControls() {
               }
             `}
           >
-            Confirm Exchange {tilesForExchange.length > 0 && `(${tilesForExchange.length} tiles)`}
+            {t('common:buttons.confirmExchange')} {tilesForExchange.length > 0 && `(${tilesForExchange.length} ${t('common:plurals.tile', { count: tilesForExchange.length })})`}
           </button>
 
           {/* Cancel Exchange Button */}
@@ -299,13 +302,13 @@ export function GameControls() {
             onClick={handleCancelExchange}
             className="btn bg-red-500 hover:bg-red-600 text-white text-lg py-4 font-bold"
           >
-            Cancel Exchange
+            {t('common:buttons.cancelExchange')}
           </button>
 
           {/* Info Message */}
           <div className="p-3 bg-purple-50 border-2 border-purple-300 rounded-lg">
             <p className="text-sm text-purple-800 font-medium">
-              Click tiles in your rack to select them for exchange.
+              {t('game:rackInfo.clickToSelect')}
             </p>
           </div>
         </>
@@ -324,7 +327,7 @@ export function GameControls() {
               }
             `}
           >
-            Play Word {selectedTiles.length > 0 && `(${selectedTiles.length} tiles)`}
+            {t('common:buttons.playWord')} {selectedTiles.length > 0 && `(${selectedTiles.length} ${t('common:plurals.tile', { count: selectedTiles.length })})`}
           </button>
 
           {/* Challenge button (only shown when opponent just played a word) */}
@@ -333,7 +336,7 @@ export function GameControls() {
               onClick={handleChallenge}
               className="btn text-lg py-4 font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg animate-pulse"
             >
-              ⚠️ Challenge Word: "{lastPlayedWord.word}"
+              ⚠️ {t('common:buttons.challenge')}: "{lastPlayedWord.word}"
             </button>
           )}
 
@@ -344,7 +347,7 @@ export function GameControls() {
               disabled={selectedTiles.length === 0 || !isInProgress}
               className="btn btn-secondary"
             >
-              Recall Tiles
+              {t('common:buttons.recallTiles')}
             </button>
 
             <button
@@ -352,7 +355,7 @@ export function GameControls() {
               disabled={!isInProgress}
               className="btn btn-secondary"
             >
-              Skip Turn
+              {t('common:buttons.skipTurn')}
             </button>
           </div>
 
@@ -362,7 +365,7 @@ export function GameControls() {
             disabled={!canExchangeTiles}
             className="btn bg-purple-500 hover:bg-purple-600 text-white disabled:bg-gray-300 disabled:text-gray-500"
           >
-            Exchange Tiles
+            {t('common:buttons.exchange')}
           </button>
         </>
       )}
@@ -374,7 +377,7 @@ export function GameControls() {
           disabled={game.status === GameStatus.COMPLETED}
           className="btn bg-yellow-500 hover:bg-yellow-600 text-white text-sm"
         >
-          {isPaused ? 'Resume' : 'Pause'}
+          {isPaused ? t('common:buttons.resume') : t('common:buttons.pause')}
         </button>
 
         <button
@@ -382,7 +385,7 @@ export function GameControls() {
           disabled={game.status === GameStatus.COMPLETED}
           className="btn bg-red-500 hover:bg-red-600 text-white text-sm"
         >
-          End Game
+          {t('common:buttons.endGame')}
         </button>
       </div>
 
@@ -432,7 +435,7 @@ export function GameControls() {
                   : 'bg-blue-500 hover:bg-blue-600'
               }`}
             >
-              OK
+              {t('common:buttons.ok')}
             </button>
           </div>
         </div>
@@ -466,13 +469,13 @@ export function GameControls() {
                 onClick={() => setConfirmDialog(null)}
                 className="btn py-2 font-medium text-gray-700 text-sm rounded-lg bg-gray-200 hover:bg-gray-300"
               >
-                Cancel
+                {t('common:buttons.cancel')}
               </button>
               <button
                 onClick={confirmDialog.onConfirm}
                 className="btn py-2 font-medium text-white text-sm rounded-lg bg-yellow-500 hover:bg-yellow-600"
               >
-                Confirm
+                {t('common:buttons.confirm')}
               </button>
             </div>
           </div>
@@ -481,7 +484,7 @@ export function GameControls() {
 
       {/* Help text */}
       <div className="mt-2 text-xs text-gray-600 text-center">
-        <p>Drag tiles from your rack to the board, then click Play Word</p>
+        <p>{t('game:howToPlay.clickPlay')}</p>
       </div>
     </div>
   )

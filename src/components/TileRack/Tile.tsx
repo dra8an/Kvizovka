@@ -15,7 +15,9 @@
  * - Value shown in bottom-right corner
  */
 
+import { useTranslation } from 'react-i18next'
 import { Tile as TileType } from '../../types'
+import { latinToCyrillic } from '../../utils/letterMapping'
 
 /**
  * Props for Tile component
@@ -72,17 +74,20 @@ interface TileProps {
  * ```
  */
 export function Tile({ tile, tileIndex, isWithinRack, onDragStart, onDragEnd, isDragging, disabled }: TileProps) {
+  const { t, i18n } = useTranslation(['common'])
+
   /**
    * Get the letter to display
    *
    * - Regular tiles: Show the letter (A, B, Č, etc.)
    * - Joker tiles: Show joker icon 🃏
+   * - Serbian: Convert Latin to Cyrillic
    */
   const getDisplayLetter = (): string => {
     if (tile.isJoker) {
       return '🃏'
     }
-    return tile.letter
+    return latinToCyrillic(tile.letter, i18n.language)
   }
 
   /**
@@ -166,7 +171,7 @@ export function Tile({ tile, tileIndex, isWithinRack, onDragStart, onDragEnd, is
       {/* Joker indicator (top-left) */}
       {tile.isJoker && (
         <div className="absolute top-0.5 left-1 text-[10px] font-bold text-purple-600">
-          JOKER
+          {t('common:labels.joker').toUpperCase()}
         </div>
       )}
     </div>

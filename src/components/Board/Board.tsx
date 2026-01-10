@@ -14,6 +14,7 @@
  */
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useGameStore } from '../../store/gameStore'
 import { Square } from './Square'
 import { BOARD_SIZE } from '../../constants'
@@ -32,6 +33,8 @@ import { Tile as TileType } from '../../types'
  * so it updates whenever the board state changes.
  */
 export function Board() {
+  const { t } = useTranslation(['game'])
+
   // Subscribe to game store
   const game = useGameStore((state) => state.game)
   const selectTile = useGameStore((state) => state.selectTile)
@@ -428,23 +431,23 @@ export function Board() {
       <div className="flex flex-wrap gap-3 text-xs">
         <div className="flex items-center gap-1">
           <div className="w-4 h-4 bg-premium-yellow rounded"></div>
-          <span>2L - Double Letter</span>
+          <span>{t('game:board.legend.doubleLetter')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-4 h-4 bg-premium-green rounded"></div>
-          <span>3L - Triple Letter</span>
+          <span>{t('game:board.legend.tripleLetter')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-4 h-4 bg-premium-red rounded"></div>
-          <span>4L - Quadruple Letter</span>
+          <span>{t('game:board.legend.quadrupleLetter')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-4 h-4 bg-premium-blue rounded"></div>
-          <span>X - Word Multiplier</span>
+          <span>{t('game:board.legend.wordMultiplier')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-4 h-4 bg-yellow-400 rounded"></div>
-          <span>★ - Center (Start)</span>
+          <span>{t('game:board.legend.center')}</span>
         </div>
       </div>
 

@@ -14,9 +14,11 @@
  */
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useGameStore } from '../../store/gameStore'
 import { Tile } from './Tile'
 import { Tile as TileType } from '../../types'
+import { latinToCyrillic } from '../../utils/letterMapping'
 
 /**
  * TileRack Component
@@ -29,6 +31,8 @@ import { Tile as TileType } from '../../types'
  * The rack automatically shows the current player's tiles.
  */
 export function TileRack() {
+  const { t, i18n } = useTranslation(['game', 'common'])
+
   // Subscribe to game store
   const game = useGameStore((state) => state.game)
   const selectedTiles = useGameStore((state) => state.selectedTiles)
@@ -51,7 +55,7 @@ export function TileRack() {
   if (!game) {
     return (
       <div className="flex items-center justify-center p-6 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">
-        <p className="text-gray-500">No active game. Start a game to see your tiles!</p>
+        <p className="text-gray-500">{t('game:statuses.noActiveGameLong')}</p>
       </div>
     )
   }
@@ -218,18 +222,18 @@ export function TileRack() {
       {/* Player info */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-bold text-gray-800">{currentPlayer.name}'s Tiles</h3>
+          <h3 className="text-base font-bold text-gray-800">{t('game:tileRack.playerTiles', { playerName: currentPlayer.name })}</h3>
           <p className="text-xs text-gray-600">
-            {availableTiles.length} tile{availableTiles.length !== 1 ? 's' : ''} in hand
+            {t('common:plurals.tilesInHand', { count: availableTiles.length })}
             {selectedTiles.length > 0 && (
               <span className="ml-2 text-blue-600 font-semibold">
-                ({selectedTiles.length} placed)
+                {t('common:plurals.tilesPlaced', { count: selectedTiles.length })}
               </span>
             )}
           </p>
         </div>
         <div className="text-xs text-gray-600">
-          <p className="font-semibold">Your Turn</p>
+          <p className="font-semibold">{t('common:labels.yourTurn')}</p>
         </div>
       </div>
 
@@ -246,10 +250,10 @@ export function TileRack() {
         {isExchangeMode && (
           <div className="mb-2 p-2 bg-purple-900 rounded text-center">
             <p className="text-sm font-bold text-purple-100">
-              Exchange Mode: Click tiles to select
+              {t('game:tileRack.exchangeMode')}
             </p>
             <p className="text-xs text-purple-200 mt-0.5">
-              {tilesForExchange.length} tile{tilesForExchange.length !== 1 ? 's' : ''} selected
+              {t('common:plurals.tilesSelected', { count: tilesForExchange.length })}
             </p>
           </div>
         )}
@@ -299,8 +303,8 @@ export function TileRack() {
           ) : (
             <div className="text-amber-200 py-2">
               {selectedTiles.length > 0
-                ? 'All tiles placed on board'
-                : 'No tiles in hand'
+                ? t('game:tileRack.allPlaced')
+                : t('game:tileRack.noTiles')
               }
             </div>
           )}
@@ -310,8 +314,8 @@ export function TileRack() {
         <div className="mt-1.5 text-center">
           <p className={`text-xs ${isExchangeMode ? 'text-purple-200' : 'text-amber-200'}`}>
             {isExchangeMode
-              ? 'Click tiles to select for exchange'
-              : 'Drag tiles to the board to place them'
+              ? t('game:tileRack.selectForExchange')
+              : t('game:tileRack.dragToBoard')
             }
           </p>
         </div>
@@ -320,7 +324,12 @@ export function TileRack() {
       {/* Debug info (can be removed later) */}
       {localDraggedTile && (
         <div className="text-xs text-gray-500 text-center">
-          Dragging: {localDraggedTile.isJoker ? 'Joker' : localDraggedTile.letter} (value: {localDraggedTile.value})
+          {t('game:tileRack.dragging', {
+            letter: localDraggedTile.isJoker
+              ? t('common:labels.joker')
+              : latinToCyrillic(localDraggedTile.letter, i18n.language),
+            value: localDraggedTile.value
+          })}
         </div>
       )}
     </div>

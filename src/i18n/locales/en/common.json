@@ -1,0 +1,56 @@
+{
+  "buttons": {
+    "start": "Start New Game",
+    "playAgain": "Play Again",
+    "playWord": "Play Word",
+    "recallTiles": "Recall Tiles",
+    "skipTurn": "Skip Turn",
+    "exchange": "Exchange Tiles",
+    "confirmExchange": "Confirm Exchange",
+    "cancelExchange": "Cancel Exchange",
+    "challenge": "Challenge Word",
+    "pause": "Pause",
+    "resume": "Resume",
+    "endGame": "End Game",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "labels": {
+    "score": "Score",
+    "timeLeft": "Time Left",
+    "tilesLeft": "Tiles left",
+    "tiles": "Tiles",
+    "rounds": "Rounds played",
+    "totalMoves": "Total moves",
+    "status": "Status",
+    "round": "Round",
+    "player": "Player",
+    "opponent": "Opponent",
+    "yourTurn": "Your Turn",
+    "currentTurn": "CURRENT TURN",
+    "gameStatus": "Game Status",
+    "lastMove": "Last Move",
+    "type": "Type",
+    "points": "points",
+    "words": "Words",
+    "final": "Final",
+    "word": "Word",
+    "pts": "Pts",
+    "total": "Total",
+    "joker": "Joker"
+  },
+  "defaultNames": {
+    "player1": "Player 1",
+    "player2": "Player 2"
+  },
+  "plurals": {
+    "tile": "tile",
+    "tile_plural": "tiles",
+    "tilesInHand": "{{count}} tile in hand",
+    "tilesInHand_plural": "{{count}} tiles in hand",
+    "tilesPlaced": "({{count}} placed)",
+    "tilesSelected": "{{count}} tile selected",
+    "tilesSelected_plural": "{{count}} tiles selected"
+  }
+}

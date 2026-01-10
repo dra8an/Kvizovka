@@ -13,11 +13,13 @@
  * This is the complete playable Kvizovka interface!
  */
 
+import { useTranslation } from 'react-i18next'
 import { Board } from '../Board/Board'
 import { TileRack } from '../TileRack/TileRack'
 import { ScorePanel } from '../ScorePanel/ScorePanel'
 import { GameControls } from '../GameControls/GameControls'
 import { Scoresheet } from '../Scoresheet/Scoresheet'
+import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher'
 import { useGameStore } from '../../store/gameStore'
 import { GameMode, GameStatus } from '../../types'
 
@@ -30,6 +32,8 @@ import { GameMode, GameStatus } from '../../types'
  * ```
  */
 export function Game() {
+  const { t } = useTranslation(['game', 'dialogs', 'common'])
+
   // Subscribe to game store
   const game = useGameStore((state) => state.game)
   const startGame = useGameStore((state) => state.startGame)
@@ -42,7 +46,7 @@ export function Game() {
    * For now, just start a game with default names.
    */
   const handleStartGame = () => {
-    startGame(GameMode.LOCAL_MULTIPLAYER, 'Player 1', 'Player 2')
+    startGame(GameMode.LOCAL_MULTIPLAYER, t('common:defaultNames.player1'), t('common:defaultNames.player2'))
   }
 
   /**
@@ -57,27 +61,32 @@ export function Game() {
   if (!game) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-6">
-        <div className="card max-w-md w-full text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Kvizovka</h1>
+        <div className="card max-w-md w-full text-center relative">
+          {/* Language switcher (top-right) */}
+          <div className="absolute top-4 right-4">
+            <LanguageSwitcher />
+          </div>
+
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">{t('game:title')}</h1>
           <p className="text-lg text-gray-600 mb-8">
-            Serbian Word Board Game
+            {t('game:subtitle')}
           </p>
 
           <button
             onClick={handleStartGame}
             className="btn btn-primary w-full text-xl py-4"
           >
-            Start New Game
+            {t('common:buttons.start')}
           </button>
 
           <div className="mt-6 text-sm text-gray-600 text-left">
-            <p className="font-semibold mb-2">How to play:</p>
+            <p className="font-semibold mb-2">{t('game:howToPlay.title')}</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>Drag tiles from your rack to the board</li>
-              <li>Form words (minimum 4 letters)</li>
-              <li>Click "Play Word" to submit</li>
-              <li>First move must touch the center ★</li>
-              <li>10 rounds per player</li>
+              <li>{t('game:howToPlay.dragTiles')}</li>
+              <li>{t('game:howToPlay.formWords')}</li>
+              <li>{t('game:howToPlay.clickPlay')}</li>
+              <li>{t('game:howToPlay.firstMove')}</li>
+              <li>{t('game:howToPlay.rounds')}</li>
             </ul>
           </div>
         </div>
@@ -94,13 +103,13 @@ export function Game() {
     const getEndReasonMessage = () => {
       switch (game.endReason) {
         case 'rounds_completed':
-          return '10 rounds completed by both players'
+          return t('dialogs:gameOver.endReasons.roundsCompleted')
         case 'time_expired':
-          return 'Time expired'
+          return t('dialogs:gameOver.endReasons.timeExpired')
         case 'no_tiles':
-          return 'No more tiles available'
+          return t('dialogs:gameOver.endReasons.noTiles')
         default:
-          return 'Game ended'
+          return t('dialogs:gameOver.endReasons.default')
       }
     }
 
@@ -108,8 +117,13 @@ export function Game() {
       <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="card text-center mb-6">
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Game Complete!</h1>
+          <div className="card text-center mb-6 relative">
+            {/* Language switcher (top-right) */}
+            <div className="absolute top-4 right-4">
+              <LanguageSwitcher />
+            </div>
+
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">{t('dialogs:gameOver.title')}</h1>
 
             {/* End reason */}
             <p className="text-sm text-gray-600 mb-4">
@@ -124,15 +138,15 @@ export function Game() {
             {winner ? (
               <>
                 <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                  {winner.name} Wins!
+                  {t('dialogs:gameOver.winner', { playerName: winner.name })}
                 </h2>
                 <p className="text-xl text-gray-600 mb-4">
-                  {winner.score} points!
+                  {t('dialogs:gameOver.winnerPoints', { points: winner.score })}
                 </p>
               </>
             ) : (
               <p className="text-2xl text-blue-600 font-bold mb-4">
-                It's a Tie!
+                {t('dialogs:gameOver.tie')}
               </p>
             )}
           </div>
@@ -147,15 +161,15 @@ export function Game() {
                 <p className="text-4xl font-bold text-gray-900">{player1.score}</p>
                 <div className="mt-3 text-sm text-gray-600 space-y-1">
                   <p>
-                    <span className="font-semibold">Rounds played:</span> {player1.roundsPlayed}
+                    <span className="font-semibold">{t('common:labels.rounds')}:</span> {player1.roundsPlayed}
                   </p>
                   {player1.tilePenalty && player1.tilePenalty > 0 && (
                     <div className="text-red-600">
                       <p>
-                        <span className="font-semibold">Unused tiles penalty:</span> -{player1.tilePenalty} points
+                        <span className="font-semibold">{t('dialogs:gameOver.unusedTilesPenalty')}</span> -{player1.tilePenalty} {t('common:labels.points')}
                       </p>
                       <p className="text-xs mt-1">
-                        ({player1.tiles.length} tile{player1.tiles.length !== 1 ? 's' : ''} left in hand)
+                        {t('dialogs:gameOver.tilesLeftInHand', { count: player1.tiles.length })}
                       </p>
                       {player1.tiles.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
@@ -192,15 +206,15 @@ export function Game() {
                 <p className="text-4xl font-bold text-gray-900">{player2.score}</p>
                 <div className="mt-3 text-sm text-gray-600 space-y-1">
                   <p>
-                    <span className="font-semibold">Rounds played:</span> {player2.roundsPlayed}
+                    <span className="font-semibold">{t('common:labels.rounds')}:</span> {player2.roundsPlayed}
                   </p>
                   {player2.tilePenalty && player2.tilePenalty > 0 && (
                     <div className="text-red-600">
                       <p>
-                        <span className="font-semibold">Unused tiles penalty:</span> -{player2.tilePenalty} points
+                        <span className="font-semibold">{t('dialogs:gameOver.unusedTilesPenalty')}</span> -{player2.tilePenalty} {t('common:labels.points')}
                       </p>
                       <p className="text-xs mt-1">
-                        ({player2.tiles.length} tile{player2.tiles.length !== 1 ? 's' : ''} left in hand)
+                        {t('dialogs:gameOver.tilesLeftInHand', { count: player2.tiles.length })}
                       </p>
                       {player2.tiles.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
@@ -234,10 +248,10 @@ export function Game() {
           <div className="card text-center mb-6">
             <div className="bg-gray-50 rounded-lg p-4 text-sm inline-block">
               <p className="text-gray-600">
-                <span className="font-semibold">Total moves:</span> {game.moveHistory.length}
+                <span className="font-semibold">{t('common:labels.totalMoves')}:</span> {game.moveHistory.length}
               </p>
               <p className="text-gray-600">
-                <span className="font-semibold">Rounds:</span> {game.round}
+                <span className="font-semibold">{t('common:labels.round')}:</span> {game.round}
               </p>
             </div>
           </div>
@@ -249,7 +263,7 @@ export function Game() {
                 onClick={handleNewGame}
                 className="btn-primary w-full text-lg py-3"
               >
-                Play Again
+                {t('common:buttons.playAgain')}
               </button>
             </div>
           </div>
@@ -262,8 +276,12 @@ export function Game() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-2 lg:p-4">
       {/* Header */}
-      <header className="mb-2">
-        <h1 className="text-2xl lg:text-3xl font-bold text-center text-gray-800">Kvizovka</h1>
+      <header className="mb-2 relative">
+        <h1 className="text-2xl lg:text-3xl font-bold text-center text-gray-800">{t('game:title')}</h1>
+        {/* Language switcher (top-right) */}
+        <div className="absolute top-0 right-4">
+          <LanguageSwitcher />
+        </div>
       </header>
 
       {/* Main game layout: [Scoresheets] [Board+Rack] [ScorePanel] */}

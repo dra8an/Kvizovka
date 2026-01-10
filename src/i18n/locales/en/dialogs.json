@@ -1,0 +1,72 @@
+{
+  "gameOver": {
+    "title": "Game Complete!",
+    "winner": "{{playerName}} Wins!",
+    "winnerPoints": "{{points}} points!",
+    "tie": "It's a Tie!",
+    "endReasons": {
+      "roundsCompleted": "10 rounds completed by both players",
+      "timeExpired": "Time expired",
+      "noTiles": "No more tiles available",
+      "default": "Game ended"
+    },
+    "unusedTilesPenalty": "Unused tiles penalty:",
+    "tilesLeftInHand": "({{count}} tile left in hand)",
+    "tilesLeftInHand_plural": "({{count}} tiles left in hand)"
+  },
+  "confirmations": {
+    "skipTurn": {
+      "title": "Skip Turn?",
+      "message": "You have tiles placed on the board. Skip turn anyway? (Tiles will be returned to rack)"
+    },
+    "exchangeTiles": {
+      "title": "Exchange Tiles?",
+      "message": "Exchange {{count}} tile?\n\nThis will end your turn.",
+      "message_plural": "Exchange {{count}} tiles?\n\nThis will end your turn."
+    },
+    "endGame": {
+      "title": "End Game?",
+      "message": "Are you sure you want to end the game? Final scores will be calculated."
+    },
+    "challenge": {
+      "title": "Challenge Word \"{{word}}\"?",
+      "message": "⚠️ Warning: If the word is valid, you will lose 3 minutes from your time!"
+    }
+  },
+  "results": {
+    "challengeSuccess": {
+      "title": "✅ Challenge Successful!",
+      "message": "The word \"{{word}}\" is invalid.\nReason: {{reason}}\n\nThe move has been undone."
+    },
+    "challengeFailed": {
+      "title": "❌ Challenge Failed!",
+      "message": "The word \"{{word}}\" is valid.\n\nYou have been penalized 3 minutes."
+    }
+  },
+  "errors": {
+    "noTilesPlaced": {
+      "title": "No Tiles Placed",
+      "message": "Please place some tiles on the board first!"
+    },
+    "cannotPlayWord": {
+      "title": "Cannot Play Word"
+    },
+    "cannotExchange": {
+      "title": "Cannot Exchange Tiles",
+      "emptyBag": "The tile bag is empty!",
+      "consecutiveExchange": "Cannot exchange tiles two moves in a row!\n\nYou must play a word or skip your turn before exchanging again."
+    },
+    "noTilesSelected": {
+      "title": "No Tiles Selected",
+      "message": "Please select at least one tile to exchange!"
+    },
+    "exchangeFailed": {
+      "title": "Exchange Failed",
+      "message": "Failed to exchange tiles. Please try again."
+    }
+  },
+  "scoresheet": {
+    "pass": "(Pass)",
+    "exchange": "(Exchange)"
+  }
+}

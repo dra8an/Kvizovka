@@ -8,6 +8,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Full Internationalization (i18n)**: Complete localization system with English and Serbian support (2026-01-10)
+  - **Technology Stack**: react-i18next with i18next-browser-languagedetector
+  - **Supported Languages**:
+    - English (en) - default
+    - Serbian (sr) - with full Cyrillic script support
+  - **Language Detection**: Auto-detects from browser settings, manual switcher available
+  - **Persistence**: Selected language stored in localStorage (`kvizovka-language`)
+  - **Translation Files**: Organized into namespaces for maintainability
+    - `common.json` - Buttons, labels, plurals, default player names (30+ strings)
+    - `game.json` - Game-specific UI, tile rack, board legend (25+ strings)
+    - `dialogs.json` - Modal dialogs, confirmations, game over (15+ strings)
+    - `validation.json` - Error messages, validation feedback (40+ strings)
+  - **TypeScript Integration**: Full autocomplete and type safety for translation keys
+    - Module augmentation for `react-i18next` types
+    - Compile-time errors for missing translation keys
+    - IDE autocomplete for all translation paths
+  - **Components Migrated**: All UI components now fully localized
+    - Game.tsx - Main game screen, start screen, game over
+    - Board.tsx - Board legend (premium square labels)
+    - TileRack.tsx - Tile rack UI, exchange mode, debug info
+    - GameControls.tsx - All buttons and dialogs
+    - ScorePanel.tsx - Score display, last move, game status
+    - Scoresheet.tsx - Move history table headers
+    - Tile.tsx - Joker label
+  - **Cyrillic Letter Support**: Serbian displays in authentic Cyrillic script
+    - **Letter Mapping Utility** (`src/utils/letterMapping.ts`):
+      - `latinToCyrillic()` - Converts single letters (A→А, Š→Ш)
+      - `wordToCyrillic()` - Converts entire words, handles digraphs (LJ→Љ, NJ→Њ, DŽ→Џ)
+      - Full Serbian alphabet (30 letters) mapped
+      - Special characters: Č→Ч, Ć→Ћ, Đ→Ђ, Š→Ш, Ž→Ж
+      - Digraphs: LJ→Љ, NJ→Њ, DŽ→Џ
+    - **Tiles Display**: All tiles show Cyrillic when language is Serbian
+      - Rack tiles (e.g., 'A' displays as 'А')
+      - Board tiles (placed letters in Cyrillic)
+      - Joker tiles with assigned letters
+    - **Words Display**: All words converted to Cyrillic
+      - Scoresheet move history
+      - Score panel last move
+      - Dragging feedback messages
+    - **UI Conversion**: Automatic based on language selection
+      - English mode: Latin letters (A, B, C, Š, LJ)
+      - Serbian mode: Cyrillic letters (А, Б, Ц, Ш, Љ)
+      - Game logic unchanged (still uses Latin internally)
+  - **Language Switcher Component**: Visual language selection UI
+    - Displays in header (start screen and active game)
+    - Shows language flags (🇬🇧 English, 🇷🇸 Српски)
+    - Highlights active language with blue background
+    - Instant language switching (no page reload)
+    - Positioned in top-right corner for accessibility
+  - **Localized Features**:
+    - **Default Player Names**: "Player 1/2" → "Играч 1/2"
+    - **Board Legend**: Premium square labels in both languages
+      - "Double Letter" → "Дупло Слово"
+      - "Triple Letter" → "Тропло Слово"
+      - "Quadruple Letter" → "Четвороструко Слово"
+      - "Word Multiplier" → "Množitељ Речи"
+      - "Center (Start)" → "Центар (почетак)"
+    - **Joker Label**: "JOKER" → "КВИЗОВАЦ"
+    - **All UI Text**: Buttons, labels, messages, dialogs
+  - **Pluralization**: Built-in i18next plural handling
+    - English: "1 tile" / "2 tiles"
+    - Serbian: "1 плочица" / "2 плочица"
+  - **Dynamic Content**: Variable interpolation for player names, counts, scores
+    - Example: `"{{playerName}}'s Tiles"` → `"Плочице играча {{playerName}}"`
+  - **Documentation**:
+    - `Docs/LOCALIZATION-PLAN-2026-01-10.md` - Complete implementation plan
+    - Translation guidelines and best practices
+    - Future expansion roadmap (multiplayer localization)
+  - **Build Status**: ✅ TypeScript compilation successful, all components working
+  - **Files Created** (12 new files):
+    - `src/i18n/config.ts` - i18next configuration
+    - `src/i18n/types.ts` - TypeScript module augmentation
+    - `src/i18n/locales/en/common.json` - English common strings
+    - `src/i18n/locales/en/game.json` - English game strings
+    - `src/i18n/locales/en/dialogs.json` - English dialog strings
+    - `src/i18n/locales/en/validation.json` - English validation strings
+    - `src/i18n/locales/sr/common.json` - Serbian common strings
+    - `src/i18n/locales/sr/game.json` - Serbian game strings
+    - `src/i18n/locales/sr/dialogs.json` - Serbian dialog strings
+    - `src/i18n/locales/sr/validation.json` - Serbian validation strings
+    - `src/components/LanguageSwitcher/LanguageSwitcher.tsx` - Language switcher UI
+    - `src/utils/letterMapping.ts` - Latin ↔ Cyrillic conversion utility
+  - **Files Modified** (8 files):
+    - `src/main.tsx` - Import i18n config before App
+    - `src/components/Game/Game.tsx` - Add LanguageSwitcher, localize all strings, default player names
+    - `src/components/Board/Board.tsx` - Localize board legend
+    - `src/components/Board/Square.tsx` - Cyrillic letter display on tiles
+    - `src/components/TileRack/TileRack.tsx` - Cyrillic letter display, localized UI
+    - `src/components/TileRack/Tile.tsx` - Cyrillic letters, localized joker label
+    - `src/components/GameControls/GameControls.tsx` - Localized buttons and dialogs
+    - `src/components/ScorePanel/ScorePanel.tsx` - Cyrillic words in last move
+    - `src/components/Scoresheet/Scoresheet.tsx` - Cyrillic words in move history
+  - **Dependencies Added**:
+    - `i18next@23.17.4` - Core i18n framework
+    - `react-i18next@15.2.0` - React bindings for i18next
+    - `i18next-browser-languagedetector@8.0.2` - Auto language detection
+
 - **Joker Stealing Feature**: Complete implementation of joker stealing rule (2026-01-08)
   - **Rule Implementation**: Player can steal joker from opponent's last move
     - Only jokers played in the immediately previous turn can be stolen
@@ -961,11 +1058,12 @@ Following [Semantic Versioning](https://semver.org/):
 
 - [Implementation Plan](./Docs/IMPLEMENTATION_PLAN.md)
 - [Game Rules](./Docs/GAME_RULES.md)
+- [Localization Plan (2026-01-10)](./Docs/LOCALIZATION-PLAN-2026-01-10.md)
 - [Bug Fixes & Features (2026-01-02)](./Docs/FIXES-2026-01-02.md)
 - [Step 1 Documentation](./Docs/STEP_01_PROJECT_SETUP.md)
 
 ---
 
-**Last Updated:** 2026-01-08
-**Current Version:** 0.6.1 (Joker Stealing Feature Complete)
+**Last Updated:** 2026-01-10
+**Current Version:** 0.7.0 (Full Internationalization - English & Serbian with Cyrillic)
 **Next Milestone:** Step 9 - Game Flow Completion & Online Multiplayer
