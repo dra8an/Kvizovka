@@ -11,6 +11,8 @@
  */
 
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { latinToCyrillic } from '../../utils/letterMapping'
 
 /**
  * Serbian alphabet letters (Latin)
@@ -47,6 +49,8 @@ interface JokerLetterDialogProps {
  * ```
  */
 export function JokerLetterDialog({ onSelect, onCancel }: JokerLetterDialogProps) {
+  const { t, i18n } = useTranslation(['dialogs', 'common'])
+
   // Handle ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -73,10 +77,10 @@ export function JokerLetterDialog({ onSelect, onCancel }: JokerLetterDialogProps
           {/* Header */}
           <div className="mb-4">
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              🃏 Choose Letter for Joker
+              🃏 {t('dialogs:jokerLetter.title')}
             </h2>
             <p className="text-sm text-gray-600">
-              Select which letter this joker tile should represent
+              {t('dialogs:jokerLetter.subtitle')}
             </p>
           </div>
 
@@ -95,7 +99,7 @@ export function JokerLetterDialog({ onSelect, onCancel }: JokerLetterDialogProps
                   hover:scale-105 active:scale-95
                 "
               >
-                {letter}
+                {latinToCyrillic(letter, i18n.language)}
               </button>
             ))}
           </div>
@@ -105,11 +109,11 @@ export function JokerLetterDialog({ onSelect, onCancel }: JokerLetterDialogProps
             onClick={onCancel}
             className="btn btn-secondary w-full"
           >
-            Cancel
+            {t('common:buttons.cancel')}
           </button>
 
           <p className="text-xs text-gray-500 text-center mt-2">
-            Press ESC to cancel
+            {t('dialogs:jokerLetter.pressEsc')}
           </p>
         </div>
       </div>

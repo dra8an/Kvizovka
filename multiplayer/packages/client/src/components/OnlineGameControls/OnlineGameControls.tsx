@@ -6,6 +6,7 @@
  */
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { PlacedTile } from '@kvizovka/shared'
 
 interface OnlineGameControlsProps {
@@ -29,6 +30,8 @@ export function OnlineGameControls({
   onBackToMenu,
   onEndGameTest,
 }: OnlineGameControlsProps) {
+  const { t } = useTranslation(['online', 'common', 'dialogs'])
+
   // Local state for custom confirmation dialog
   const [confirmDialog, setConfirmDialog] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null)
   /**
@@ -47,8 +50,8 @@ export function OnlineGameControls({
   const handleSkipTurn = () => {
     if (selectedTiles.length > 0) {
       setConfirmDialog({
-        title: 'Skip Turn?',
-        message: 'You have tiles placed on the board. Skip turn anyway? (Tiles will be returned to rack)',
+        title: t('dialogs:confirmations.skipTurn.title'),
+        message: t('dialogs:confirmations.skipTurn.message'),
         onConfirm: () => {
           onSkipTurn()
           setConfirmDialog(null)
@@ -71,8 +74,8 @@ export function OnlineGameControls({
    */
   const handleBackToMenu = () => {
     setConfirmDialog({
-      title: 'Leave Game?',
-      message: 'Are you sure you want to leave the game? This will disconnect you from the match.',
+      title: t('online:controls.leaveGameConfirm.title'),
+      message: t('online:controls.leaveGameConfirm.message'),
       onConfirm: () => {
         onBackToMenu()
         setConfirmDialog(null)
@@ -95,7 +98,9 @@ export function OnlineGameControls({
           }
         `}
       >
-        Play Word {selectedTiles.length > 0 && `(${selectedTiles.length} tiles)`}
+        {selectedTiles.length > 0
+          ? t('online:controls.playWordWithCount', { count: selectedTiles.length })
+          : t('online:controls.playWord')}
       </button>
 
       {/* Secondary actions */}
@@ -105,7 +110,7 @@ export function OnlineGameControls({
           disabled={selectedTiles.length === 0 || !isYourTurn}
           className="btn btn-secondary"
         >
-          Recall Tiles
+          {t('online:controls.recallTiles')}
         </button>
 
         <button
@@ -113,7 +118,7 @@ export function OnlineGameControls({
           disabled={!isYourTurn}
           className="btn btn-secondary"
         >
-          Skip Turn
+          {t('online:controls.skipTurn')}
         </button>
       </div>
 
@@ -121,9 +126,9 @@ export function OnlineGameControls({
       <button
         disabled
         className="btn bg-gray-300 text-gray-500 cursor-not-allowed"
-        title="Exchange tiles feature coming soon"
+        title={t('online:controls.exchangeComingSoon')}
       >
-        Exchange Tiles
+        {t('online:controls.exchangeTiles')}
       </button>
 
       {/* Game management */}
@@ -133,9 +138,9 @@ export function OnlineGameControls({
           <button
             onClick={onEndGameTest}
             className="btn bg-orange-500 hover:bg-orange-600 text-white text-sm"
-            title="For testing - ends game immediately"
+            title={t('online:controls.endGameTestTitle')}
           >
-            🧪 End Game (Test)
+            🧪 {t('online:controls.endGameTest')}
           </button>
         )}
 
@@ -143,7 +148,7 @@ export function OnlineGameControls({
           onClick={handleBackToMenu}
           className="btn bg-red-500 hover:bg-red-600 text-white text-sm"
         >
-          Leave Game
+          {t('online:controls.leaveGame')}
         </button>
       </div>
 
@@ -184,13 +189,13 @@ export function OnlineGameControls({
                 onClick={() => setConfirmDialog(null)}
                 className="btn py-2 font-medium text-gray-700 text-sm rounded-lg bg-gray-200 hover:bg-gray-300"
               >
-                Cancel
+                {t('common:buttons.cancel')}
               </button>
               <button
                 onClick={confirmDialog.onConfirm}
                 className="btn py-2 font-medium text-white text-sm rounded-lg bg-yellow-500 hover:bg-yellow-600"
               >
-                Confirm
+                {t('common:buttons.confirm')}
               </button>
             </div>
           </div>
@@ -199,7 +204,7 @@ export function OnlineGameControls({
 
       {/* Help text */}
       <div className="mt-2 text-xs text-gray-600 text-center">
-        <p>Drag tiles from your rack to the board, then click Play Word</p>
+        <p>{t('online:controls.helpText')}</p>
       </div>
     </div>
   )

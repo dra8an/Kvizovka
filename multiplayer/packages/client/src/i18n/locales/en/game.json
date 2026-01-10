@@ -1,0 +1,42 @@
+{
+  "title": "Kvizovka",
+  "subtitle": "Serbian Word Board Game",
+  "howToPlay": {
+    "title": "How to play:",
+    "dragTiles": "Drag tiles from your rack to the board",
+    "formWords": "Form words (minimum 4 letters)",
+    "clickPlay": "Click \"Play Word\" to submit",
+    "firstMove": "First move must touch the center ★",
+    "rounds": "10 rounds per player"
+  },
+  "statuses": {
+    "noActiveGame": "No active game",
+    "noActiveGameLong": "No active game. Start a game to see your tiles!"
+  },
+  "tileRack": {
+    "playerTiles": "{{playerName}}'s Tiles",
+    "tilesInHand": "{{count}} tile in hand",
+    "tilesInHand_plural": "{{count}} tiles in hand",
+    "tilesPlaced": "({{count}} placed)",
+    "tilesSelected": "{{count}} tile selected",
+    "tilesSelected_plural": "{{count}} tiles selected",
+    "allPlaced": "All tiles placed on board",
+    "noTiles": "No tiles in hand",
+    "dragToBoard": "Drag tiles to the board to place them",
+    "selectForExchange": "Click tiles to select for exchange",
+    "exchangeMode": "Exchange Mode: Click tiles to select",
+    "dragging": "Dragging: {{letter}} (value: {{value}})"
+  },
+  "rackInfo": {
+    "clickToSelect": "Click tiles in your rack to select them for exchange."
+  },
+  "board": {
+    "legend": {
+      "doubleLetter": "2L - Double Letter",
+      "tripleLetter": "3L - Triple Letter",
+      "quadrupleLetter": "4L - Quadruple Letter",
+      "wordMultiplier": "X - Word Multiplier",
+      "center": "★ - Center (Start)"
+    }
+  }
+}

@@ -15,7 +15,9 @@
  * - Value shown in bottom-right corner
  */
 
+import { useTranslation } from 'react-i18next'
 import { Tile as TileType } from '@kvizovka/shared'
+import { latinToCyrillic } from '../../utils/letterMapping'
 
 /**
  * Props for Tile component
@@ -72,17 +74,20 @@ interface TileProps {
  * ```
  */
 export function Tile({ tile, tileIndex, isWithinRack, onDragStart, onDragEnd, isDragging, disabled }: TileProps) {
+  const { i18n } = useTranslation()
+
   /**
    * Get the letter to display
    *
-   * - Regular tiles: Show the letter (A, B, Č, etc.)
+   * - Regular tiles: Show the letter (A, B, Č, etc.) - Cyrillic if Serbian
    * - Joker tiles: Show joker icon 🃏
    */
   const getDisplayLetter = (): string => {
     if (tile.isJoker) {
       return '🃏'
     }
-    return tile.letter
+    // Convert to Cyrillic if Serbian language
+    return latinToCyrillic(tile.letter, i18n.language)
   }
 
   /**

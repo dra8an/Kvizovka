@@ -1,0 +1,86 @@
+{
+  "menu": {
+    "title": "Онлајн вишеиграч",
+    "selectMode": "Изаберите режим игре",
+    "createRoom": "Направи собу",
+    "joinRoom": "Придружи се соби",
+    "backToLocal": "Назад на локалну игру"
+  },
+  "room": {
+    "roomCode": "Шифра собе",
+    "enterCode": "Унесите шифру собе",
+    "enterCodePlaceholder": "Унесите 6-карактерну шифру",
+    "yourName": "Ваше име",
+    "enterName": "Унесите ваше име",
+    "create": "Направи собу",
+    "join": "Придружи се",
+    "waiting": "Чекам противника...",
+    "ready": "Спреман за игру",
+    "readyWaiting": "Спреман за почетак",
+    "shareCode": "Поделите ову шифру са противником",
+    "copyCode": "Копирај",
+    "codeCopied": "Копирано!",
+    "leave": "Напусти собу",
+    "creating": "Креирање...",
+    "joining": "Придруживање...",
+    "starting": "Почињем...",
+    "host": "Домаћин",
+    "guest": "Гост",
+    "you": "Ви",
+    "inviteFriend": "Позовите пријатеља",
+    "startNewGame": "Започните нову игру"
+  },
+  "connection": {
+    "connecting": "Повезивање са сервером...",
+    "connected": "Повезан",
+    "disconnected": "Прекинута веза са сервером",
+    "reconnecting": "Поновно повезивање...",
+    "error": "Грешка при повезивању"
+  },
+  "errors": {
+    "roomNotFound": "Соба није пронађена",
+    "roomFull": "Соба је пуна",
+    "invalidCode": "Неисправна шифра собе",
+    "nameRequired": "Име је обавезно",
+    "connectionFailed": "Неуспешно повезивање на сервер",
+    "opponentLeft": "Противник је напустио игру"
+  },
+  "messages": {
+    "opponentJoined": "{{name}} се придружио соби",
+    "opponentLeft": "{{name}} је напустио собу",
+    "youAreHost": "Ви сте домаћин",
+    "opponentIsThinking": "Противник размишља...",
+    "waitingForMove": "Чекам потез противника..."
+  },
+  "game": {
+    "header": "Квизовка онлајн",
+    "connected": "Повезан",
+    "disconnected": "Прекинута веза",
+    "loadingGame": "Учитавање игре...",
+    "gameComplete": "Игра завршена!",
+    "youWon": "Победили сте!",
+    "wins": "{{name}} побеђује!",
+    "playAgain": "Играј поново",
+    "playAgainSoon": "Играј поново функција ускоро! Оба играча би морала да се сложе.",
+    "backToMenu": "Назад на мени",
+    "roundsPlayed": "Одиграно рунди:",
+    "tilesCount": "Плочице:",
+    "errorPlayerNotFound": "Грешка: Подаци о играчу нису пронађени"
+  },
+  "controls": {
+    "playWord": "Одиграј реч",
+    "playWordWithCount": "Одиграј реч ({{count}} плочица)",
+    "recallTiles": "Врати плочице",
+    "skipTurn": "Прескочи потез",
+    "exchangeTiles": "Замени плочице",
+    "exchangeComingSoon": "Замена плочица функција ускоро",
+    "leaveGame": "Напусти игру",
+    "endGameTest": "Заврши игру (тест)",
+    "endGameTestTitle": "За тестирање - завршава игру одмах",
+    "helpText": "Превуците плочице са сталка на таблу, затим кликните Одиграј реч",
+    "leaveGameConfirm": {
+      "title": "Напусти игру?",
+      "message": "Да ли сте сигурни да желите да напустите игру? Ово ће вас дисконектовати са меча."
+    }
+  }
+}

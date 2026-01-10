@@ -9,6 +9,8 @@
  */
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
+import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher'
 
 export type GameMode = 'local' | 'online'
 
@@ -20,13 +22,20 @@ interface GameModeMenuProps {
 }
 
 export function GameModeMenu({ onSelectMode }: GameModeMenuProps) {
+  const { t } = useTranslation(['common'])
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="card max-w-lg w-full">
+        {/* Language Switcher */}
+        <div className="absolute top-4 right-4">
+          <LanguageSwitcher />
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-gray-800 mb-2">Kvizovka</h1>
-          <p className="text-gray-600">Serbian Word Game</p>
+          <h1 className="text-5xl font-bold text-gray-800 mb-2">{t('common:gameMode.title')}</h1>
+          <p className="text-gray-600">{t('common:gameMode.subtitle')}</p>
         </div>
 
         {/* Mode Selection */}
@@ -45,13 +54,13 @@ export function GameModeMenu({ onSelectMode }: GameModeMenuProps) {
               {/* Content */}
               <div className="flex-1 text-left">
                 <h2 className="text-2xl font-bold text-gray-800 mb-1">
-                  Play Locally
+                  {t('common:gameMode.playLocally')}
                 </h2>
                 <p className="text-gray-600 text-sm">
-                  2 players on the same device
+                  {t('common:gameMode.localDescription')}
                 </p>
                 <p className="text-gray-500 text-xs mt-1">
-                  Take turns playing on one computer
+                  {t('common:gameMode.localSubtext')}
                 </p>
               </div>
 
@@ -88,13 +97,13 @@ export function GameModeMenu({ onSelectMode }: GameModeMenuProps) {
               {/* Content */}
               <div className="flex-1 text-left">
                 <h2 className="text-2xl font-bold text-gray-800 mb-1">
-                  Play Online
+                  {t('common:gameMode.playOnline')}
                 </h2>
                 <p className="text-gray-600 text-sm">
-                  2 players over the internet
+                  {t('common:gameMode.onlineDescription')}
                 </p>
                 <p className="text-gray-500 text-xs mt-1">
-                  Create or join a room to play with friends
+                  {t('common:gameMode.onlineSubtext')}
                 </p>
               </div>
 
@@ -120,7 +129,7 @@ export function GameModeMenu({ onSelectMode }: GameModeMenuProps) {
 
         {/* Footer */}
         <div className="text-center mt-8 text-sm text-gray-500">
-          <p>Choose your game mode to begin</p>
+          <p>{t('common:gameMode.choose')}</p>
         </div>
       </div>
 

@@ -1,0 +1,68 @@
+{
+  "buttons": {
+    "start": "Започни нову игру",
+    "playAgain": "Играј поново",
+    "playWord": "Одиграј реч",
+    "recallTiles": "Врати плочице",
+    "skipTurn": "Прескочи потез",
+    "exchange": "Замени плочице",
+    "confirmExchange": "Потврди замену",
+    "cancelExchange": "Откажи замену",
+    "challenge": "Изазови реч",
+    "pause": "Паузирај",
+    "resume": "Настави",
+    "endGame": "Заврши игру",
+    "ok": "У реду",
+    "cancel": "Откажи",
+    "confirm": "Потврди",
+    "leave": "Напусти"
+  },
+  "labels": {
+    "score": "Резултат",
+    "timeLeft": "Преостало време",
+    "tilesLeft": "Преостало плочица",
+    "tiles": "Плочице",
+    "rounds": "Одиграно рунди",
+    "totalMoves": "Укупно потеза",
+    "status": "Статус",
+    "round": "Рунда",
+    "player": "Играч",
+    "opponent": "Противник",
+    "yourTurn": "Твој потез",
+    "currentTurn": "ТЕКУЋИ ПОТЕЗ",
+    "gameStatus": "Статус игре",
+    "lastMove": "Последњи потез",
+    "type": "Тип",
+    "points": "поена",
+    "words": "Речи",
+    "final": "Коначно",
+    "word": "Реч",
+    "pts": "Поена",
+    "total": "Укупно",
+    "joker": "Квизовац"
+  },
+  "defaultNames": {
+    "player1": "Играч 1",
+    "player2": "Играч 2"
+  },
+  "plurals": {
+    "tile": "плочица",
+    "tile_plural": "плочице",
+    "tilesInHand": "{{count}} плочица у руци",
+    "tilesInHand_plural": "{{count}} плочица у руци",
+    "tilesPlaced": "({{count}} постављено)",
+    "tilesSelected": "{{count}} плочица изабрана",
+    "tilesSelected_plural": "{{count}} плочица изабрано"
+  },
+  "gameMode": {
+    "title": "Квизовка",
+    "subtitle": "Српска игра речи",
+    "choose": "Изаберите режим игре за почетак",
+    "playLocally": "Играј локално",
+    "playOnline": "Играј онлајн",
+    "localDescription": "2 играча на истом уређају",
+    "localSubtext": "Смењујте се играјући на једном рачунару",
+    "onlineDescription": "2 играча преко интернета",
+    "onlineSubtext": "Направите или се придружите соби да играте са пријатељима"
+  }
+}

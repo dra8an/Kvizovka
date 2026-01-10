@@ -1,0 +1,86 @@
+{
+  "menu": {
+    "title": "Online Multiplayer",
+    "selectMode": "Select Game Mode",
+    "createRoom": "Create Room",
+    "joinRoom": "Join Room",
+    "backToLocal": "Back to Local Game"
+  },
+  "room": {
+    "roomCode": "Room Code",
+    "enterCode": "Enter room code",
+    "enterCodePlaceholder": "Enter 6-character code",
+    "yourName": "Your Name",
+    "enterName": "Enter your name",
+    "create": "Create Room",
+    "join": "Join Room",
+    "waiting": "Waiting for opponent...",
+    "ready": "Ready to Play",
+    "readyWaiting": "Ready to start",
+    "shareCode": "Share this code with your opponent",
+    "copyCode": "Copy",
+    "codeCopied": "Copied!",
+    "leave": "Leave Room",
+    "creating": "Creating...",
+    "joining": "Joining...",
+    "starting": "Starting...",
+    "host": "Host",
+    "guest": "Guest",
+    "you": "You",
+    "inviteFriend": "Invite a friend",
+    "startNewGame": "Start a new game"
+  },
+  "connection": {
+    "connecting": "Connecting to server...",
+    "connected": "Connected",
+    "disconnected": "Disconnected from server",
+    "reconnecting": "Reconnecting...",
+    "error": "Connection error"
+  },
+  "errors": {
+    "roomNotFound": "Room not found",
+    "roomFull": "Room is full",
+    "invalidCode": "Invalid room code",
+    "nameRequired": "Name is required",
+    "connectionFailed": "Failed to connect to server",
+    "opponentLeft": "Opponent left the game"
+  },
+  "messages": {
+    "opponentJoined": "{{name}} joined the room",
+    "opponentLeft": "{{name}} left the room",
+    "youAreHost": "You are the host",
+    "opponentIsThinking": "Opponent is thinking...",
+    "waitingForMove": "Waiting for opponent's move..."
+  },
+  "game": {
+    "header": "Kvizovka Online",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "loadingGame": "Loading game...",
+    "gameComplete": "Game Complete!",
+    "youWon": "You Won!",
+    "wins": "{{name}} Wins!",
+    "playAgain": "Play Again",
+    "playAgainSoon": "Play Again feature coming soon! Both players would need to agree.",
+    "backToMenu": "Back to Menu",
+    "roundsPlayed": "Rounds played:",
+    "tilesCount": "Tiles:",
+    "errorPlayerNotFound": "Error: Player data not found"
+  },
+  "controls": {
+    "playWord": "Play Word",
+    "playWordWithCount": "Play Word ({{count}} tiles)",
+    "recallTiles": "Recall Tiles",
+    "skipTurn": "Skip Turn",
+    "exchangeTiles": "Exchange Tiles",
+    "exchangeComingSoon": "Exchange tiles feature coming soon",
+    "leaveGame": "Leave Game",
+    "endGameTest": "End Game (Test)",
+    "endGameTestTitle": "For testing - ends game immediately",
+    "helpText": "Drag tiles from your rack to the board, then click Play Word",
+    "leaveGameConfirm": {
+      "title": "Leave Game?",
+      "message": "Are you sure you want to leave the game? This will disconnect you from the match."
+    }
+  }
+}

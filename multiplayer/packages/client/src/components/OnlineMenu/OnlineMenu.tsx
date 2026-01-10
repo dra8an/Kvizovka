@@ -12,11 +12,15 @@
  */
 
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useOnlineGameStore } from '../../store/onlineGameStore'
+import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher'
 
 type MenuView = 'choice' | 'create' | 'join'
 
 export function OnlineMenu() {
+  const { t } = useTranslation(['online', 'common'])
+
   const {
     isConnected,
     connectionError,
@@ -80,9 +84,12 @@ export function OnlineMenu() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-100">
         <div className="card max-w-md w-full text-center">
+          <div className="absolute top-4 right-4">
+            <LanguageSwitcher />
+          </div>
           <div className="text-6xl mb-4">⏳</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Connecting to Server...
+            {t('online:connection.connecting')}
           </h2>
           {connectionError && (
             <p className="text-red-600 mt-4">{connectionError}</p>
@@ -97,9 +104,13 @@ export function OnlineMenu() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-100">
         <div className="card max-w-md w-full">
+          <div className="absolute top-4 right-4">
+            <LanguageSwitcher />
+          </div>
+
           {/* Room Code Display */}
           <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-gray-700 mb-3">Room Code</h2>
+            <h2 className="text-xl font-bold text-gray-700 mb-3">{t('online:room.roomCode')}</h2>
             <div className="flex items-center justify-center gap-3">
               <div className="room-code-display">
                 {roomCode}
@@ -107,17 +118,17 @@ export function OnlineMenu() {
               <button
                 onClick={handleCopyRoomCode}
                 className="copy-button"
-                title="Copy room code"
+                title={t('online:room.copyCode')}
               >
                 {copied ? (
-                  <span className="copy-button-success">✓ Copied!</span>
+                  <span className="copy-button-success">✓ {t('online:room.codeCopied')}</span>
                 ) : (
-                  <span>📋 Copy</span>
+                  <span>📋 {t('online:room.copyCode')}</span>
                 )}
               </button>
             </div>
             <p className="text-sm text-gray-600 mt-3">
-              Share this code with your opponent
+              {t('online:room.shareCode')}
             </p>
           </div>
 
@@ -129,7 +140,7 @@ export function OnlineMenu() {
               <div className="flex-1">
                 <p className="font-semibold text-gray-800">{playerName}</p>
                 <p className="text-sm text-gray-600">
-                  {isHost ? 'Host' : 'Guest'} · You
+                  {isHost ? t('online:room.host') : t('online:room.guest')} · {t('online:room.you')}
                 </p>
               </div>
               <div className="text-green-600">✓</div>
@@ -143,13 +154,13 @@ export function OnlineMenu() {
                   <>
                     <p className="font-semibold text-gray-800">{opponentName}</p>
                     <p className="text-sm text-gray-600">
-                      {isHost ? 'Guest' : 'Host'}
+                      {isHost ? t('online:room.guest') : t('online:room.host')}
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="text-gray-500">Waiting for opponent...</p>
-                    <p className="text-sm text-gray-400">Invite a friend</p>
+                    <p className="text-gray-500">{t('online:room.waiting')}</p>
+                    <p className="text-sm text-gray-400">{t('online:room.inviteFriend')}</p>
                   </>
                 )}
               </div>
@@ -164,7 +175,7 @@ export function OnlineMenu() {
               disabled={isLoading}
               className="btn-primary w-full"
             >
-              {isLoading ? 'Starting...' : 'Ready to Play'}
+              {isLoading ? t('online:room.starting') : t('online:room.ready')}
             </button>
           )}
 
@@ -184,11 +195,15 @@ export function OnlineMenu() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-100">
         <div className="card max-w-md w-full">
+          <div className="absolute top-4 right-4">
+            <LanguageSwitcher />
+          </div>
+
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              Online Multiplayer
+              {t('online:menu.title')}
             </h1>
-            <p className="text-gray-600">Create or join a room</p>
+            <p className="text-gray-600">{t('online:menu.selectMode')}</p>
           </div>
 
           <div className="space-y-3">
@@ -198,8 +213,8 @@ export function OnlineMenu() {
             >
               <div className="text-3xl mr-4">➕</div>
               <div className="flex-1 text-left">
-                <h3 className="font-bold text-gray-800">Create Room</h3>
-                <p className="text-sm text-gray-600">Start a new game</p>
+                <h3 className="font-bold text-gray-800">{t('online:menu.createRoom')}</h3>
+                <p className="text-sm text-gray-600">{t('online:room.startNewGame')}</p>
               </div>
               <div className="text-gray-400">→</div>
             </button>
@@ -210,8 +225,8 @@ export function OnlineMenu() {
             >
               <div className="text-3xl mr-4">🔗</div>
               <div className="flex-1 text-left">
-                <h3 className="font-bold text-gray-800">Join Room</h3>
-                <p className="text-sm text-gray-600">Enter room code</p>
+                <h3 className="font-bold text-gray-800">{t('online:menu.joinRoom')}</h3>
+                <p className="text-sm text-gray-600">{t('online:room.enterCode')}</p>
               </div>
               <div className="text-gray-400">→</div>
             </button>
@@ -226,28 +241,32 @@ export function OnlineMenu() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-100">
         <div className="card max-w-md w-full">
+          <div className="absolute top-4 right-4">
+            <LanguageSwitcher />
+          </div>
+
           <button
             onClick={() => setMenuView('choice')}
             className="text-gray-600 hover:text-gray-800 mb-4 flex items-center"
           >
-            ← Back
+            ← {t('common:buttons.cancel')}
           </button>
 
           <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Create Room
+            {t('online:menu.createRoom')}
           </h2>
 
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Your Name
+                {t('online:room.yourName')}
               </label>
               <input
                 type="text"
                 value={inputName}
                 onChange={(e) => setInputName(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleCreateRoom()}
-                placeholder="Enter your name"
+                placeholder={t('online:room.enterName')}
                 maxLength={20}
                 className="input-field"
                 autoFocus
@@ -265,7 +284,7 @@ export function OnlineMenu() {
               disabled={!inputName.trim() || isLoading}
               className="btn-primary w-full"
             >
-              {isLoading ? 'Creating...' : 'Create Room'}
+              {isLoading ? t('online:room.creating') : t('online:room.create')}
             </button>
           </div>
         </div>
@@ -278,25 +297,29 @@ export function OnlineMenu() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-100">
         <div className="card max-w-md w-full">
+          <div className="absolute top-4 right-4">
+            <LanguageSwitcher />
+          </div>
+
           <button
             onClick={() => setMenuView('choice')}
             className="text-gray-600 hover:text-gray-800 mb-4 flex items-center"
           >
-            ← Back
+            ← {t('common:buttons.cancel')}
           </button>
 
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Join Room</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">{t('online:menu.joinRoom')}</h2>
 
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Room Code
+                {t('online:room.roomCode')}
               </label>
               <input
                 type="text"
                 value={inputRoomCode}
                 onChange={(e) => setInputRoomCode(e.target.value.toUpperCase())}
-                placeholder="Enter 6-character code"
+                placeholder={t('online:room.enterCodePlaceholder')}
                 maxLength={6}
                 className="input-field text-center text-2xl font-mono tracking-wider"
                 autoFocus
@@ -305,14 +328,14 @@ export function OnlineMenu() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Your Name
+                {t('online:room.yourName')}
               </label>
               <input
                 type="text"
                 value={inputName}
                 onChange={(e) => setInputName(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleJoinRoom()}
-                placeholder="Enter your name"
+                placeholder={t('online:room.enterName')}
                 maxLength={20}
                 className="input-field"
               />
@@ -331,7 +354,7 @@ export function OnlineMenu() {
               }
               className="btn-primary w-full"
             >
-              {isLoading ? 'Joining...' : 'Join Room'}
+              {isLoading ? t('online:room.joining') : t('online:room.join')}
             </button>
           </div>
         </div>

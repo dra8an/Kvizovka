@@ -18,7 +18,9 @@
  * - Center: Gold (bg-yellow-400)
  */
 
+import { useTranslation } from 'react-i18next'
 import { BoardSquare } from '@kvizovka/shared'
+import { latinToCyrillic } from '../../utils/letterMapping'
 
 /**
  * Props for Square component
@@ -68,6 +70,8 @@ interface SquareProps {
  * ```
  */
 export function Square({ square, onDrop, onDragOver, isValidDrop, isDraggable, onTileDragStart }: SquareProps) {
+  const { i18n } = useTranslation()
+
   // Get premium field class based on type
   const getPremiumClass = (): string => {
     if (!square.premiumField) {
@@ -154,11 +158,14 @@ export function Square({ square, onDrop, onDragOver, isValidDrop, isDraggable, o
     if ('letter' in tile) {
       // Check if joker
       if ('isJoker' in tile && tile.isJoker) {
-        letter = tile.jokerLetter || ''  // Show chosen letter or empty
+        const jokerLetter = tile.jokerLetter || ''
+        // Convert joker letter to Cyrillic if Serbian
+        letter = jokerLetter ? latinToCyrillic(jokerLetter, i18n.language) : ''
         value = 0 // Jokers have 0 value
         isJoker = true
       } else {
-        letter = tile.letter
+        // Convert to Cyrillic if Serbian language
+        letter = latinToCyrillic(tile.letter, i18n.language)
         value = tile.value
       }
     }

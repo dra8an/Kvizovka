@@ -104,6 +104,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `i18next@23.17.4` - Core i18n framework
     - `react-i18next@15.2.0` - React bindings for i18next
     - `i18next-browser-languagedetector@8.0.2` - Auto language detection
+  - **Multiplayer Localization** (2026-01-10):
+    - **Full i18n Infrastructure**: Complete localization system for online multiplayer
+      - Same translation structure as local game
+      - Added `online` namespace for multiplayer-specific strings (25+ translations)
+      - Translations for room creation, joining, connection status, errors
+      - Shared translation files with local game (common, game, dialogs, validation)
+      - **Serbian sentence case convention**: All translations use proper sentence case (not title case)
+    - **Translation Files** (`multiplayer/packages/client/src/i18n/locales/`):
+      - English: common.json, game.json, dialogs.json, validation.json, online.json
+      - Serbian: common.json, game.json, dialogs.json, validation.json, online.json
+      - Online-specific translations:
+        - "Create Room" → "Направи собу"
+        - "Join Room" → "Придружи се соби"
+        - "Room Code" → "Шифра собе"
+        - "Waiting for opponent..." → "Чекам противника..."
+        - "Connected" → "Повезан"
+        - Connection errors and status messages
+      - Game-specific translations with pluralization:
+        - "{{count}} tile in hand" / "{{count}} tiles in hand" → "{{count}} плочица у руци"
+        - "Your Turn" → "Твој потез"
+        - Board legend: "2L - Double Letter" → "2С - Дупло слово"
+    - **Configuration** (`multiplayer/packages/client/src/i18n/`):
+      - `config.ts` - i18next setup with 5 namespaces
+      - `types.ts` - TypeScript autocomplete for translation keys
+      - Separate localStorage key: `kvizovka-multiplayer-language`
+    - **Components Migrated** (All multiplayer UI fully localized):
+      - `LanguageSwitcher` - Language selection with flags (🇬🇧 English, 🇷🇸 Српски)
+      - `letterMapping.ts` utility - Cyrillic support for multiplayer
+      - `OnlineMenu.tsx` - Room creation, joining, connection screens
+      - `GameModeMenu.tsx` - Game mode selection with language switcher
+      - `OnlineGame.tsx` - Main game screen with all dialogs and messages
+      - `OnlineGameControls.tsx` - All buttons, confirmations, and help text
+      - `OnlineScorePanel.tsx` - Game status, scores, time, rounds, tiles remaining
+      - `Scoresheet.tsx` - Move history table with headers (Word, Pts, Total, Final)
+      - `TileRack.tsx` - Player tiles, counts with pluralization, drag instructions
+      - `Board.tsx` - Board legend (Double/Triple/Quadruple Letter, Word Multiplier, Center)
+      - `JokerLetterDialog.tsx` - Joker letter selection with Cyrillic alphabet
+      - `Tile.tsx` - Tile display with Latin/Cyrillic conversion
+      - `Square.tsx` - Board square with Latin/Cyrillic conversion
+    - **Build Status**: ✅ TypeScript compilation successful (358KB JS, gzipped: 108KB)
+    - **Files Created** (13 new files):
+      - i18n configuration and types (2 files)
+      - English translations (5 files)
+      - Serbian translations (5 files)
+      - LanguageSwitcher component
+      - letterMapping utility
+    - **Files Modified** (15 files):
+      - `main.tsx` - Import i18n config
+      - `OnlineMenu.tsx` - Full localization (all screens)
+      - `GameModeMenu.tsx` - Add language switcher and translations
+      - `OnlineGame.tsx` - All dialogs, headers, error messages
+      - `OnlineGameControls.tsx` - Buttons and confirmation dialogs
+      - `OnlineScorePanel.tsx` - Game status and score display
+      - `Scoresheet.tsx` - Table headers and move types
+      - `TileRack.tsx` - Player info, tile counts, exchange mode, drag instructions
+      - `Board.tsx` - Board legend translations
+      - `JokerLetterDialog.tsx` - Cyrillic letter support
+      - `Tile.tsx` - Cyrillic letter display
+      - `Square.tsx` - Cyrillic letter display
+      - English `game.json` - Added pluralization keys for tiles
+      - Serbian `game.json` - Added pluralization keys with sentence case
+      - Serbian `online.json` - Fixed sentence case throughout
+    - **Status**: ✅ Complete - All multiplayer components fully localized
 
 - **Joker Stealing Feature**: Complete implementation of joker stealing rule (2026-01-08)
   - **Rule Implementation**: Player can steal joker from opponent's last move

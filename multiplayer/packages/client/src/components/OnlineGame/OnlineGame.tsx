@@ -14,6 +14,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useOnlineGameStore } from '../../store/onlineGameStore'
 import { OnlineMenu } from '../OnlineMenu/OnlineMenu'
 import { Board } from '../Board/Board'
@@ -24,6 +25,7 @@ import { OnlineGameControls } from '../OnlineGameControls/OnlineGameControls'
 import { GameStatus, PlacedTile } from '@kvizovka/shared'
 
 export function OnlineGame() {
+  const { t } = useTranslation(['online', 'common', 'dialogs'])
   const {
     view,
     gameState,
@@ -61,11 +63,11 @@ export function OnlineGame() {
   useEffect(() => {
     if (gameError) {
       setErrorModal({
-        title: 'Cannot Play Word',
+        title: t('dialogs:errors.cannotPlayWord.title'),
         message: gameError
       })
     }
-  }, [gameError])
+  }, [gameError, t])
 
   // If not in playing or finished view, show menu/waiting
   if (view !== 'playing' && view !== 'finished') {
@@ -78,7 +80,7 @@ export function OnlineGame() {
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="card text-center">
           <div className="text-4xl mb-4">⏳</div>
-          <p className="text-gray-600">Loading game...</p>
+          <p className="text-gray-600">{t('online:game.loadingGame')}</p>
         </div>
       </div>
     )
@@ -89,7 +91,7 @@ export function OnlineGame() {
   const opponent = gameState.players.find((p) => p.id !== yourPlayerId)
 
   if (!you || !opponent) {
-    return <div>Error: Player data not found</div>
+    return <div>{t('online:game.errorPlayerNotFound')}</div>
   }
 
   // Check if it's your turn
@@ -115,13 +117,13 @@ export function OnlineGame() {
     const getEndReasonMessage = () => {
       switch (gameState.endReason) {
         case 'rounds_completed':
-          return '10 rounds completed by both players'
+          return t('dialogs:gameOver.endReasons.roundsCompleted')
         case 'time_expired':
-          return 'Time expired'
+          return t('dialogs:gameOver.endReasons.timeExpired')
         case 'no_tiles':
-          return 'No more tiles available'
+          return t('dialogs:gameOver.endReasons.noTiles')
         default:
-          return 'Game ended'
+          return t('dialogs:gameOver.endReasons.default')
       }
     }
 
@@ -130,7 +132,7 @@ export function OnlineGame() {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="card text-center mb-6">
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Game Complete!</h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">{t('online:game.gameComplete')}</h1>
 
             {/* End reason */}
             <p className="text-sm text-gray-600 mb-4">
@@ -144,15 +146,15 @@ export function OnlineGame() {
 
             {isTie ? (
               <p className="text-2xl text-blue-600 font-bold mb-4">
-                It's a Tie!
+                {t('dialogs:gameOver.tie')}
               </p>
             ) : (
               <>
                 <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                  {youWon ? 'You Won!' : `${winner?.name} Wins!`}
+                  {youWon ? t('online:game.youWon') : t('online:game.wins', { name: winner?.name })}
                 </h2>
                 <p className="text-xl text-gray-600 mb-4">
-                  {winner?.score} points!
+                  {t('dialogs:gameOver.winnerPoints', { points: winner?.score })}
                 </p>
               </>
             )}
@@ -168,15 +170,15 @@ export function OnlineGame() {
                 <p className="text-4xl font-bold text-gray-900">{you.score}</p>
                 <div className="mt-3 text-sm text-gray-600 space-y-1">
                   <p>
-                    <span className="font-semibold">Rounds played:</span> {you.roundsPlayed}
+                    <span className="font-semibold">{t('online:game.roundsPlayed')}</span> {you.roundsPlayed}
                   </p>
                   {yourTilePenalty > 0 && (
                     <div className="text-red-600">
                       <p>
-                        <span className="font-semibold">Unused tiles penalty:</span> -{yourTilePenalty} points
+                        <span className="font-semibold">{t('dialogs:gameOver.unusedTilesPenalty')}</span> -{yourTilePenalty} {t('common:labels.points')}
                       </p>
                       <p className="text-xs mt-1">
-                        ({yourTilesLeft} tile{yourTilesLeft !== 1 ? 's' : ''} left in hand)
+                        {t('dialogs:gameOver.tilesLeftInHand', { count: yourTilesLeft })}
                       </p>
                       {you.tiles.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
@@ -213,17 +215,17 @@ export function OnlineGame() {
                 <p className="text-4xl font-bold text-gray-900">{opponent.score}</p>
                 <div className="mt-3 text-sm text-gray-600 space-y-1">
                   <p>
-                    <span className="font-semibold">Rounds played:</span> {opponent.roundsPlayed}
+                    <span className="font-semibold">{t('online:game.roundsPlayed')}</span> {opponent.roundsPlayed}
                   </p>
                   {opponentTilePenalty > 0 && (
                     <div className="text-red-600">
                       <p>
-                        <span className="font-semibold">Unused tiles penalty:</span> -{opponentTilePenalty} points
+                        <span className="font-semibold">{t('dialogs:gameOver.unusedTilesPenalty')}</span> -{opponentTilePenalty} {t('common:labels.points')}
                       </p>
                       {opponent.tiles.length > 0 && (
                         <>
                           <p className="text-xs mt-1">
-                            ({opponent.tiles.length} tile{opponent.tiles.length !== 1 ? 's' : ''} left in hand)
+                            {t('dialogs:gameOver.tilesLeftInHand', { count: opponent.tiles.length })}
                           </p>
                           <div className="mt-2 flex flex-wrap gap-1">
                             {opponent.tiles.map((tile, idx) => (
@@ -257,10 +259,10 @@ export function OnlineGame() {
           <div className="card text-center mb-6">
             <div className="bg-gray-50 rounded-lg p-4 text-sm inline-block">
               <p className="text-gray-600">
-                <span className="font-semibold">Total moves:</span> {gameState.moveHistory.length}
+                <span className="font-semibold">{t('common:labels.totalMoves')}:</span> {gameState.moveHistory.length}
               </p>
               <p className="text-gray-600">
-                <span className="font-semibold">Rounds:</span> {gameState.round}
+                <span className="font-semibold">{t('common:labels.rounds')}:</span> {gameState.round}
               </p>
             </div>
           </div>
@@ -272,13 +274,13 @@ export function OnlineGame() {
                 onClick={() => {
                   // TODO: Implement play again feature
                   setInfoModal({
-                    title: 'Play Again',
-                    message: 'Play Again feature coming soon! Both players would need to agree.'
+                    title: t('online:game.playAgain'),
+                    message: t('online:game.playAgainSoon')
                   })
                 }}
                 className="btn-primary w-full text-lg py-3"
               >
-                Play Again
+                {t('online:game.playAgain')}
               </button>
 
               <button
@@ -288,7 +290,7 @@ export function OnlineGame() {
                 }}
                 className="btn bg-gray-500 hover:bg-gray-600 text-white w-full"
               >
-                Back to Menu
+                {t('online:game.backToMenu')}
               </button>
             </div>
           </div>
@@ -374,13 +376,13 @@ export function OnlineGame() {
       {/* Header */}
       <header className="mb-2">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">Kvizovka Online</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">{t('online:game.header')}</h1>
 
           {/* Connection Status */}
           <div className="flex items-center gap-2">
             <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
             <span className="text-sm text-gray-600">
-              {isConnected ? 'Connected' : 'Disconnected'}
+              {isConnected ? t('online:game.connected') : t('online:game.disconnected')}
             </span>
           </div>
         </div>
@@ -512,7 +514,7 @@ export function OnlineGame() {
               onClick={() => setInfoModal(null)}
               className="btn w-full py-2 font-medium text-white text-sm rounded-lg bg-blue-500 hover:bg-blue-600"
             >
-              OK
+              {t('common:buttons.ok')}
             </button>
           </div>
         </div>
@@ -545,7 +547,7 @@ export function OnlineGame() {
               onClick={() => setErrorModal(null)}
               className="btn w-full py-2 font-medium text-white text-sm rounded-lg bg-red-500 hover:bg-red-600"
             >
-              OK
+              {t('common:buttons.ok')}
             </button>
           </div>
         </div>

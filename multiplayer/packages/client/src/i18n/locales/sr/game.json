@@ -1,0 +1,42 @@
+{
+  "title": "Квизовка",
+  "subtitle": "Српска игра речи",
+  "howToPlay": {
+    "title": "Како играти:",
+    "dragTiles": "Превуци плочице са сталка на таблу",
+    "formWords": "Формирај речи (минимум 4 слова)",
+    "clickPlay": "Кликни \"Одиграј реч\" да поднесеш",
+    "firstMove": "Први потез мора да додирне центар ★",
+    "rounds": "10 рунди по играчу"
+  },
+  "statuses": {
+    "noActiveGame": "Нема активне игре",
+    "noActiveGameLong": "Нема активне игре. Започни игру да видиш своје плочице!"
+  },
+  "tileRack": {
+    "playerTiles": "Плочице играча {{playerName}}",
+    "tilesInHand": "{{count}} плочица у руци",
+    "tilesInHand_plural": "{{count}} плочица у руци",
+    "tilesPlaced": "({{count}} постављено)",
+    "tilesSelected": "{{count}} плочица изабрана",
+    "tilesSelected_plural": "{{count}} плочица изабрано",
+    "allPlaced": "Све плочице постављене на табли",
+    "noTiles": "Нема плочица у руци",
+    "dragToBoard": "Превуци плочице на таблу да их поставиш",
+    "selectForExchange": "Кликни плочице да их изабереш за замену",
+    "exchangeMode": "Режим замене: кликни плочице да их изабереш",
+    "dragging": "Превлачење: {{letter}} (вредност: {{value}})"
+  },
+  "rackInfo": {
+    "clickToSelect": "Кликни плочице на сталку да их изабереш за замену."
+  },
+  "board": {
+    "legend": {
+      "doubleLetter": "2С - Дупло слово",
+      "tripleLetter": "3С - Тропло слово",
+      "quadrupleLetter": "4С - Четвороструко слово",
+      "wordMultiplier": "X - Множитељ речи",
+      "center": "★ - Центар (почетак)"
+    }
+  }
+}

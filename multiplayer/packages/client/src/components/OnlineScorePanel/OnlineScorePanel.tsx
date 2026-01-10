@@ -5,6 +5,7 @@
  * Displays game scores, timer, and statistics for both players.
  */
 
+import { useTranslation } from 'react-i18next'
 import { GameState } from '@kvizovka/shared'
 
 interface OnlineScorePanelProps {
@@ -14,6 +15,7 @@ interface OnlineScorePanelProps {
 }
 
 export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: OnlineScorePanelProps) {
+  const { t } = useTranslation(['common', 'online'])
   /**
    * Format time in MM:SS
    */
@@ -50,22 +52,22 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
     <div className="flex flex-col gap-4">
       {/* Game info header */}
       <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white p-4 rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold mb-2">Game Status</h2>
+        <h2 className="text-xl font-bold mb-2">{t('common:labels.gameStatus')}</h2>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="opacity-80">Round:</span>{' '}
+            <span className="opacity-80">{t('common:labels.round')}:</span>{' '}
             <span className="font-semibold">{gameState.round}/10</span>
           </div>
           <div>
-            <span className="opacity-80">Tiles left:</span>{' '}
+            <span className="opacity-80">{t('common:labels.tilesLeft')}:</span>{' '}
             <span className="font-semibold">{tilesRemaining}</span>
           </div>
           <div>
-            <span className="opacity-80">Total moves:</span>{' '}
+            <span className="opacity-80">{t('common:labels.totalMoves')}:</span>{' '}
             <span className="font-semibold">{gameState.moveHistory.length}</span>
           </div>
           <div>
-            <span className="opacity-80">Status:</span>{' '}
+            <span className="opacity-80">{t('common:labels.status')}:</span>{' '}
             <span className="font-semibold">{gameState.status}</span>
           </div>
         </div>
@@ -83,10 +85,10 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
       `}
       >
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-bold">{you.name} (You)</h3>
+          <h3 className="text-lg font-bold">{you.name} ({t('online:room.you')})</h3>
           {isYourTurn && (
             <span className="text-xs font-semibold bg-white text-blue-600 px-2 py-1 rounded">
-              CURRENT TURN
+              {t('common:labels.currentTurn')}
             </span>
           )}
         </div>
@@ -94,13 +96,13 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <p className={isYourTurn ? 'opacity-90' : 'text-gray-600'}>
-              Score
+              {t('common:labels.score')}
             </p>
             <p className="text-3xl font-bold">{you.score}</p>
           </div>
           <div>
             <p className={isYourTurn ? 'opacity-90' : 'text-gray-600'}>
-              Time Left
+              {t('common:labels.timeLeft')}
             </p>
             <p
               className={`text-2xl font-bold ${
@@ -113,14 +115,14 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
         </div>
 
         <div className="mt-3 text-xs opacity-80">
-          <span>Rounds played: {you.roundsPlayed}</span>
+          <span>{t('online:game.roundsPlayed')} {you.roundsPlayed}</span>
           <span className="mx-2">•</span>
-          <span>Tiles: {you.tiles.length}</span>
+          <span>{t('online:game.tilesCount')} {you.tiles.length}</span>
         </div>
 
         {/* Your tiles */}
         <div className="mt-3 pt-3 border-t border-white/20">
-          <p className="text-xs opacity-80 mb-2">Tiles:</p>
+          <p className="text-xs opacity-80 mb-2">{t('common:labels.tiles')}:</p>
           <div className="flex flex-wrap gap-0.5">
             {you.tiles.map((tile, index) => (
               <div
@@ -164,7 +166,7 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
           <h3 className="text-lg font-bold">{opponentName}</h3>
           {isOpponentTurn && (
             <span className="text-xs font-semibold bg-white text-green-600 px-2 py-1 rounded">
-              CURRENT TURN
+              {t('common:labels.currentTurn')}
             </span>
           )}
         </div>
@@ -172,13 +174,13 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <p className={isOpponentTurn ? 'opacity-90' : 'text-gray-600'}>
-              Score
+              {t('common:labels.score')}
             </p>
             <p className="text-3xl font-bold">{opponent.score}</p>
           </div>
           <div>
             <p className={isOpponentTurn ? 'opacity-90' : 'text-gray-600'}>
-              Time Left
+              {t('common:labels.timeLeft')}
             </p>
             <p
               className={`text-2xl font-bold ${
@@ -191,14 +193,14 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
         </div>
 
         <div className="mt-3 text-xs opacity-80">
-          <span>Rounds played: {opponent.roundsPlayed}</span>
+          <span>{t('online:game.roundsPlayed')} {opponent.roundsPlayed}</span>
           <span className="mx-2">•</span>
-          <span>Tiles: {opponent.tiles.length}</span>
+          <span>{t('online:game.tilesCount')} {opponent.tiles.length}</span>
         </div>
 
         {/* Opponent tiles */}
         <div className="mt-3 pt-3 border-t border-white/20">
-          <p className="text-xs opacity-80 mb-2">Tiles:</p>
+          <p className="text-xs opacity-80 mb-2">{t('common:labels.tiles')}:</p>
           <div className="flex flex-wrap gap-0.5">
             {opponent.tiles.map((tile, index) => (
               <div
@@ -230,19 +232,19 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
       {/* Last move info */}
       {lastMove && (
         <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200">
-          <h4 className="text-sm font-bold text-purple-900 mb-1">Last Move</h4>
+          <h4 className="text-sm font-bold text-purple-900 mb-1">{t('common:labels.lastMove')}</h4>
           <div className="text-xs text-purple-800">
             <p>
-              <span className="font-semibold">Type:</span> {lastMove.type}
+              <span className="font-semibold">{t('common:labels.type')}:</span> {lastMove.type}
             </p>
             {lastMove.score > 0 && (
               <p>
-                <span className="font-semibold">Score:</span> +{lastMove.score} points
+                <span className="font-semibold">{t('common:labels.score')}:</span> +{lastMove.score} {t('common:labels.points')}
               </p>
             )}
             {lastMove.formedWords && lastMove.formedWords.length > 0 && (
               <p>
-                <span className="font-semibold">Words:</span>{' '}
+                <span className="font-semibold">{t('common:labels.words')}:</span>{' '}
                 {lastMove.formedWords.join(', ')}
               </p>
             )}

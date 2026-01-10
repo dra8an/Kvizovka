@@ -10,6 +10,7 @@
  * Shows 10 rows total (one per round), with empty rows for future moves.
  */
 
+import { useTranslation } from 'react-i18next'
 import { Move, MoveType } from '@kvizovka/shared'
 
 interface ScoresheetProps {
@@ -54,8 +55,22 @@ export function Scoresheet({
   maxRounds = 10,
   compact = false,
 }: ScoresheetProps) {
+  const { t } = useTranslation(['dialogs', 'common'])
+
   // Filter moves for this player only
   const playerMoves = moves.filter((move) => move.playerId === playerId)
+
+  // Helper to get move type label
+  const getMoveTypeLabel = (type: MoveType): string => {
+    switch (type) {
+      case MoveType.SKIP:
+        return t('dialogs:scoresheet.pass')
+      case MoveType.EXCHANGE:
+        return t('dialogs:scoresheet.exchange')
+      default:
+        return '-'
+    }
+  }
 
   // Build scoresheet rows
   const rows: ScoresheetRow[] = []
@@ -109,13 +124,13 @@ export function Scoresheet({
                 #
               </th>
               <th className={`text-left font-semibold text-gray-700 ${compact ? 'py-1 px-1.5' : 'py-2 px-3'}`}>
-                Word
+                {t('common:labels.word')}
               </th>
               <th className={`text-right font-semibold text-gray-700 ${compact ? 'py-1 px-1' : 'py-2 px-3'}`}>
-                Pts
+                {t('common:labels.pts')}
               </th>
               <th className={`text-right font-semibold text-gray-700 ${compact ? 'py-1 px-1' : 'py-2 px-3'}`}>
-                Total
+                {t('common:labels.total')}
               </th>
             </tr>
           </thead>
@@ -160,7 +175,7 @@ export function Scoresheet({
           <tfoot>
             <tr className="border-t-2 border-gray-300 font-bold">
               <td colSpan={3} className={`text-right text-gray-800 ${compact ? 'py-1 px-1 text-xs' : 'py-2 px-3'}`}>
-                Final:
+                {t('common:labels.final')}:
               </td>
               <td className={`text-right text-blue-600 tabular-nums ${compact ? 'py-1 px-1 text-sm' : 'py-2 px-3 text-lg'}`}>
                 {runningTotal}
@@ -171,18 +186,4 @@ export function Scoresheet({
       </div>
     </div>
   )
-}
-
-/**
- * Helper: Get display label for non-tile-placement moves
- */
-function getMoveTypeLabel(type: MoveType): string {
-  switch (type) {
-    case MoveType.SKIP:
-      return '(Pass)'
-    case MoveType.EXCHANGE:
-      return '(Exchange)'
-    default:
-      return '-'
-  }
 }
