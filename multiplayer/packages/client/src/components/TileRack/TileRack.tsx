@@ -298,24 +298,10 @@ export function TileRack(props: TileRackProps = {}) {
 
       {/* Tile rack container */}
       <div
-        className={`
-          bg-gradient-to-b py-2 px-3 rounded-lg shadow-lg
-          ${isExchangeMode ? 'from-purple-700 to-purple-800' : 'from-amber-700 to-amber-800'}
-        `}
+        className="bg-gradient-to-b from-amber-700 to-amber-800 py-2 px-3 rounded-lg shadow-lg"
         onDrop={handleDropOnRack}
         onDragOver={handleDragOverRack}
       >
-        {/* Exchange mode banner */}
-        {isExchangeMode && (
-          <div className="mb-2 p-2 bg-purple-900 rounded text-center">
-            <p className="text-sm font-bold text-purple-100">
-              {t('game:tileRack.exchangeMode')}
-            </p>
-            <p className="text-xs text-purple-200 mt-0.5">
-              {t('game:tileRack.tilesSelected', { count: tilesForExchange.length })}
-            </p>
-          </div>
-        )}
 
         {/* Tiles */}
         <div className="flex gap-1.5 justify-center flex-wrap">
@@ -330,12 +316,29 @@ export function TileRack(props: TileRackProps = {}) {
                   onDragLeave={handleDragLeaveTile}
                   onClick={() => handleTileClick(tile)}
                   className={`
-                    transition-all duration-150
+                    relative transition-all duration-200
                     ${dropTargetIndex === index && draggedFromIndex !== index ? 'scale-110' : ''}
                     ${isExchangeMode ? 'cursor-pointer' : ''}
-                    ${isSelectedForExchange ? 'ring-4 ring-purple-400 rounded scale-105' : ''}
+                    ${isSelectedForExchange ? 'animate-bounce-once scale-105' : ''}
                   `}
                 >
+                  {/* Slightly darker overlay during exchange mode */}
+                  {isExchangeMode && !isSelectedForExchange && (
+                    <div className="absolute inset-0 bg-black/20 rounded-lg pointer-events-none z-10" />
+                  )}
+
+                  {/* Significantly darker overlay for selected tiles */}
+                  {isSelectedForExchange && (
+                    <div className="absolute inset-0 bg-black/60 rounded-lg pointer-events-none z-10" />
+                  )}
+
+                  {/* Red X overlay for selected tiles */}
+                  {isSelectedForExchange && (
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center shadow-lg z-20">
+                      <span className="text-white text-sm font-bold">✕</span>
+                    </div>
+                  )}
+
                   <Tile
                     tile={tile}
                     tileIndex={index}

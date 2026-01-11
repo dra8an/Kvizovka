@@ -247,7 +247,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Multiplayer: `multiplayer/packages/client/src/components/OnlineGameControls/OnlineGameControls.tsx`
     - Translation files: `src/i18n/locales/en/dialogs.json`, `src/i18n/locales/sr/dialogs.json`
     - Translation files: `multiplayer/packages/client/src/i18n/locales/en/dialogs.json`, `multiplayer/packages/client/src/i18n/locales/sr/dialogs.json`
-  - **Build Status**: ✅ Both games build successfully (Local: 280.38 KB, Multiplayer: 357.72 KB)
+
+- **Tile Exchange Visual Improvements** (2026-01-10):
+  - **Improved Visual Feedback**: Enhanced tile selection UI during exchange mode for better clarity
+    - **During exchange mode (all tiles)**: Slightly darker overlay (20% black) to indicate exchange mode is active
+    - **Selected tiles for exchange**: Significantly darker overlay (60% black) with red "✕" badge
+    - **Clear messaging**: Red X clearly indicates tiles will be discarded/exchanged
+  - **Visual Hierarchy**:
+    - Normal tiles → Full brightness (no overlay)
+    - Exchange mode (not selected) → Slightly dimmed (bg-black/20)
+    - Selected for exchange → Very dimmed (bg-black/60) + Red X badge in top-right corner
+  - **Replaced confusing green checkmark** with intuitive red X indicator
+    - Green checkmark (✓) was counterintuitive - suggested confirmation rather than removal
+    - Red X (✕) clearly indicates "this tile will be removed"
+  - **Custom Bounce Animation**: Added subtle bounce effect when selecting/deselecting tiles
+    - Animation defined in Tailwind config: `animate-bounce-once` (0.5s, translateY -10px at 50%)
+    - Provides immediate visual feedback on tile selection
+  - **Consistent Across Both Games**: Same visual treatment in local and multiplayer modes
+  - **Files Modified** (4 files):
+    - Local game: `src/components/TileRack/TileRack.tsx`
+    - Local game: `tailwind.config.js` (added bounce-once animation)
+    - Multiplayer: `multiplayer/packages/client/src/components/TileRack/TileRack.tsx`
+    - Multiplayer: `multiplayer/packages/client/tailwind.config.js` (added bounce-once animation)
+  - **Build Status**: ✅ Both games build successfully
+    - Local game: 280.42 KB JS (gzipped: 86.73 KB)
+    - Multiplayer: 357.76 KB JS (gzipped: 108.77 KB)
 
 - **Joker Stealing Feature**: Complete implementation of joker stealing rule (2026-01-08)
   - **Rule Implementation**: Player can steal joker from opponent's last move

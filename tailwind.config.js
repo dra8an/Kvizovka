@@ -35,6 +35,17 @@ export default {
       gridTemplateRows: {
         '17': 'repeat(17, minmax(0, 1fr))',
       },
+
+      // Custom animations
+      animation: {
+        'bounce-once': 'bounce-once 0.5s ease-in-out',
+      },
+      keyframes: {
+        'bounce-once': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+      },
     },
   },
   plugins: [],
