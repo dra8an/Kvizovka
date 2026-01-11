@@ -13,6 +13,7 @@
  * This is the complete playable Kvizovka interface!
  */
 
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Board } from '../Board/Board'
 import { TileRack } from '../TileRack/TileRack'
@@ -39,14 +40,33 @@ export function Game() {
   const startGame = useGameStore((state) => state.startGame)
   const reset = useGameStore((state) => state.reset)
 
+  // Local state for player name input
+  const [showNameInput, setShowNameInput] = React.useState(false)
+  const [player1Name, setPlayer1Name] = React.useState('')
+  const [player2Name, setPlayer2Name] = React.useState('')
+
   /**
-   * Handle start new game
-   *
-   * TODO: Add a proper game setup screen with player name inputs
-   * For now, just start a game with default names.
+   * Handle showing the name input screen
    */
-  const handleStartGame = () => {
-    startGame(GameMode.LOCAL_MULTIPLAYER, t('common:defaultNames.player1'), t('common:defaultNames.player2'))
+  const handleShowNameInput = () => {
+    setShowNameInput(true)
+  }
+
+  /**
+   * Handle starting game with player names
+   */
+  const handleStartGame = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+
+    const name1 = player1Name.trim() || t('common:defaultNames.player1')
+    const name2 = player2Name.trim() || t('common:defaultNames.player2')
+
+    startGame(GameMode.LOCAL_MULTIPLAYER, name1, name2)
+
+    // Reset form
+    setShowNameInput(false)
+    setPlayer1Name('')
+    setPlayer2Name('')
   }
 
   /**
@@ -54,11 +74,86 @@ export function Game() {
    */
   const handleNewGame = () => {
     reset()
-    handleStartGame()
+    setShowNameInput(true)
   }
 
-  // If no game, show start screen
+  // If no game, show start screen or name input
   if (!game) {
+    // Show name input form
+    if (showNameInput) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-6">
+          <div className="card max-w-md w-full">
+            {/* Language switcher (centered above title) */}
+            <div className="flex justify-center mb-4">
+              <LanguageSwitcher />
+            </div>
+
+            <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">{t('game:title')}</h1>
+            <p className="text-gray-600 mb-6 text-center">{t('game:playerSetup.subtitle')}</p>
+
+            <form onSubmit={handleStartGame}>
+              <div className="space-y-4">
+                {/* Player 1 Name */}
+                <div>
+                  <label htmlFor="player1" className="block text-sm font-semibold text-gray-700 mb-1">
+                    {t('game:playerSetup.player1Label')}
+                  </label>
+                  <input
+                    type="text"
+                    id="player1"
+                    value={player1Name}
+                    onChange={(e) => setPlayer1Name(e.target.value)}
+                    placeholder={t('common:defaultNames.player1')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    maxLength={20}
+                    autoFocus
+                  />
+                </div>
+
+                {/* Player 2 Name */}
+                <div>
+                  <label htmlFor="player2" className="block text-sm font-semibold text-gray-700 mb-1">
+                    {t('game:playerSetup.player2Label')}
+                  </label>
+                  <input
+                    type="text"
+                    id="player2"
+                    value={player2Name}
+                    onChange={(e) => setPlayer2Name(e.target.value)}
+                    placeholder={t('common:defaultNames.player2')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    maxLength={20}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowNameInput(false)}
+                  className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+                >
+                  {t('common:buttons.cancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 btn btn-primary py-3 font-semibold"
+                >
+                  {t('game:playerSetup.startGame')}
+                </button>
+              </div>
+            </form>
+
+            <p className="mt-4 text-xs text-gray-500 text-center">
+              {t('game:playerSetup.hint')}
+            </p>
+          </div>
+        </div>
+      )
+    }
+
+    // Show welcome screen
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-6">
         <div className="card max-w-md w-full text-center">
@@ -73,7 +168,7 @@ export function Game() {
           </p>
 
           <button
-            onClick={handleStartGame}
+            onClick={handleShowNameInput}
             className="btn btn-primary w-full text-xl py-4"
           >
             {t('common:buttons.start')}

@@ -189,6 +189,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Translation files: `multiplayer/packages/client/src/i18n/locales/en/common.json`, `multiplayer/packages/client/src/i18n/locales/sr/common.json`
   - **Build Status**: ✅ Both games build successfully with cleaner UI
 
+- **Player Name Input Screen** (2026-01-10):
+  - **Local Game**: Added player name input screen before game starts
+    - Two-step flow: Welcome screen → Name input → Game starts
+    - Input fields for Player 1 and Player 2 names (max 20 characters each)
+    - Auto-focus on Player 1 input field
+    - Smart defaults: Uses "Player 1"/"Player 2" (or Serbian equivalents) if left blank
+    - Cancel button to return to welcome screen
+    - Form submission with Enter key
+    - Color-coded focus rings (blue for Player 1, green for Player 2)
+  - **Translation Keys Added**:
+    - English: `playerSetup.subtitle`, `player1Label`, `player2Label`, `startGame`, `hint`
+    - Serbian: Same keys with sentence case translations
+  - **Files Modified** (3 files):
+    - `src/components/Game/Game.tsx` - Added name input form and state management
+    - `src/i18n/locales/en/game.json` - Added playerSetup namespace
+    - `src/i18n/locales/sr/game.json` - Added playerSetup namespace with sentence case
+  - **Build Status**: ✅ Local game builds successfully (280.21 KB JS, gzipped: 86.67 KB)
+
+- **Serbian Translation Refinements** (2026-01-10):
+  - **Terminology Updates**: Improved Serbian translations for better clarity and consistency
+    - "Онлајн вишеиграч" → "Игра у мрежи" (Online multiplayer → Game on the network)
+    - "Придружи се соби" → "Придружи се" (Join room → Join)
+    - "Играј локално" → "Играј на комјутеру" (Play locally → Play on computer)
+    - "Играј онлајн" → "Играј у мрежи" (Play online → Play on the network)
+  - **Sentence Case Consistency**: Fixed remaining title case issues
+    - "Српска Игра Речи" → "Српска игра речи"
+    - "Одиграј Реч" → "Одиграј реч"
+    - Board legend translations (e.g., "Дупло Слово" → "Дупло слово")
+  - **Files Modified** (2 files):
+    - `multiplayer/packages/client/src/i18n/locales/sr/online.json`
+    - `multiplayer/packages/client/src/i18n/locales/sr/common.json`
+  - **Impact**: More natural Serbian language throughout the interface
+
+- **Multiplayer UI Alignment** (2026-01-10):
+  - **Centered Game Title**: Multiplayer game title now centered to match local game
+    - Title changed from left-aligned to centered
+    - Connection status moved to top-right corner (absolute positioning)
+    - Consistent visual alignment across both game modes
+  - **Files Modified**: `multiplayer/packages/client/src/components/OnlineGame/OnlineGame.tsx`
+  - **Build Status**: ✅ Multiplayer client builds successfully (357.54 KB JS, gzipped: 108.72 KB)
+
 - **Joker Stealing Feature**: Complete implementation of joker stealing rule (2026-01-08)
   - **Rule Implementation**: Player can steal joker from opponent's last move
     - Only jokers played in the immediately previous turn can be stolen

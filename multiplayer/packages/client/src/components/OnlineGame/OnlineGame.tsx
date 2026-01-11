@@ -374,17 +374,15 @@ export function OnlineGame() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-2 lg:p-4">
       {/* Header */}
-      <header className="mb-2">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">{t('online:game.header')}</h1>
+      <header className="mb-2 relative">
+        <h1 className="text-2xl lg:text-3xl font-bold text-center text-gray-800">{t('online:game.header')}</h1>
 
-          {/* Connection Status */}
-          <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-            <span className="text-sm text-gray-600">
-              {isConnected ? t('online:game.connected') : t('online:game.disconnected')}
-            </span>
-          </div>
+        {/* Connection Status (top-right) */}
+        <div className="absolute top-0 right-4 flex items-center gap-2">
+          <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <span className="text-sm text-gray-600">
+            {isConnected ? t('online:game.connected') : t('online:game.disconnected')}
+          </span>
         </div>
       </header>
 

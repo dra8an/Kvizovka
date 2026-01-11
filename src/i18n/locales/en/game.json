@@ -13,6 +13,13 @@
     "noActiveGame": "No active game",
     "noActiveGameLong": "No active game. Start a game to see your tiles!"
   },
+  "playerSetup": {
+    "subtitle": "Enter player names",
+    "player1Label": "Player 1 Name",
+    "player2Label": "Player 2 Name",
+    "startGame": "Start Game",
+    "hint": "Leave blank to use default names"
+  },
   "tileRack": {
     "playerTiles": "{{playerName}}'s Tiles",
     "allPlaced": "All tiles placed on board",
