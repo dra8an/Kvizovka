@@ -74,6 +74,13 @@ interface GameStoreState {
   lastValidation: MoveValidationResult | null
 
   /**
+   * Real-time placement validation
+   * Runs validation on selectedTiles in real-time as player places tiles
+   * Used for visual feedback (green/amber/gray tiles)
+   */
+  placementValidation: MoveValidationResult | null
+
+  /**
    * Last played word (can be challenged by opponent)
    */
   lastPlayedWord: {
@@ -185,6 +192,13 @@ interface GameStoreState {
   setHoveredSquare: (square: { row: number; col: number } | null) => void
 
   /**
+   * Validate current placement in real-time
+   * Called automatically after selectTile/unselectTile/setJokerLetter
+   * Updates placementValidation state for visual feedback
+   */
+  validateCurrentPlacement: () => void
+
+  /**
    * Reorder tiles in current player's hand
    */
   reorderPlayerTiles: (fromIndex: number, toIndex: number) => void
@@ -238,13 +252,14 @@ interface GameStoreState {
  */
 const createInitialState = (): Pick<
   GameStoreState,
-  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'draggedTile' | 'hoveredSquare' | 'timerIntervalId'
+  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'placementValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'draggedTile' | 'hoveredSquare' | 'timerIntervalId'
 > => ({
   game: null,
   boardInstance: null,
   tileBagInstance: null,
   selectedTiles: [],
   lastValidation: null,
+  placementValidation: null,
   lastPlayedWord: null,
   isExchangeMode: false,
   tilesForExchange: [],
@@ -673,6 +688,9 @@ export const useGameStore = create<GameStoreState>()(
             selectedTiles: [...selectedTiles, { tile, row, col }],
           })
         }
+
+        // Validate placement in real-time for visual feedback
+        get().validateCurrentPlacement()
       },
 
       /**
@@ -703,6 +721,9 @@ export const useGameStore = create<GameStoreState>()(
             (st) => st.row !== row || st.col !== col
           ),
         })
+
+        // Validate placement in real-time for visual feedback
+        get().validateCurrentPlacement()
       },
 
       /**
@@ -728,7 +749,7 @@ export const useGameStore = create<GameStoreState>()(
           })
         }
 
-        set({ selectedTiles: [] })
+        set({ selectedTiles: [], placementValidation: null })
       },
 
       /**
@@ -767,6 +788,9 @@ export const useGameStore = create<GameStoreState>()(
               : st
           ),
         })
+
+        // Validate placement in real-time for visual feedback
+        get().validateCurrentPlacement()
       },
 
       /**
@@ -864,6 +888,30 @@ export const useGameStore = create<GameStoreState>()(
        */
       setHoveredSquare: (square: { row: number; col: number } | null) => {
         set({ hoveredSquare: square })
+      },
+
+      /**
+       * Validate current placement in real-time
+       *
+       * Runs MoveValidator on selectedTiles to provide real-time visual feedback.
+       * Updates placementValidation state with validation result.
+       * Called automatically after selectTile, unselectTile, setJokerLetter.
+       */
+      validateCurrentPlacement: () => {
+        const { selectedTiles, game, boardInstance } = get()
+
+        // No validation if no game or no tiles placed
+        if (!game || !boardInstance || selectedTiles.length === 0) {
+          set({ placementValidation: null })
+          return
+        }
+
+        // Run validation (same logic as makeMove but without side effects)
+        const validator = new MoveValidator(boardInstance)
+        const result = validator.validateMove(selectedTiles)
+
+        // Store validation result for visual feedback
+        set({ placementValidation: result })
       },
 
       /**

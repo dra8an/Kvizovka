@@ -19,7 +19,7 @@ import { useGameStore } from '../../store/gameStore'
 import { Square } from './Square'
 import { BOARD_SIZE } from '../../constants'
 import { JokerLetterDialog } from '../JokerLetterDialog/JokerLetterDialog'
-import { Tile as TileType } from '../../types'
+import { Tile as TileType, TilePlacementState, Direction } from '../../types'
 
 /**
  * Board Component
@@ -40,6 +40,7 @@ export function Board() {
   const selectTile = useGameStore((state) => state.selectTile)
   const unselectTile = useGameStore((state) => state.unselectTile)
   const selectedTiles = useGameStore((state) => state.selectedTiles)
+  const placementValidation = useGameStore((state) => state.placementValidation)
   const setJokerLetter = useGameStore((state) => state.setJokerLetter)
   const stealJoker = useGameStore((state) => state.stealJoker)
   const draggedTile = useGameStore((state) => state.draggedTile)
@@ -86,6 +87,67 @@ export function Board() {
 
   // Get board from game state
   const board = game.board
+
+  /**
+   * Get tile placement state for visual feedback
+   *
+   * Determines the visual state of a tile based on real-time validation.
+   * Returns: NEUTRAL | VALID_PLACEMENT | VALID_WORD | INVALID
+   */
+  const getTileState = (row: number, col: number): TilePlacementState => {
+    // Check if this position has a selected tile
+    const selectedTile = selectedTiles.find(
+      (st) => st.row === row && st.col === col
+    )
+
+    if (!selectedTile) return TilePlacementState.NEUTRAL
+
+    // No validation result yet
+    if (!placementValidation) return TilePlacementState.NEUTRAL
+
+    // If validation passed, tile is part of a valid word
+    if (placementValidation.isValid) {
+      return TilePlacementState.VALID_WORD
+    }
+
+    // Validation failed - invalid placement
+    return TilePlacementState.INVALID
+  }
+
+  /**
+   * Get highlighted line for direction indicator
+   *
+   * Returns the row or column that should be highlighted when 2+ tiles are placed.
+   * Returns null if no highlight needed.
+   */
+  const getHighlightedLine = (): { type: 'row' | 'col'; index: number } | null => {
+    if (selectedTiles.length < 2 || !placementValidation?.direction) {
+      return null
+    }
+
+    const firstTile = selectedTiles[0]
+
+    return {
+      type: placementValidation.direction === ('HORIZONTAL' as Direction) ? 'row' : 'col',
+      index: placementValidation.direction === ('HORIZONTAL' as Direction)
+        ? firstTile.row
+        : firstTile.col
+    }
+  }
+
+  /**
+   * Check if a square is in the highlighted line
+   *
+   * Used to show row/column highlighting for placement direction.
+   */
+  const isInHighlightedLine = (row: number, col: number): boolean => {
+    const highlight = getHighlightedLine()
+    if (!highlight) return false
+
+    return highlight.type === 'row'
+      ? highlight.index === row
+      : highlight.index === col
+  }
 
   /**
    * Check if a square is a valid drop target
@@ -420,6 +482,8 @@ export function Board() {
                   isValidDrop={false}
                   isDraggable={!!selectedTile}
                   onTileDragStart={handleTileDragStart}
+                  placementState={getTileState(rowIndex, colIndex)}
+                  isHighlightedLine={isInHighlightedLine(rowIndex, colIndex)}
                 />
               )
             })

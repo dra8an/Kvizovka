@@ -132,6 +132,25 @@ export interface Position {
 export type Direction = 'HORIZONTAL' | 'VERTICAL'
 
 /**
+ * Tile Placement State
+ *
+ * Visual state for tiles being placed on the board (real-time feedback).
+ * Used to provide visual feedback before tiles are committed to the board.
+ *
+ * States:
+ * - NEUTRAL: No tiles placed or no validation yet
+ * - VALID_PLACEMENT: Tiles correctly placed but word incomplete (<4 letters)
+ * - VALID_WORD: Forms a valid word (≥4 letters, correct placement)
+ * - INVALID: Placement violates rules (not in line, gaps, no connection, etc.)
+ */
+export enum TilePlacementState {
+  NEUTRAL = 'neutral',
+  VALID_PLACEMENT = 'valid-placement',
+  VALID_WORD = 'valid-word',
+  INVALID = 'invalid'
+}
+
+/**
  * Placed Tile Type
  *
  * Represents a tile that has been placed on the board during a move.
