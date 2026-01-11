@@ -73,6 +73,13 @@ interface GameStoreState {
   lastValidation: MoveValidationResult | null
 
   /**
+   * Real-time placement validation
+   * Runs validation on selectedTiles in real-time as player places tiles
+   * Used for visual feedback (green/amber/gray tiles)
+   */
+  placementValidation: MoveValidationResult | null
+
+  /**
    * Last played word (can be challenged by opponent)
    */
   lastPlayedWord: {
@@ -158,6 +165,13 @@ interface GameStoreState {
   setJokerLetter: (row: number, col: number, letter: string) => void
 
   /**
+   * Validate current placement in real-time
+   * Called automatically after selectTile/unselectTile/setJokerLetter
+   * Updates placementValidation state for visual feedback
+   */
+  validateCurrentPlacement: () => void
+
+  /**
    * Reorder tiles in current player's hand
    */
   reorderPlayerTiles: (fromIndex: number, toIndex: number) => void
@@ -211,13 +225,14 @@ interface GameStoreState {
  */
 const createInitialState = (): Pick<
   GameStoreState,
-  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'timerIntervalId'
+  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'placementValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'timerIntervalId'
 > => ({
   game: null,
   boardInstance: null,
   tileBagInstance: null,
   selectedTiles: [],
   lastValidation: null,
+  placementValidation: null,
   lastPlayedWord: null,
   isExchangeMode: false,
   tilesForExchange: [],
@@ -628,6 +643,9 @@ export const useGameStore = create<GameStoreState>()(
             selectedTiles: [...selectedTiles, { tile, row, col }],
           })
         }
+
+        // Validate current placement for real-time visual feedback
+        get().validateCurrentPlacement()
       },
 
       /**
@@ -658,6 +676,9 @@ export const useGameStore = create<GameStoreState>()(
             (st) => st.row !== row || st.col !== col
           ),
         })
+
+        // Validate current placement for real-time visual feedback
+        get().validateCurrentPlacement()
       },
 
       /**
@@ -684,6 +705,9 @@ export const useGameStore = create<GameStoreState>()(
         }
 
         set({ selectedTiles: [] })
+
+        // Validate current placement for real-time visual feedback
+        get().validateCurrentPlacement()
       },
 
       /**
@@ -722,6 +746,29 @@ export const useGameStore = create<GameStoreState>()(
               : st
           ),
         })
+
+        // Validate current placement for real-time visual feedback
+        get().validateCurrentPlacement()
+      },
+
+      /**
+       * Validate current placement in real-time
+       *
+       * Runs validation on selectedTiles without side effects.
+       * Updates placementValidation state for visual feedback.
+       */
+      validateCurrentPlacement: () => {
+        const { selectedTiles, game, boardInstance } = get()
+
+        if (!game || !boardInstance || selectedTiles.length === 0) {
+          set({ placementValidation: null })
+          return
+        }
+
+        const validator = new MoveValidator(boardInstance)
+        const result = validator.validateMove(selectedTiles)
+
+        set({ placementValidation: result })
       },
 
       /**

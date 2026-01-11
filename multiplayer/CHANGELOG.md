@@ -13,6 +13,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.7] - 2026-01-11
+
+### Added
+- **Real-Time Visual Feedback for Word Placement**
+  - Tiles now display color-coded visual feedback as players place them on the board
+  - **Green tiles** (bg-green-100) - Valid word formed (≥4 letters, correct placement)
+  - **Gray tiles** (bg-gray-400) - Invalid placement (tiles not in line, gaps, no center square, etc.)
+  - **Direction indicator** - Entire row or column highlighted with cyan background when 2+ tiles placed
+  - Visual feedback updates in real-time as tiles are added/removed
+  - Smooth transitions with 200ms duration for polished UX
+  - Works in both local multiplayer and online multiplayer modes
+
+### Implementation Details
+
+**Shared Package (`packages/shared/`)**
+- Added `TilePlacementState` enum to `types/board.types.ts`
+  - `NEUTRAL` - No tiles placed or no validation yet
+  - `VALID_PLACEMENT` - Correct placement but word incomplete (<4 letters)
+  - `VALID_WORD` - Forms valid word (≥4 letters, correct placement)
+  - `INVALID` - Placement violates rules
+- Exported enum from shared package index
+
+**Local Multiplayer Game (`/src/`)**
+- `store/gameStore.ts`: Added real-time validation
+  - New state: `placementValidation: MoveValidationResult | null`
+  - New action: `validateCurrentPlacement()` - runs validation without side effects
+  - Validation triggered automatically on `selectTile`, `unselectTile`, `clearSelection`, `setJokerLetter`
+- `components/Board/Board.tsx`: Visual state logic
+  - `getTileState()` - determines visual state for each placed tile
+  - `getHighlightedLine()` - identifies row/column to highlight
+  - `isInHighlightedLine()` - checks if square is in highlighted line
+  - Passes `placementState` and `isHighlightedLine` to Square components
+- `components/Board/Square.tsx`: Dynamic styling
+  - `getTileStateClass()` - returns Tailwind classes based on placement state
+  - Green: `bg-green-100 border-green-500 border-2`
+  - Gray: `bg-gray-400 border-gray-500 opacity-60`
+  - Highlighted line: `bg-cyan-50`
+  - Added transition animation: `transition-all duration-200`
+
+**Online Multiplayer Game (`packages/client/`)**
+- `store/gameStore.ts`: Same real-time validation as local mode
+- `components/Board/Board.tsx`: Dual-mode validation support
+  - Local mode: Uses `placementValidation` from gameStore
+  - Online mode: Runs validation locally via `useEffect` hook
+  - Creates temporary Board instance to validate online mode placements
+  - Validates whenever `selectedTiles` prop changes
+  - Both modes use same visual feedback logic
+- `components/Board/Square.tsx`: Same styling as local mode
+
+### Technical Highlights
+- **No Dictionary Validation**: Real-time feedback only checks placement rules + word length (≥4 letters)
+  - Dictionary validation still happens only on "Play Word" submission
+  - This is intentional - prevents revealing invalid words before submission
+- **Dual-Mode Architecture**:
+  - Local mode uses gameStore with automatic validation
+  - Online mode uses props with manual validation in useEffect
+  - Both modes share the same visual feedback components
+- **Performance**: Validation runs efficiently using lightweight MoveValidator
+  - Online mode creates temporary board only when needed
+  - No network calls during real-time validation
+
+### Files Changed
+- `packages/shared/src/types/board.types.ts` - Added TilePlacementState enum
+- `packages/shared/src/types/index.ts` - Exported TilePlacementState
+- `packages/shared/src/index.ts` - Re-exported TilePlacementState
+- `packages/client/src/store/gameStore.ts` - Added validation state and action
+- `packages/client/src/components/Board/Board.tsx` - Added visual state logic
+- `packages/client/src/components/Board/Square.tsx` - Added dynamic styling
+- `/src/store/gameStore.ts` - Added validation state and action (local game)
+- `/src/components/Board/Board.tsx` - Added visual state logic (local game)
+- `/src/components/Board/Square.tsx` - Added dynamic styling (local game)
+
+### User Experience Improvements
+- **Before**: No visual feedback until "Play Word" clicked - users had to guess if placement was valid
+- **After**: Instant visual confirmation as tiles are placed
+  - Green = "This looks good! Ready to submit"
+  - Gray = "Something's wrong with this placement"
+  - Cyan row/column = "Your word is going in this direction"
+- Players can now see and fix mistakes before clicking "Play Word"
+- Reduces frustration from rejected moves
+- Makes game rules more discoverable through visual feedback
+
+### Tested
+- ✅ Local multiplayer mode: Green tiles for valid words
+- ✅ Local multiplayer mode: Gray tiles for invalid placements
+- ✅ Local multiplayer mode: Cyan row/column highlighting
+- ✅ Online multiplayer mode: Same visual feedback as local
+- ✅ Visual updates when adding tiles
+- ✅ Visual updates when removing tiles
+- ✅ Visual updates when moving tiles
+- ✅ Visual updates when setting joker letters
+- ✅ First move validation (must cover center)
+- ✅ Subsequent move validation (must connect to existing tiles)
+- ✅ Direction detection (horizontal vs vertical)
+- ✅ Gap detection (tiles must be contiguous)
+- ✅ Minimum word length (≥4 letters)
+
+---
+
 ## [0.2.6] - 2026-01-10
 
 ### Added
@@ -568,6 +667,9 @@ After fix: Rejected (3 tiles < 4) ✅
 
 ## Version History
 
+- **0.2.7** - Real-time visual feedback for word placement (Jan 11, 2026)
+- **0.2.6** - Opponent tiles display in ScorePanel (Jan 10, 2026)
+- **0.2.5** - Fixed Serbian digraph scoring bug (Jan 9, 2026)
 - **0.2.4** - Fixed Serbian digraph validation bug (Jan 9, 2026)
 - **0.2.3** - Custom modal dialogs (UI improvement) (Jan 9, 2026)
 - **0.2.2** - Joker stealing feature in online multiplayer (Jan 9, 2026)

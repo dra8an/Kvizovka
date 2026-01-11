@@ -13,11 +13,11 @@
  * This is the central UI component of Kvizovka!
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useGameStore } from '../../store/gameStore'
 import { Square } from './Square'
-import { BOARD_SIZE, Tile as TileType, BoardType, PlacedTile } from '@kvizovka/shared'
+import { BOARD_SIZE, Tile as TileType, BoardType, PlacedTile, TilePlacementState, MoveValidator, Board as BoardEngine, MoveValidationResult } from '@kvizovka/shared'
 import { JokerLetterDialog } from '../JokerLetterDialog/JokerLetterDialog'
 
 /**
@@ -108,6 +108,9 @@ export function Board(props: BoardProps = {}) {
   const storeUnselectTile = useGameStore((state) => state.unselectTile)
   const storeSelectedTiles = useGameStore((state) => state.selectedTiles)
   const storeSetJokerLetter = useGameStore((state) => state.setJokerLetter)
+  const storePlacementValidation = useGameStore((state) => state.placementValidation)
+  const storeValidateCurrentPlacement = useGameStore((state) => state.validateCurrentPlacement)
+  const storeBoardInstance = useGameStore((state) => state.boardInstance)
 
   // Determine which data source to use (props or store)
   const isOnlineMode = !!props.boardState
@@ -179,6 +182,48 @@ export function Board(props: BoardProps = {}) {
     col: 0,
     replacementTile: null,
   })
+
+  // Local state for online mode validation
+  const [onlinePlacementValidation, setOnlinePlacementValidation] = useState<MoveValidationResult | null>(null)
+
+  // Run validation for online mode when selectedTiles changes
+  useEffect(() => {
+    if (isOnlineMode && props.boardState) {
+      if (selectedTiles.length === 0) {
+        setOnlinePlacementValidation(null)
+        return
+      }
+
+      // Create a temporary board instance for validation
+      const tempBoard = new BoardEngine()
+      tempBoard.initialize()
+
+      // Copy the current board state
+      const currentBoard = props.boardState
+      for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+          const square = currentBoard[row][col]
+          if (square.tile) {
+            tempBoard.setTile(row, col, square.tile)
+          }
+          if (square.isUsed) {
+            const tempSquare = tempBoard.getSquare(row, col)
+            if (tempSquare) {
+              tempSquare.isUsed = true
+            }
+          }
+        }
+      }
+
+      // Run validation
+      const validator = new MoveValidator(tempBoard)
+      const result = validator.validateMove(selectedTiles)
+      setOnlinePlacementValidation(result)
+    }
+  }, [isOnlineMode, selectedTiles, props.boardState])
+
+  // Determine which validation to use
+  const placementValidation = isOnlineMode ? onlinePlacementValidation : storePlacementValidation
 
   // If no board, show placeholder
   if (!board) {
@@ -418,6 +463,57 @@ export function Board(props: BoardProps = {}) {
   }
 
   /**
+   * Get tile placement state for real-time visual feedback
+   *
+   * Returns the visual state for a selected tile based on validation.
+   */
+  const getTileState = (row: number, col: number): TilePlacementState => {
+    const selectedTile = selectedTiles.find((st) => st.row === row && st.col === col)
+    if (!selectedTile) return TilePlacementState.NEUTRAL
+
+    if (!placementValidation) return TilePlacementState.NEUTRAL
+
+    if (placementValidation.isValid) {
+      return TilePlacementState.VALID_WORD
+    }
+
+    return TilePlacementState.INVALID
+  }
+
+  /**
+   * Get highlighted line (row or column) for direction indicator
+   *
+   * Returns the row or column that should be highlighted based on placement direction.
+   */
+  const getHighlightedLine = ():
+    | { type: 'row' | 'col'; index: number }
+    | null => {
+    if (selectedTiles.length < 2 || !placementValidation?.direction) return null
+
+    const firstTile = selectedTiles[0]
+
+    return {
+      type: placementValidation.direction === 'HORIZONTAL' ? 'row' : 'col',
+      index:
+        placementValidation.direction === 'HORIZONTAL'
+          ? firstTile.row
+          : firstTile.col,
+    }
+  }
+
+  /**
+   * Check if a square is in the highlighted line
+   *
+   * Used to apply cyan background to row/column being filled.
+   */
+  const isInHighlightedLine = (row: number, col: number): boolean => {
+    const highlight = getHighlightedLine()
+    if (!highlight) return false
+
+    return highlight.type === 'row' ? highlight.index === row : highlight.index === col
+  }
+
+  /**
    * Render the board grid
    *
    * Creates a 17×17 CSS Grid with Square components.
@@ -462,6 +558,8 @@ export function Board(props: BoardProps = {}) {
                   isValidDrop={isHovered && isValidDropTarget(rowIndex, colIndex)}
                   isDraggable={!!selectedTile}
                   onTileDragStart={handleTileDragStart}
+                  placementState={getTileState(rowIndex, colIndex)}
+                  isHighlightedLine={isInHighlightedLine(rowIndex, colIndex)}
                 />
               )
             })

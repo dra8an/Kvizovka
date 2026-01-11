@@ -42,6 +42,11 @@ export type {
   BlockerTile,
 } from './board.types'
 
+export {
+  // Board enums
+  TilePlacementState,
+} from './board.types'
+
 export type {
   // Tile types
   Tile,

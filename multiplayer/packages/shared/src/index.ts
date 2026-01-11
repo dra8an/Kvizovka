@@ -6,7 +6,7 @@
  */
 
 // Re-export enums (these are both types AND values, so can't use 'export type')
-export { GameMode, GameStatus, MoveType, WordCategory } from './types/index.js'
+export { GameMode, GameStatus, MoveType, WordCategory, TilePlacementState } from './types/index.js'
 
 // Re-export pure types
 export type {

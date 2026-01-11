@@ -19,7 +19,7 @@
  */
 
 import { useTranslation } from 'react-i18next'
-import { BoardSquare } from '@kvizovka/shared'
+import { BoardSquare, TilePlacementState } from '@kvizovka/shared'
 import { latinToCyrillic } from '../../utils/letterMapping'
 
 /**
@@ -55,6 +55,18 @@ interface SquareProps {
    * Called when user starts dragging a tile from this square
    */
   onTileDragStart?: (row: number, col: number) => void
+
+  /**
+   * Placement state for real-time visual feedback
+   * Used to show green/amber/gray tiles as player places them
+   */
+  placementState?: TilePlacementState
+
+  /**
+   * Whether this square is in the highlighted row/column
+   * Used to show direction indicator when 2+ tiles are placed
+   */
+  isHighlightedLine?: boolean
 }
 
 /**
@@ -69,7 +81,16 @@ interface SquareProps {
  * />
  * ```
  */
-export function Square({ square, onDrop, onDragOver, isValidDrop, isDraggable, onTileDragStart }: SquareProps) {
+export function Square({
+  square,
+  onDrop,
+  onDragOver,
+  isValidDrop,
+  isDraggable,
+  onTileDragStart,
+  placementState = TilePlacementState.NEUTRAL,
+  isHighlightedLine = false
+}: SquareProps) {
   const { i18n } = useTranslation()
 
   // Get premium field class based on type
@@ -118,6 +139,39 @@ export function Square({ square, onDrop, onDragOver, isValidDrop, isDraggable, o
         return '★'
       default:
         return ''
+    }
+  }
+
+  /**
+   * Get tile background and border classes based on placement state
+   * Provides real-time visual feedback for tile placement
+   */
+  const getTileStateClass = (isJoker: boolean): string => {
+    // For committed tiles (not being placed), use default colors
+    if (placementState === TilePlacementState.NEUTRAL) {
+      return isJoker
+        ? 'bg-purple-100 border-purple-400'
+        : 'bg-amber-100 border-amber-300'
+    }
+
+    // Real-time feedback for tiles being placed
+    switch (placementState) {
+      case TilePlacementState.VALID_WORD:
+        // Green - forms a valid word (≥4 letters)
+        return 'bg-green-100 border-green-500 border-2'
+
+      case TilePlacementState.VALID_PLACEMENT:
+        // Amber - correct placement but word incomplete
+        return 'bg-amber-100 border-amber-500 border-2'
+
+      case TilePlacementState.INVALID:
+        // Gray - placement violates rules
+        return 'bg-gray-400 border-gray-500 opacity-60'
+
+      default:
+        return isJoker
+          ? 'bg-purple-100 border-purple-400'
+          : 'bg-amber-100 border-amber-300'
     }
   }
 
@@ -188,10 +242,8 @@ export function Square({ square, onDrop, onDragOver, isValidDrop, isDraggable, o
       <div
         draggable={isDraggable}
         onDragStart={handleTileDragStart}
-        className={`absolute inset-1 rounded shadow-md flex flex-col items-center justify-center border-2 ${
-          isJoker
-            ? 'bg-purple-100 border-purple-400'  // Purple for jokers
-            : 'bg-amber-100 border-amber-300'    // Amber for regular tiles
+        className={`absolute inset-1 rounded shadow-md flex flex-col items-center justify-center border-2 transition-all duration-200 ${
+          getTileStateClass(isJoker)
         } ${
           isDraggable ? 'cursor-grab active:cursor-grabbing' : ''
         }`}
@@ -220,6 +272,7 @@ export function Square({ square, onDrop, onDragOver, isValidDrop, isDraggable, o
         relative w-full h-full border border-gray-300
         ${getPremiumClass()}
         ${isValidDrop ? 'ring-2 ring-green-500 ring-inset' : ''}
+        ${isHighlightedLine ? 'bg-cyan-50' : ''}
         transition-all
       `}
       onDragOver={handleDragOver}
