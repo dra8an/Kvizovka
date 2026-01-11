@@ -1,7 +1,7 @@
 {
   "gameOver": {
-    "title": "Игра Завршена!",
-    "winner": "{{playerName}} Побеђује!",
+    "title": "Игра завршена!",
+    "winner": "{{playerName}} побеђује!",
     "winnerPoints": "{{points}} поена!",
     "tie": "Нерешено!",
     "endReasons": {
