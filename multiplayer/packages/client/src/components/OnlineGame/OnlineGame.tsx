@@ -23,6 +23,7 @@ import { Scoresheet } from '../Scoresheet/Scoresheet'
 import { OnlineScorePanel } from '../OnlineScorePanel/OnlineScorePanel'
 import { OnlineGameControls } from '../OnlineGameControls/OnlineGameControls'
 import { Chat } from '../Chat/Chat'
+import { BonusFlash } from '../BonusFlash/BonusFlash'
 import { GameStatus, PlacedTile } from '@kvizovka/shared'
 
 export function OnlineGame() {
@@ -36,10 +37,12 @@ export function OnlineGame() {
     isConnected,
     gameError,
     chatMessages,
+    bonusFlash,
     makeMove,
     skipTurn,
     stealJoker,
     sendChatMessage,
+    clearBonusFlash,
     reset,
     forceEndGame,
   } = useOnlineGameStore()
@@ -568,6 +571,11 @@ export function OnlineGame() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Bonus flash overlay */}
+      {bonusFlash !== null && (
+        <BonusFlash bonus={bonusFlash} onComplete={clearBonusFlash} />
       )}
     </div>
   )

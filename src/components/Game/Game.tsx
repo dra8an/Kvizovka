@@ -21,6 +21,7 @@ import { ScorePanel } from '../ScorePanel/ScorePanel'
 import { GameControls } from '../GameControls/GameControls'
 import { Scoresheet } from '../Scoresheet/Scoresheet'
 import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher'
+import { BonusFlash } from '../BonusFlash/BonusFlash'
 import { useGameStore } from '../../store/gameStore'
 import { GameMode, GameStatus } from '../../types'
 
@@ -39,6 +40,8 @@ export function Game() {
   const game = useGameStore((state) => state.game)
   const startGame = useGameStore((state) => state.startGame)
   const reset = useGameStore((state) => state.reset)
+  const bonusFlash = useGameStore((state) => state.bonusFlash)
+  const clearBonusFlash = useGameStore((state) => state.clearBonusFlash)
 
   // Local state for player name input
   const [showNameInput, setShowNameInput] = React.useState(false)
@@ -209,52 +212,52 @@ export function Game() {
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 overflow-y-auto">
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-2 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="card text-center mb-6 relative">
+          <div className="card text-center mb-3 py-3 relative">
             {/* Language switcher (top-right) */}
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-2 right-2">
               <LanguageSwitcher />
             </div>
 
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">{t('dialogs:gameOver.title')}</h1>
+            <h1 className="text-2xl font-bold text-gray-800 mb-1">{t('dialogs:gameOver.title')}</h1>
 
             {/* End reason */}
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-xs text-gray-600 mb-2">
               {getEndReasonMessage()}
             </p>
 
             {/* Winner announcement */}
-            <div className="text-6xl mb-4">
+            <div className="text-4xl mb-2">
               {winner ? '🏆' : '🤝'}
             </div>
 
             {winner ? (
               <>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                <h2 className="text-xl font-bold text-gray-800 mb-1">
                   {t('dialogs:gameOver.winner', { playerName: winner.name })}
                 </h2>
-                <p className="text-xl text-gray-600 mb-4">
+                <p className="text-base text-gray-600">
                   {t('dialogs:gameOver.winnerPoints', { points: winner.score })}
                 </p>
               </>
             ) : (
-              <p className="text-2xl text-blue-600 font-bold mb-4">
+              <p className="text-lg text-blue-600 font-bold">
                 {t('dialogs:gameOver.tie')}
               </p>
             )}
           </div>
 
           {/* Final Scores and Scoresheets Side by Side */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
             {/* Player 1 Score Card and Scoresheet */}
-            <div className="space-y-4">
+            <div className="space-y-2">
               {/* Score Summary */}
-              <div className={`p-6 rounded-lg ${player1.id === game.winner ? 'bg-green-100 border-2 border-green-500' : 'bg-white shadow-md'}`}>
-                <p className="font-bold text-xl mb-2">{player1.name}</p>
-                <p className="text-4xl font-bold text-gray-900">{player1.score}</p>
-                <div className="mt-3 text-sm text-gray-600 space-y-1">
+              <div className={`p-3 rounded-lg border-2 ${player1.id === game.winner ? 'bg-green-100 border-green-500' : 'bg-white border-transparent shadow-md'}`}>
+                <p className="font-bold text-base mb-1">{player1.name}</p>
+                <p className="text-2xl font-bold text-gray-900">{player1.score}</p>
+                <div className="mt-2 text-xs text-gray-600 space-y-1">
                   <p>
                     <span className="font-semibold">{t('common:labels.rounds')}:</span> {player1.roundsPlayed}
                   </p>
@@ -263,19 +266,19 @@ export function Game() {
                       <p>
                         <span className="font-semibold">{t('dialogs:gameOver.unusedTilesPenalty')}</span> -{player1.tilePenalty} {t('common:labels.points')}
                       </p>
-                      <p className="text-xs mt-1">
+                      <p className="text-[10px] mt-1">
                         {t('dialogs:gameOver.tilesLeftInHand', { count: player1.tiles.length })}
                       </p>
                       {player1.tiles.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
+                        <div className="mt-1 flex flex-wrap gap-0.5">
                           {player1.tiles.map((tile, idx) => (
                             <span
                               key={idx}
-                              className="inline-flex items-center justify-center w-8 h-8 bg-amber-100 border border-amber-300 rounded text-xs font-bold"
+                              className="inline-flex items-center justify-center w-6 h-6 bg-amber-100 border border-amber-300 rounded text-[10px] font-bold"
                               title={tile.isJoker ? `Joker (${tile.jokerLetter || '?'})` : tile.letter}
                             >
                               {tile.isJoker ? (tile.jokerLetter || '*') : tile.letter}
-                              <sub className="text-[8px] ml-0.5">{tile.value}</sub>
+                              <sub className="text-[6px] ml-0.5">{tile.value}</sub>
                             </span>
                           ))}
                         </div>
@@ -294,12 +297,12 @@ export function Game() {
             </div>
 
             {/* Player 2 Score Card and Scoresheet */}
-            <div className="space-y-4">
+            <div className="space-y-2">
               {/* Score Summary */}
-              <div className={`p-6 rounded-lg ${player2.id === game.winner ? 'bg-green-100 border-2 border-green-500' : 'bg-white shadow-md'}`}>
-                <p className="font-bold text-xl mb-2">{player2.name}</p>
-                <p className="text-4xl font-bold text-gray-900">{player2.score}</p>
-                <div className="mt-3 text-sm text-gray-600 space-y-1">
+              <div className={`p-3 rounded-lg border-2 ${player2.id === game.winner ? 'bg-green-100 border-green-500' : 'bg-white border-transparent shadow-md'}`}>
+                <p className="font-bold text-base mb-1">{player2.name}</p>
+                <p className="text-2xl font-bold text-gray-900">{player2.score}</p>
+                <div className="mt-2 text-xs text-gray-600 space-y-1">
                   <p>
                     <span className="font-semibold">{t('common:labels.rounds')}:</span> {player2.roundsPlayed}
                   </p>
@@ -308,19 +311,19 @@ export function Game() {
                       <p>
                         <span className="font-semibold">{t('dialogs:gameOver.unusedTilesPenalty')}</span> -{player2.tilePenalty} {t('common:labels.points')}
                       </p>
-                      <p className="text-xs mt-1">
+                      <p className="text-[10px] mt-1">
                         {t('dialogs:gameOver.tilesLeftInHand', { count: player2.tiles.length })}
                       </p>
                       {player2.tiles.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
+                        <div className="mt-1 flex flex-wrap gap-0.5">
                           {player2.tiles.map((tile, idx) => (
                             <span
                               key={idx}
-                              className="inline-flex items-center justify-center w-8 h-8 bg-amber-100 border border-amber-300 rounded text-xs font-bold"
+                              className="inline-flex items-center justify-center w-6 h-6 bg-amber-100 border border-amber-300 rounded text-[10px] font-bold"
                               title={tile.isJoker ? `Joker (${tile.jokerLetter || '?'})` : tile.letter}
                             >
                               {tile.isJoker ? (tile.jokerLetter || '*') : tile.letter}
-                              <sub className="text-[8px] ml-0.5">{tile.value}</sub>
+                              <sub className="text-[6px] ml-0.5">{tile.value}</sub>
                             </span>
                           ))}
                         </div>
@@ -339,24 +342,12 @@ export function Game() {
             </div>
           </div>
 
-          {/* Game stats */}
-          <div className="card text-center mb-6">
-            <div className="bg-gray-50 rounded-lg p-4 text-sm inline-block">
-              <p className="text-gray-600">
-                <span className="font-semibold">{t('common:labels.totalMoves')}:</span> {game.moveHistory.length}
-              </p>
-              <p className="text-gray-600">
-                <span className="font-semibold">{t('common:labels.round')}:</span> {game.round}
-              </p>
-            </div>
-          </div>
-
           {/* Action buttons */}
-          <div className="card">
+          <div className="card py-2">
             <div className="max-w-md mx-auto">
               <button
                 onClick={handleNewGame}
-                className="btn-primary w-full text-lg py-3"
+                className="btn-primary w-full text-base py-2"
               >
                 {t('common:buttons.playAgain')}
               </button>
@@ -436,6 +427,11 @@ export function Game() {
           </div>
         </div>
       </div>
+
+      {/* Bonus flash overlay */}
+      {bonusFlash !== null && (
+        <BonusFlash bonus={bonusFlash} onComplete={clearBonusFlash} />
+      )}
     </div>
   )
 }

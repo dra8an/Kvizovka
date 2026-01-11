@@ -210,6 +210,12 @@ export interface Move {
   score: number
 
   /**
+   * Detailed score breakdown (bonuses, multipliers, etc.)
+   * Includes longWordBonus, allTilesBonus, wordScores
+   */
+  scoreBreakdown?: ScoreBreakdown
+
+  /**
    * IDs of tiles drawn after this move (for undo purposes)
    * Used to remove newly drawn tiles when undoing a challenged move
    */

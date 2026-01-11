@@ -114,6 +114,12 @@ interface OnlineGameStore {
    */
   isLoading: boolean
 
+  /**
+   * Bonus flash overlay (shows long word bonus)
+   * null = not showing, number = bonus amount to display
+   */
+  bonusFlash: number | null
+
   // ========================================
   // CHAT STATE
   // ========================================
@@ -200,6 +206,20 @@ interface OnlineGameStore {
   sendChatMessage: (message: string) => void
 
   // ========================================
+  // ACTIONS - UI
+  // ========================================
+
+  /**
+   * Show bonus flash overlay
+   */
+  showBonusFlash: (bonus: number) => void
+
+  /**
+   * Clear bonus flash overlay
+   */
+  clearBonusFlash: () => void
+
+  // ========================================
   // ACTIONS - RESET
   // ========================================
 
@@ -232,6 +252,7 @@ const initialState = {
   // UI
   view: 'menu' as ViewState,
   isLoading: false,
+  bonusFlash: null,
 
   // Chat
   chatMessages: [],
@@ -474,6 +495,20 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   },
 
   // ========================================
+  // UI ACTIONS
+  // ========================================
+
+  showBonusFlash: (bonus: number) => {
+    if (bonus > 0) {
+      set({ bonusFlash: bonus })
+    }
+  },
+
+  clearBonusFlash: () => {
+    set({ bonusFlash: null })
+  },
+
+  // ========================================
   // RESET
   // ========================================
 
@@ -515,7 +550,21 @@ function setupGameEventHandlers(
   socketService.on('game:state-update', (data) => {
     console.log('[OnlineStore] State update received')
     console.log('[OnlineStore] Game status:', data.gameState.status)
+
+    const previousState = get().gameState
     set({ gameState: data.gameState })
+
+    // Check if a new move was made (moveHistory grew)
+    if (previousState && data.gameState.moveHistory.length > previousState.moveHistory.length) {
+      // Get the latest move
+      const latestMove = data.gameState.moveHistory[data.gameState.moveHistory.length - 1]
+
+      // Show bonus flash if long word bonus was awarded
+      if (latestMove.scoreBreakdown?.longWordBonus && latestMove.scoreBreakdown.longWordBonus > 0) {
+        console.log('[OnlineStore] Long word bonus detected:', latestMove.scoreBreakdown.longWordBonus)
+        get().showBonusFlash(latestMove.scoreBreakdown.longWordBonus)
+      }
+    }
 
     // Check if game is finished
     if (data.gameState.status === GameStatus.COMPLETED) {

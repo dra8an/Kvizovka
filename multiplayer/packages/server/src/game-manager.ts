@@ -240,10 +240,22 @@ export class GameManager {
 
     // Calculate score (now board has the tiles)
     const scoreCalculator = new ScoreCalculator()
+
+    // Check if this is the first move of the game (empty move history)
+    const isFirstMove = game.moveHistory.length === 0
+
+    // Calculate how many tiles player will have left after drawing new tiles
+    // Player currently has currentPlayer.tiles.length tiles
+    // After this move: current tiles - tiles used + tiles drawn
+    const tilesDrawn = Math.min(placedTiles.length, game.tileBagInstance.remaining())
+    const tilesRemainingAfterMove = currentPlayer.tiles.length - placedTiles.length + tilesDrawn
+
     const scoreResult = scoreCalculator.calculateMoveScore(
       validation.wordsFormed || [],
       placedTiles,
-      placedTiles.length
+      placedTiles.length,
+      isFirstMove,
+      tilesRemainingAfterMove
     )
 
     // Place blockers
@@ -292,6 +304,7 @@ export class GameManager {
       placedTiles,
       formedWords: scoreResult.wordScores.map(ws => ws.word),
       score: scoreResult.totalScore,
+      scoreBreakdown: scoreResult,
       timestamp: new Date(),
       drawnTileIds,
     })

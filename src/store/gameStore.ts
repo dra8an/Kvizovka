@@ -115,6 +115,12 @@ interface GameStoreState {
    */
   timerIntervalId: number | null
 
+  /**
+   * Bonus flash overlay (shows long word bonus)
+   * null = not showing, number = bonus amount to display
+   */
+  bonusFlash: number | null
+
   // ========================================
   // ACTIONS
   // ========================================
@@ -240,6 +246,16 @@ interface GameStoreState {
   resumeGame: () => void
 
   /**
+   * Show bonus flash overlay
+   */
+  showBonusFlash: (bonus: number) => void
+
+  /**
+   * Clear bonus flash overlay
+   */
+  clearBonusFlash: () => void
+
+  /**
    * Reset store to initial state
    */
   reset: () => void
@@ -252,7 +268,7 @@ interface GameStoreState {
  */
 const createInitialState = (): Pick<
   GameStoreState,
-  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'placementValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'draggedTile' | 'hoveredSquare' | 'timerIntervalId'
+  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'placementValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'draggedTile' | 'hoveredSquare' | 'timerIntervalId' | 'bonusFlash'
 > => ({
   game: null,
   boardInstance: null,
@@ -266,6 +282,7 @@ const createInitialState = (): Pick<
   draggedTile: null,
   hoveredSquare: null,
   timerIntervalId: null,
+  bonusFlash: null,
 })
 
 /**
@@ -361,9 +378,9 @@ export const useGameStore = create<GameStoreState>()(
        */
       makeMove: (placedTiles: PlacedTile[]): boolean => {
         const state = get()
-        const { game, boardInstance } = state
+        const { game, boardInstance, tileBagInstance } = state
 
-        if (!game || !boardInstance) {
+        if (!game || !boardInstance || !tileBagInstance) {
           console.error('No active game')
           return false
         }
@@ -397,17 +414,32 @@ export const useGameStore = create<GameStoreState>()(
 
         // Calculate score (premium squares are still unmarked, so multipliers apply)
         const calculator = new ScoreCalculator()
+
+        // Check if this is the first move of the game (empty move history)
+        const isFirstMove = game.moveHistory.length === 0
+
+        // Calculate how many tiles player will have left after drawing new tiles
+        const currentPlayer = game.players[game.currentPlayerIndex]
+        const tilesDrawn = Math.min(placedTiles.length, tileBagInstance.remaining())
+        const tilesRemainingAfterMove = currentPlayer.tiles.length - placedTiles.length + tilesDrawn
+
         const scoreBreakdown = calculator.calculateMoveScore(
           validation.wordsFormed || [],
           placedTiles,
-          placedTiles.length
+          placedTiles.length,
+          isFirstMove,
+          tilesRemainingAfterMove
         )
+
+        // Show bonus flash if long word bonus awarded
+        if (scoreBreakdown.longWordBonus > 0) {
+          get().showBonusFlash(scoreBreakdown.longWordBonus)
+        }
 
         // Mark premium squares as used (AFTER scoring, so multipliers don't apply again)
         boardInstance.markSquaresAsUsed(placedTiles)
 
-        // Update current player
-        const currentPlayer = game.players[game.currentPlayerIndex]
+        // Update current player score
         currentPlayer.score += scoreBreakdown.totalScore
 
         // Remove used tiles from player's hand
@@ -1332,6 +1364,22 @@ export const useGameStore = create<GameStoreState>()(
         })
 
         startTimer()
+      },
+
+      /**
+       * Show bonus flash overlay
+       */
+      showBonusFlash: (bonus: number) => {
+        if (bonus > 0) {
+          set({ bonusFlash: bonus })
+        }
+      },
+
+      /**
+       * Clear bonus flash overlay
+       */
+      clearBonusFlash: () => {
+        set({ bonusFlash: null })
       },
 
       /**

@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.7.0] - 2026-01-11
+
+### Added
+- **Visual Bonus Flash Notification**
+  - Large, glowing overlay displays bonus amount when long word bonus is awarded
+  - Shows "+20", "+30", "+40", or "+50" depending on bonus tier
+  - Green color with pulsing animation and glow effect
+  - Automatically appears for 1.5 seconds then fades out
+  - Helps players immediately see what bonus was applied
+  - Integrated into both local game and online multiplayer
+
+### Changed
+- **Refined Long Word Bonus System** (2026-01-11)
+  - **Removed ALL_TILES_BONUS stacking**: Long word bonuses no longer stack with the +45 all-tiles bonus
+  - **New bonus-only system**:
+    1. First player's first move using all 10 tiles on empty board: **+30 bonus only**
+    2. Any other 10-letter word: **+20 bonus only**
+    3. 11+ letter word with tiles remaining in hand: **+40 bonus only**
+    4. 11+ letter word using all 10 tiles from hand: **+50 bonus only**
+  - **Fixed +50 bonus condition**: Now correctly checks if player used all 10 tiles (not whether they have 0 tiles after drawing)
+  - **Score impact**: Scores are now more balanced (e.g., 10-letter first move = base + 30 instead of base + 75)
+
+- **Improved Game Complete Screen**
+  - Removed debug information ("labels.totalMoves", "labels.round") that appeared at bottom
+  - Made entire screen more compact to fit without scrolling:
+    - Reduced header size (title, trophy, winner announcement) by ~60%
+    - Reduced player score cards by ~50% (smaller fonts, tighter padding)
+    - Reduced remaining tiles display by ~40% (smaller tile icons)
+    - Reduced Play Again button by ~30%
+  - Fixed alignment issue: Both player cards now have same dimensions (transparent border on non-winner)
+  - All game statistics now visible without scrolling
+
+### Fixed
+- Long word bonus calculation now correctly awards +50 for 11+ letter words when all 10 tiles are used
+- Visual bonus flash now shows correct amount (+50 instead of +40 for qualifying moves)
+- Game complete screen player cards are now perfectly aligned (winner's green border no longer causes size mismatch)
+
+### Technical Details
+
+**Bonus Flash Component** (`src/components/BonusFlash/`)
+- New `BonusFlash.tsx` component with fade in/out animation
+- State management in `gameStore.ts`: `bonusFlash`, `showBonusFlash()`, `clearBonusFlash()`
+- Integrated into `Game.tsx` component
+- Fixed z-index (z-50) to appear above all game elements
+
+**Score Calculation** (`src/game-engine/ScoreCalculator.ts`)
+- Removed ALL_TILES_BONUS (+45) calculation
+- Set `allTilesBonus: 0` in score breakdown
+- Long word bonus is now the only bonus applied
+
+**Bonus Rules** (`src/constants/scoring-rules.ts`)
+- Updated `getLongWordBonus()` logic for 11+ letter words
+- Changed from `tilesRemainingAfterMove === 0` to `tilesUsedInMove === 10`
+- Ensures correct +50 bonus when all tiles from hand are used
+
+**Game Complete UI** (`src/components/Game/Game.tsx`)
+- Text size reductions: `text-4xl→text-2xl`, `text-3xl→text-xl`, etc.
+- Padding reductions: `p-6→p-3`, `mb-6→mb-3`, etc.
+- Added `border-2 border-transparent` to non-winner cards for alignment
+- Removed game stats section entirely
+
+---
+
+## [0.6.0] - 2026-01-04
+
 ### Added
 - **Full Internationalization (i18n)**: Complete localization system with English and Serbian support (2026-01-10)
   - **Technology Stack**: react-i18next with i18next-browser-languagedetector

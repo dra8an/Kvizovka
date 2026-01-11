@@ -18,6 +18,7 @@ import { TileRack } from '../TileRack/TileRack'
 import { ScorePanel } from '../ScorePanel/ScorePanel'
 import { GameControls } from '../GameControls/GameControls'
 import { Scoresheet } from '../Scoresheet/Scoresheet'
+import { BonusFlash } from '../BonusFlash/BonusFlash'
 import { useGameStore } from '../../store/gameStore'
 import { GameMode, GameStatus } from '@kvizovka/shared'
 
@@ -34,6 +35,8 @@ export function Game() {
   const game = useGameStore((state) => state.game)
   const startGame = useGameStore((state) => state.startGame)
   const reset = useGameStore((state) => state.reset)
+  const bonusFlash = useGameStore((state) => state.bonusFlash)
+  const clearBonusFlash = useGameStore((state) => state.clearBonusFlash)
 
   /**
    * Handle start new game
@@ -243,6 +246,11 @@ export function Game() {
           </div>
         </div>
       </div>
+
+      {/* Bonus flash overlay */}
+      {bonusFlash !== null && (
+        <BonusFlash bonus={bonusFlash} onComplete={clearBonusFlash} />
+      )}
     </div>
   )
 }

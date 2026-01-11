@@ -13,6 +13,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.9] - 2026-01-11
+
+### Changed
+- **Modified Long Word Bonus System**
+  - Refined bonus rules to reward strategic long word play:
+    1. **First move special**: First player using all 10 tiles on empty board → +30 bonus
+    2. **10-letter words**: Standard 10-letter word (any other case) → +20 bonus
+    3. **11+ letters with tiles remaining**: Formed 11+ letter word with tiles left in hand → +40 bonus
+    4. **11+ letters, all tiles used**: Formed 11+ letter word using all tiles from hand → +50 bonus
+  - Previous system: Simple 10 letters = +20, 11+ letters = +30
+  - New system rewards both word length AND strategic tile management
+
+### Implementation Details
+
+**Shared Package (`packages/shared/`)**
+- Updated `getLongWordBonus()` function in `src/constants/scoring-rules.ts`:
+  - Added `isFirstMove` parameter - Detects first move of game
+  - Added `tilesUsedInMove` parameter - Number of tiles placed
+  - Added `tilesRemainingAfterMove` parameter - Tiles left after drawing
+  - Logic distinguishes 4 bonus scenarios based on game state
+- Updated `ScoreCalculator.calculateMoveScore()` in `src/game-engine/ScoreCalculator.ts`:
+  - Added `isFirstMove` parameter (default: false)
+  - Added `tilesRemainingAfterMove` parameter (default: 0)
+  - Passes new parameters to `getLongWordBonus()`
+
+**Server (`packages/server/`)**
+- Updated `GameManager.makeMove()` in `src/game-manager.ts`:
+  - Calculates `isFirstMove` from `game.moveHistory.length === 0`
+  - Calculates `tilesRemainingAfterMove`:
+    - Determines tiles drawn from bag (min of tiles used and bag remaining)
+    - Computes player's rack size after move: `currentTiles - usedTiles + drawnTiles`
+  - Passes both values to score calculator
+
+**Client (`packages/client/`)**
+- Updated `gameStore.makeMove()` in `src/store/gameStore.ts`:
+  - Added same calculations as server for local game scoring
+  - Ensures consistent bonus calculation in offline mode
+
+### Testing Notes
+- First move bonus (30 pts): Requires 10-letter word using all tiles on empty board
+- Standard 10-letter bonus (20 pts): Any 10-letter word not meeting first move criteria
+- High bonus (40 pts): Rewarded when forming 11+ letters while keeping tiles for future plays
+- Maximum bonus (50 pts): Ultimate reward for using entire hand to form 11+ letter word
+
+---
+
 ## [0.2.8] - 2026-01-11
 
 ### Added

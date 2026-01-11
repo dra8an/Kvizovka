@@ -155,24 +155,28 @@ export class ScoreCalculator {
    * @param allWords - All words formed by the move
    * @param newlyPlacedTiles - Tiles that were just placed
    * @param tilesUsedCount - Number of tiles used in this move
+   * @param isFirstMove - Whether this is the very first move of the game
+   * @param tilesRemainingAfterMove - Number of tiles player will have after this move
    * @returns ScoreBreakdown with total and bonuses
    *
    * Rules:
    * - Sum scores of all words formed
    * - Add 45 points if all 10 tiles used
-   * - Add long word bonus (20-50pts for 10+ letter words)
+   * - Add long word bonus (varies based on word length and game state)
    *
    * Example:
    * - Main word "AUTOMOBIL" (10 letters) = 30 pts base
    * - Cross word "AS" = 2 pts
    * - Total = 32 pts
-   * - Long word bonus = +20 pts (10 letters)
+   * - Long word bonus = +20 pts (10 letters, not first move)
    * - Grand total = 52 pts
    */
   calculateMoveScore(
     allWords: BoardSquare[][],
     newlyPlacedTiles: PlacedTile[],
-    tilesUsedCount: number
+    tilesUsedCount: number,
+    isFirstMove: boolean = false,
+    tilesRemainingAfterMove: number = 0
   ): ScoreBreakdown {
     const wordScores: WordScore[] = []
     let totalScore = 0
@@ -182,13 +186,6 @@ export class ScoreCalculator {
       const wordScore = this.calculateWordScore(wordSquares, newlyPlacedTiles)
       wordScores.push(wordScore)
       totalScore += wordScore.finalScore
-    }
-
-    // Check for all-tiles bonus
-    let allTilesBonus = 0
-    if (tilesUsedCount === 10) {
-      allTilesBonus = ALL_TILES_BONUS
-      totalScore += allTilesBonus
     }
 
     // Check for long-word bonus
@@ -205,17 +202,33 @@ export class ScoreCalculator {
         return true
       }).length
 
-      const bonus = getLongWordBonus(tileCount)
+      console.log(`🎁 Checking word ${i + 1} for long word bonus:`, {
+        tileCount,
+        isFirstMove,
+        tilesUsedCount,
+        tilesRemainingAfterMove
+      })
+
+      const bonus = getLongWordBonus(
+        tileCount,
+        isFirstMove,
+        tilesUsedCount,
+        tilesRemainingAfterMove
+      )
+
+      console.log(`  → Bonus: ${bonus}`)
+
       if (bonus > longWordBonus) {
         longWordBonus = bonus // Use highest bonus if multiple long words
       }
     }
+    console.log(`🎁 Final long word bonus: ${longWordBonus}`)
     totalScore += longWordBonus
 
     return {
       totalScore,
       wordScores,
-      allTilesBonus,
+      allTilesBonus: 0, // Not used - long word bonus replaces it
       longWordBonus,
     }
   }

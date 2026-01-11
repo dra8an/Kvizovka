@@ -29,56 +29,69 @@ export const ALL_TILES_BONUS = 45
 /**
  * Long Word Bonuses
  *
- * Words with 10 or more letters get extra bonus points.
- * The longer the word, the bigger the bonus.
- *
- * Bonus structure:
- * - 10 letters: +20 points
- * - 11 letters: +25 points
- * - 12 letters: +30 points
- * - 13 letters: +35 points
- * - 14 letters: +40 points
- * - 15 letters: +45 points
- * - 16+ letters: +50 points (maximum bonus)
+ * NEW RULES (Updated 2026-01-11):
+ * 1. First player's first move using all 10 tiles on empty board: +30
+ * 2. Any other 10-letter word: +20
+ * 3. 11+ letter word with tiles remaining in hand: +40
+ * 4. 11+ letter word with no tiles remaining (all tiles used): +50
  *
  * Example:
- *   Word "AUTOMOBIL" (10 letters) = base score + 20
- *   Word "KOMPJUTERSKI" (12 letters) = base score + 30
+ *   First move, 10 tiles, empty board → +30
+ *   Later move, 10 letters → +20
+ *   11 letters, 3 tiles left → +40
+ *   11 letters, 0 tiles left → +50
  */
-export const LONG_WORD_BONUSES: Record<number, number> = {
-  10: 20,
-  11: 25,
-  12: 30,
-  13: 35,
-  14: 40,
-  15: 45,
-  16: 50,
-  17: 50, // Maximum - unlikely but possible
-}
 
 /**
  * Get long word bonus for a given word length
  *
- * Returns bonus points if word is 10+ letters.
- * Returns 0 if word is less than 10 letters.
+ * @param wordLength - Number of tiles in the word (NOT string length due to digraphs)
+ * @param isFirstMove - Whether this is the very first move of the game
+ * @param tilesUsedInMove - Number of tiles placed in this move
+ * @param tilesRemainingAfterMove - Number of tiles player will have left after this move
+ * @returns Bonus points (0, 20, 30, 40, or 50)
  *
- * Example:
- *   getLongWordBonus(9)   // 0 (no bonus)
- *   getLongWordBonus(10)  // 20
- *   getLongWordBonus(12)  // 30
- *   getLongWordBonus(20)  // 50 (max)
+ * Examples:
+ *   getLongWordBonus(9, false, 9, 1)    // 0 (less than 10 letters)
+ *   getLongWordBonus(10, true, 10, 0)   // 30 (first move, all 10 tiles)
+ *   getLongWordBonus(10, false, 10, 0)  // 20 (10 letters, not first move)
+ *   getLongWordBonus(11, false, 11, 2)  // 40 (11+ letters, tiles remaining)
+ *   getLongWordBonus(12, false, 12, 0)  // 50 (11+ letters, no tiles remaining)
  */
-export function getLongWordBonus(wordLength: number): number {
+export function getLongWordBonus(
+  wordLength: number,
+  isFirstMove: boolean,
+  tilesUsedInMove: number,
+  tilesRemainingAfterMove: number
+): number {
+  // No bonus for words under 10 letters
   if (wordLength < 10) {
-    return 0 // No bonus for words under 10 letters
+    return 0
   }
 
-  // If word is longer than our max defined length, use max bonus
-  if (wordLength > 16) {
-    return LONG_WORD_BONUSES[16]
+  // Special case: First player's first move using all 10 tiles on empty board
+  if (isFirstMove && tilesUsedInMove === 10 && wordLength === 10) {
+    return 30
   }
 
-  return LONG_WORD_BONUSES[wordLength] || 0
+  // 10-letter word (any other case)
+  if (wordLength === 10) {
+    return 20
+  }
+
+  // 11+ letter words
+  if (wordLength >= 11) {
+    // Used all tiles from hand (all 10 tiles)
+    if (tilesUsedInMove === 10) {
+      return 50
+    }
+    // Used some tiles, but not all
+    else {
+      return 40
+    }
+  }
+
+  return 0
 }
 
 /**
