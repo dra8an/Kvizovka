@@ -61,9 +61,9 @@ export function Game() {
   if (!game) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-6">
-        <div className="card max-w-md w-full text-center relative">
-          {/* Language switcher (top-right) */}
-          <div className="absolute top-4 right-4">
+        <div className="card max-w-md w-full text-center">
+          {/* Language switcher (centered above title) */}
+          <div className="flex justify-center mb-4">
             <LanguageSwitcher />
           </div>
 

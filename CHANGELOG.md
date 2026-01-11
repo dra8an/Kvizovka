@@ -168,6 +168,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       - Serbian `online.json` - Fixed sentence case throughout
     - **Status**: ✅ Complete - All multiplayer components fully localized
 
+### Changed
+- **UI Layout Improvements** (2026-01-10):
+  - **Language Switcher Positioning**: Moved language switcher buttons above title on start screen
+    - Prevents overlap with "Kvizovka" title
+    - Centered horizontally for better visual balance
+    - Applies to both local game start screen
+  - **Removed Redundant Game Status Section**: Streamlined UI in both local and multiplayer games
+    - Removed "Game Status" header panel displaying round, tiles left, total moves, and status
+    - Information is redundant as scoresheet already tracks moves
+    - Cleaner, more focused layout with player panels and scoresheet
+    - Underlying game state (round, tileBag, moveHistory, status) still tracked internally for game logic
+  - **Translation Cleanup**: Removed unused translation keys from both English and Serbian
+    - Removed: `gameStatus`, `round`, `tilesLeft`, `totalMoves`, `status`
+    - Cleaned up in all 4 common.json files (local EN/SR, multiplayer EN/SR)
+  - **Files Modified** (6 files):
+    - Local game: `Game.tsx` (language switcher positioning), `ScorePanel.tsx` (removed status section)
+    - Multiplayer: `OnlineScorePanel.tsx` (removed status section)
+    - Translation files: `src/i18n/locales/en/common.json`, `src/i18n/locales/sr/common.json`
+    - Translation files: `multiplayer/packages/client/src/i18n/locales/en/common.json`, `multiplayer/packages/client/src/i18n/locales/sr/common.json`
+  - **Build Status**: ✅ Both games build successfully with cleaner UI
+
 - **Joker Stealing Feature**: Complete implementation of joker stealing rule (2026-01-08)
   - **Rule Implementation**: Player can steal joker from opponent's last move
     - Only jokers played in the immediately previous turn can be stolen

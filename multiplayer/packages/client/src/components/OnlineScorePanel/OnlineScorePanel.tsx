@@ -42,37 +42,11 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
   const isYourTurn = gameState.players[gameState.currentPlayerIndex].id === yourPlayerId
   const isOpponentTurn = gameState.players[gameState.currentPlayerIndex].id === opponent.id
 
-  // Count tiles remaining in bag
-  const tilesRemaining = gameState.tileBag.length
-
   // Get last move
   const lastMove = gameState.moveHistory[gameState.moveHistory.length - 1]
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Game info header */}
-      <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white p-4 rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold mb-2">{t('common:labels.gameStatus')}</h2>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="opacity-80">{t('common:labels.round')}:</span>{' '}
-            <span className="font-semibold">{gameState.round}/10</span>
-          </div>
-          <div>
-            <span className="opacity-80">{t('common:labels.tilesLeft')}:</span>{' '}
-            <span className="font-semibold">{tilesRemaining}</span>
-          </div>
-          <div>
-            <span className="opacity-80">{t('common:labels.totalMoves')}:</span>{' '}
-            <span className="font-semibold">{gameState.moveHistory.length}</span>
-          </div>
-          <div>
-            <span className="opacity-80">{t('common:labels.status')}:</span>{' '}
-            <span className="font-semibold">{gameState.status}</span>
-          </div>
-        </div>
-      </div>
-
       {/* You (Player 1 style) */}
       <div
         className={`

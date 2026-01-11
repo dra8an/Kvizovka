@@ -75,34 +75,8 @@ export function ScorePanel() {
   const lastMove = game.moveHistory[game.moveHistory.length - 1]
   const lastMoveScore = lastMove?.score || 0
 
-  // Count tiles remaining in bag
-  const tilesRemaining = game.tileBag.filter((tile) => tile !== null).length
-
   return (
     <div className="flex flex-col gap-4">
-      {/* Game info header */}
-      <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white p-4 rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold mb-2">{t('common:labels.gameStatus')}</h2>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="opacity-80">{t('common:labels.round')}:</span>{' '}
-            <span className="font-semibold">{game.round}/10</span>
-          </div>
-          <div>
-            <span className="opacity-80">{t('common:labels.tilesLeft')}:</span>{' '}
-            <span className="font-semibold">{tilesRemaining}</span>
-          </div>
-          <div>
-            <span className="opacity-80">{t('common:labels.totalMoves')}:</span>{' '}
-            <span className="font-semibold">{game.moveHistory.length}</span>
-          </div>
-          <div>
-            <span className="opacity-80">{t('common:labels.status')}:</span>{' '}
-            <span className="font-semibold">{game.status}</span>
-          </div>
-        </div>
-      </div>
-
       {/* Player 1 */}
       <div
         className={`
