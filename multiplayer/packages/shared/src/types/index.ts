@@ -24,6 +24,7 @@ export * from './game.types'
 
 // Export all socket event types
 export * from './socket-events'
+export type { ChatMessage } from './socket-events'
 
 /**
  * Re-export commonly used types for convenience

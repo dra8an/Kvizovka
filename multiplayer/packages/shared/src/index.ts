@@ -21,6 +21,7 @@ export type {
   DictionaryWord,
   ValidationResult,
   Room,
+  ChatMessage,
   ClientToServerEvents,
   ServerToClientEvents,
   InterServerEvents,

@@ -58,6 +58,31 @@ export interface Room {
 }
 
 /**
+ * Chat Message
+ */
+export interface ChatMessage {
+  /**
+   * Player ID who sent the message
+   */
+  playerId: string
+
+  /**
+   * Player name who sent the message
+   */
+  playerName: string
+
+  /**
+   * Message text
+   */
+  message: string
+
+  /**
+   * Message timestamp
+   */
+  timestamp: Date
+}
+
+/**
  * Client → Server Events
  *
  * Events that the client sends to the server
@@ -142,6 +167,11 @@ export interface ClientToServerEvents {
     data: { gameId: string },
     callback: (response: { success: boolean; error?: string }) => void
   ) => void
+
+  /**
+   * Send chat message
+   */
+  'chat:message': (data: { roomCode: string; message: string }) => void
 }
 
 /**
@@ -184,6 +214,11 @@ export interface ServerToClientEvents {
    * Error occurred
    */
   error: (data: { message: string }) => void
+
+  /**
+   * Receive chat message
+   */
+  'chat:message': (data: ChatMessage) => void
 }
 
 /**

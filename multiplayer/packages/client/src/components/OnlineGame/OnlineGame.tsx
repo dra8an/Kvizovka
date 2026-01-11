@@ -22,6 +22,7 @@ import { TileRack } from '../TileRack/TileRack'
 import { Scoresheet } from '../Scoresheet/Scoresheet'
 import { OnlineScorePanel } from '../OnlineScorePanel/OnlineScorePanel'
 import { OnlineGameControls } from '../OnlineGameControls/OnlineGameControls'
+import { Chat } from '../Chat/Chat'
 import { GameStatus, PlacedTile } from '@kvizovka/shared'
 
 export function OnlineGame() {
@@ -34,9 +35,11 @@ export function OnlineGame() {
     opponentName,
     isConnected,
     gameError,
+    chatMessages,
     makeMove,
     skipTurn,
     stealJoker,
+    sendChatMessage,
     reset,
     forceEndGame,
   } = useOnlineGameStore()
@@ -389,7 +392,7 @@ export function OnlineGame() {
       {/* Main game layout: [Scoresheets] [Board+Rack] [ScorePanel+Controls] */}
       <div className="max-w-[2000px] mx-auto">
         <div className="grid grid-cols-1 xl:grid-cols-[280px_1fr_300px] gap-2 lg:gap-4">
-          {/* Left sidebar: Scoresheets (desktop only) */}
+          {/* Left sidebar: Scoresheets + Chat (desktop only) */}
           <div className="hidden xl:block space-y-3">
             {/* Your Scoresheet */}
             <Scoresheet
@@ -405,6 +408,13 @@ export function OnlineGame() {
               playerName={opponent.name}
               moves={gameState.moveHistory}
               compact
+            />
+
+            {/* Chat */}
+            <Chat
+              messages={chatMessages}
+              yourPlayerId={you.id}
+              onSendMessage={sendChatMessage}
             />
           </div>
 
@@ -460,6 +470,15 @@ export function OnlineGame() {
                 playerId={opponent.id}
                 playerName={opponent.name}
                 moves={gameState.moveHistory}
+              />
+            </div>
+
+            {/* Chat (mobile: show below scoresheets) */}
+            <div className="xl:hidden mt-4">
+              <Chat
+                messages={chatMessages}
+                yourPlayerId={you.id}
+                onSendMessage={sendChatMessage}
               />
             </div>
           </div>

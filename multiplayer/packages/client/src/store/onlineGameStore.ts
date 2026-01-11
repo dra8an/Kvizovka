@@ -21,6 +21,7 @@ import {
   GameState,
   GameStatus,
   PlacedTile,
+  ChatMessage,
 } from '@kvizovka/shared'
 import { socketService } from '../services/socket'
 
@@ -114,6 +115,15 @@ interface OnlineGameStore {
   isLoading: boolean
 
   // ========================================
+  // CHAT STATE
+  // ========================================
+
+  /**
+   * Chat messages in the current room
+   */
+  chatMessages: ChatMessage[]
+
+  // ========================================
   // ACTIONS - CONNECTION
   // ========================================
 
@@ -181,6 +191,15 @@ interface OnlineGameStore {
   forceEndGame: () => void
 
   // ========================================
+  // ACTIONS - CHAT
+  // ========================================
+
+  /**
+   * Send a chat message
+   */
+  sendChatMessage: (message: string) => void
+
+  // ========================================
   // ACTIONS - RESET
   // ========================================
 
@@ -213,6 +232,9 @@ const initialState = {
   // UI
   view: 'menu' as ViewState,
   isLoading: false,
+
+  // Chat
+  chatMessages: [],
 }
 
 /**
@@ -437,6 +459,21 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   },
 
   // ========================================
+  // CHAT ACTIONS
+  // ========================================
+
+  sendChatMessage: (message: string) => {
+    const { roomCode } = get()
+    if (!roomCode) {
+      console.error('[OnlineStore] Cannot send message: not in a room')
+      return
+    }
+
+    console.log('[OnlineStore] Sending chat message:', message)
+    socketService.emit('chat:message', { roomCode, message })
+  },
+
+  // ========================================
   // RESET
   // ========================================
 
@@ -503,6 +540,13 @@ function setupGameEventHandlers(
   socketService.on('game:ended', (data) => {
     console.log('[OnlineStore] Game ended!', data)
     set({ view: 'finished' })
+  })
+
+  // Chat message received
+  socketService.on('chat:message', (chatMessage) => {
+    console.log('[OnlineStore] Chat message received:', chatMessage)
+    const currentMessages = get().chatMessages
+    set({ chatMessages: [...currentMessages, chatMessage] })
   })
 }
 

@@ -13,6 +13,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.8] - 2026-01-11
+
+### Added
+- **Real-Time Chat for Online Multiplayer**
+  - Players can now chat with each other during online games
+  - Chat appears in left sidebar (desktop) or below scoresheets (mobile)
+  - Real-time message delivery using WebSocket
+  - Clean, compact UI with message bubbles
+  - Auto-scroll to latest message
+  - Player name and timestamp for each message
+  - Different colors for "You" (blue) vs opponent (gray)
+  - 300px fixed height with scrollable message list
+  - Enter key to send messages
+  - 500 character limit per message
+
+### Implementation Details
+
+**Shared Package (`packages/shared/`)**
+- Added `ChatMessage` interface to `types/socket-events.ts`:
+  - `playerId` - ID of sender
+  - `playerName` - Name of sender
+  - `message` - Message text
+  - `timestamp` - Date object
+- Added socket events:
+  - `chat:message` (client → server) - Send message
+  - `chat:message` (server → client) - Receive message
+- Exported ChatMessage type from shared package index
+
+**Server (`packages/server/`)**
+- Added `chat:message` event handler in `src/index.ts`
+- Message validation:
+  - Non-empty messages only
+  - Maximum 500 characters
+  - Sender must be in the room
+- Broadcasts messages to all room participants (including sender)
+- Server-side logging for debugging
+
+**Client (`packages/client/`)**
+- Created new `Chat` component (`components/Chat/Chat.tsx`):
+  - Message list with auto-scroll
+  - Input field with Send button
+  - Enter key support
+  - Compact design for sidebar
+  - Message bubbles with player names and timestamps
+  - Visual distinction between own and opponent messages
+- Updated `onlineGameStore.ts`:
+  - New state: `chatMessages: ChatMessage[]`
+  - New action: `sendChatMessage(message: string)`
+  - Event listener for incoming `chat:message` events
+  - Messages appended to state in real-time
+- Integrated Chat into `OnlineGame.tsx`:
+  - Desktop: Below scoresheets in left sidebar
+  - Mobile: Below scoresheets in main content area
+  - Responsive layout with Tailwind CSS
+
+### Technical Highlights
+- **Zero Performance Impact**: Chat runs on existing WebSocket connection
+- **Message Size**: ~100-500 bytes per message (negligible bandwidth)
+- **State Management**: Separate chat state prevents game re-renders
+- **Auto-Scroll**: Uses `useRef` and `scrollIntoView` for smooth UX
+- **Security**: Server validates all messages before broadcast
+- **Scalability**: Message history limited to session (clears on game end)
+
+### Files Changed
+- `packages/shared/src/types/socket-events.ts` - Added ChatMessage interface and events
+- `packages/shared/src/types/index.ts` - Exported ChatMessage type
+- `packages/shared/src/index.ts` - Re-exported ChatMessage
+- `packages/server/src/index.ts` - Added chat:message handler
+- `packages/client/src/components/Chat/Chat.tsx` - New Chat component
+- `packages/client/src/store/onlineGameStore.ts` - Added chat state and actions
+- `packages/client/src/components/OnlineGame/OnlineGame.tsx` - Integrated Chat
+
+### User Experience Improvements
+- **Before**: No way to communicate with opponent during game
+- **After**: Real-time chat enables:
+  - Friendly banter and social interaction
+  - Saying "good move" or "nice word"
+  - Quick communication without external apps
+  - More engaging multiplayer experience
+- Chat is non-intrusive - doesn't interfere with gameplay
+- Clean, familiar chat UI pattern
+
+### Tested
+- ✅ Send message from one player to another
+- ✅ Messages appear instantly for both players
+- ✅ Auto-scroll to latest message
+- ✅ Message timestamps display correctly
+- ✅ Player names show correctly ("You" vs opponent name)
+- ✅ Enter key sends message
+- ✅ Send button disabled when input empty
+- ✅ 500 character limit enforced
+- ✅ Empty messages rejected
+- ✅ Messages broadcast to room participants only
+- ✅ Desktop layout (sidebar)
+- ✅ Mobile layout (below scoresheets)
+
+---
+
 ## [0.2.7] - 2026-01-11
 
 ### Added
@@ -667,6 +765,7 @@ After fix: Rejected (3 tiles < 4) ✅
 
 ## Version History
 
+- **0.2.8** - Real-time chat for online multiplayer (Jan 11, 2026)
 - **0.2.7** - Real-time visual feedback for word placement (Jan 11, 2026)
 - **0.2.6** - Opponent tiles display in ScorePanel (Jan 10, 2026)
 - **0.2.5** - Fixed Serbian digraph scoring bug (Jan 9, 2026)

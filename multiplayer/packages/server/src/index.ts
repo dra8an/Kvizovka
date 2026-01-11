@@ -560,6 +560,54 @@ async function initializeServer() {
     })
 
     /**
+     * Chat message
+     */
+    socket.on('chat:message', (data) => {
+      try {
+        const { roomCode, message } = data
+        console.log(`[chat:message] Room ${roomCode}, from ${socket.data.playerName}: ${message}`)
+
+        // Validate message
+        if (!message || message.trim().length === 0) {
+          console.log('[chat:message] Empty message, ignoring')
+          return
+        }
+
+        if (message.length > 500) {
+          console.log('[chat:message] Message too long, ignoring')
+          return
+        }
+
+        // Get room to verify player is in room
+        const room = roomManager.getRoom(roomCode)
+        if (!room) {
+          console.log('[chat:message] Room not found')
+          return
+        }
+
+        // Verify socket is in this room
+        if (socket.id !== room.hostId && socket.id !== room.guestId) {
+          console.log('[chat:message] Player not in room')
+          return
+        }
+
+        // Create chat message
+        const chatMessage = {
+          playerId: socket.data.playerId || socket.id,
+          playerName: socket.data.playerName || 'Unknown',
+          message: message.trim(),
+          timestamp: new Date(),
+        }
+
+        // Broadcast to room (including sender)
+        io.to(roomCode).emit('chat:message', chatMessage)
+        console.log(`[chat:message] Broadcasted to room ${roomCode}`)
+      } catch (error) {
+        console.error('[chat:message] Error:', error)
+      }
+    })
+
+    /**
      * Disconnect
      */
     socket.on('disconnect', () => {
