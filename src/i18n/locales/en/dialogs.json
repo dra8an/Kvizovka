@@ -17,7 +17,8 @@
   "confirmations": {
     "skipTurn": {
       "title": "Skip Turn?",
-      "message": "You have tiles placed on the board. Skip turn anyway? (Tiles will be returned to rack)"
+      "message": "You have tiles placed on the board. Skip turn anyway? (Tiles will be returned to rack)",
+      "messageNoTiles": "Are you sure you want to skip your turn?"
     },
     "exchangeTiles": {
       "title": "Exchange Tiles?",

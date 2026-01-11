@@ -97,22 +97,22 @@ export function GameControls() {
    * Handle Skip Turn button click
    *
    * Skips the current player's turn (no penalty).
+   * Always shows confirmation dialog.
    */
   const handleSkipTurn = () => {
-    if (selectedTiles.length > 0) {
-      setConfirmDialog({
-        title: t('dialogs:confirmations.skipTurn.title'),
-        message: t('dialogs:confirmations.skipTurn.message'),
-        onConfirm: () => {
-          skipTurn()
-          clearSelection()
-          setConfirmDialog(null)
-        }
-      })
-    } else {
-      skipTurn()
-      clearSelection()
-    }
+    const message = selectedTiles.length > 0
+      ? t('dialogs:confirmations.skipTurn.message')
+      : t('dialogs:confirmations.skipTurn.messageNoTiles')
+
+    setConfirmDialog({
+      title: t('dialogs:confirmations.skipTurn.title'),
+      message,
+      onConfirm: () => {
+        skipTurn()
+        clearSelection()
+        setConfirmDialog(null)
+      }
+    })
   }
 
   /**

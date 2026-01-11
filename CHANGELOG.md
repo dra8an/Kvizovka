@@ -230,6 +230,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Files Modified**: `multiplayer/packages/client/src/components/OnlineGame/OnlineGame.tsx`
   - **Build Status**: ✅ Multiplayer client builds successfully (357.54 KB JS, gzipped: 108.72 KB)
 
+- **Skip Turn Confirmation** (2026-01-10):
+  - **Always Show Confirmation**: Added confirmation dialog for "Skip Turn" action in both local and multiplayer games
+    - Previously only showed confirmation when tiles were placed on the board
+    - Now always confirms to prevent accidental turn skipping
+    - Smart messaging: Different messages based on whether tiles are placed
+  - **Translation Keys Added**:
+    - English: `confirmations.skipTurn.messageNoTiles` - "Are you sure you want to skip your turn?"
+    - Serbian: `confirmations.skipTurn.messageNoTiles` - "Да ли си сигуран да желиш да прескочиш потез?"
+  - **Additional Serbian Sentence Case Fixes**:
+    - All dialog titles now use sentence case (e.g., "Прескочи потез?" instead of "Прескочи Потез?")
+    - Error dialog titles (e.g., "Нема постављених плочица" instead of "Нема Постављених Плочица")
+    - Result dialog titles (e.g., "Изазов успешан!" instead of "Изазов Успешан!")
+  - **Files Modified** (6 files):
+    - Local game: `src/components/GameControls/GameControls.tsx`
+    - Multiplayer: `multiplayer/packages/client/src/components/OnlineGameControls/OnlineGameControls.tsx`
+    - Translation files: `src/i18n/locales/en/dialogs.json`, `src/i18n/locales/sr/dialogs.json`
+    - Translation files: `multiplayer/packages/client/src/i18n/locales/en/dialogs.json`, `multiplayer/packages/client/src/i18n/locales/sr/dialogs.json`
+  - **Build Status**: ✅ Both games build successfully (Local: 280.38 KB, Multiplayer: 357.72 KB)
+
 - **Joker Stealing Feature**: Complete implementation of joker stealing rule (2026-01-08)
   - **Rule Implementation**: Player can steal joker from opponent's last move
     - Only jokers played in the immediately previous turn can be stolen
