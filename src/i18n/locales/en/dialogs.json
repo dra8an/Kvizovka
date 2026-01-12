@@ -44,6 +44,12 @@
       "message": "The word \"{{word}}\" is valid.\n\nYou have been penalized 3 minutes."
     }
   },
+  "directionChoice": {
+    "title": "Choose Word Direction",
+    "message": "Your tile forms valid words in both directions. Which word do you want to play?",
+    "horizontal": "Horizontal →",
+    "vertical": "Vertical ↓"
+  },
   "errors": {
     "noTilesPlaced": {
       "title": "No Tiles Placed",

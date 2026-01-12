@@ -6,6 +6,8 @@
     "invalidWord": "Invalid word: {{word}}",
     "mustConnectToCenter": "First word must cover the center square",
     "mustConnectToExisting": "New tiles must connect to existing words",
+    "mustFormLine": "Tiles must form a single horizontal or vertical line",
+    "wordTooShort": "Word must be at least {{minLength}} letters long",
     "gapInWord": "Words cannot have gaps",
     "notEnoughTiles": "Not enough tiles to exchange (minimum 7 required)",
     "invalidPosition": "Invalid tile position",

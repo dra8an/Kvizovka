@@ -212,25 +212,17 @@ export class Board {
   }
 
   /**
-   * Check if a position touches the center square
+   * Check if a position is on the center square
    *
    * @param row - Row number
    * @param col - Column number
-   * @returns true if position is center or adjacent to center
+   * @returns true if position is exactly on the center square
    *
-   * Used for first move validation (must touch center)
+   * Used for first move validation (must place on center)
    */
   touchesCenter(row: number, col: number): boolean {
-    // Check if this IS the center
-    if (row === BOARD_CENTER.row && col === BOARD_CENTER.col) {
-      return true
-    }
-
-    // Check if adjacent to center
-    const neighbors = getAdjacentPositions(row, col)
-    return neighbors.some(
-      (pos) => pos.row === BOARD_CENTER.row && pos.col === BOARD_CENTER.col
-    )
+    // First move must place a tile ON the center square
+    return row === BOARD_CENTER.row && col === BOARD_CENTER.col
   }
 
   /**

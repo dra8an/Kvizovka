@@ -22,6 +22,7 @@ import { GameControls } from '../GameControls/GameControls'
 import { Scoresheet } from '../Scoresheet/Scoresheet'
 import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher'
 import { BonusFlash } from '../BonusFlash/BonusFlash'
+import { DirectionChoiceDialog } from '../DirectionChoiceDialog/DirectionChoiceDialog'
 import { useGameStore } from '../../store/gameStore'
 import { GameMode, GameStatus } from '../../types'
 
@@ -42,6 +43,9 @@ export function Game() {
   const reset = useGameStore((state) => state.reset)
   const bonusFlash = useGameStore((state) => state.bonusFlash)
   const clearBonusFlash = useGameStore((state) => state.clearBonusFlash)
+  const directionChoice = useGameStore((state) => state.directionChoice)
+  const makeMoveWithDirection = useGameStore((state) => state.makeMoveWithDirection)
+  const cancelDirectionChoice = useGameStore((state) => state.cancelDirectionChoice)
 
   // Local state for player name input
   const [showNameInput, setShowNameInput] = React.useState(false)
@@ -431,6 +435,16 @@ export function Game() {
       {/* Bonus flash overlay */}
       {bonusFlash !== null && (
         <BonusFlash bonus={bonusFlash} onComplete={clearBonusFlash} />
+      )}
+
+      {/* Direction choice dialog */}
+      {directionChoice && (
+        <DirectionChoiceDialog
+          horizontalWord={directionChoice.horizontalOption.wordText}
+          verticalWord={directionChoice.verticalOption.wordText}
+          onChoose={makeMoveWithDirection}
+          onCancel={cancelDirectionChoice}
+        />
       )}
     </div>
   )

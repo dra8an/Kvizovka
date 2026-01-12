@@ -8,7 +8,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "kill": "lsof -ti:5173 | xargs kill -9 2>/dev/null || echo 'No processes to kill'",
+    "clean-start": "npm run kill && npm run dev"
   },
   "dependencies": {
     "@kvizovka/shared": "file:../shared",

@@ -33,6 +33,8 @@ import {
   WordValidator,
   TILES_PER_PLAYER,
   DEFAULT_TIME_LIMIT,
+  BoardSquare,
+  Direction,
 } from '@kvizovka/shared'
 
 /**
@@ -109,6 +111,24 @@ interface GameStoreState {
    * null = not showing, number = bonus amount to display
    */
   bonusFlash: number | null
+
+  /**
+   * Direction choice dialog (when single tile forms words in both directions)
+   * null = not showing
+   */
+  directionChoice: {
+    placedTiles: PlacedTile[]
+    horizontalOption: {
+      word: BoardSquare[]
+      wordText: string
+      direction: Direction
+    }
+    verticalOption: {
+      word: BoardSquare[]
+      wordText: string
+      direction: Direction
+    }
+  } | null
 
   // ========================================
   // ACTIONS
@@ -229,6 +249,25 @@ interface GameStoreState {
   clearBonusFlash: () => void
 
   /**
+   * Show direction choice dialog
+   */
+  showDirectionChoice: (
+    placedTiles: PlacedTile[],
+    horizontalOption: { word: BoardSquare[]; wordText: string; direction: Direction },
+    verticalOption: { word: BoardSquare[]; wordText: string; direction: Direction }
+  ) => void
+
+  /**
+   * Make move with chosen direction
+   */
+  makeMoveWithDirection: (direction: Direction) => boolean
+
+  /**
+   * Cancel direction choice dialog
+   */
+  cancelDirectionChoice: () => void
+
+  /**
    * Reset store to initial state
    */
   reset: () => void
@@ -241,7 +280,7 @@ interface GameStoreState {
  */
 const createInitialState = (): Pick<
   GameStoreState,
-  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'placementValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'timerIntervalId' | 'bonusFlash'
+  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'placementValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'timerIntervalId' | 'bonusFlash' | 'directionChoice'
 > => ({
   game: null,
   boardInstance: null,
@@ -254,6 +293,7 @@ const createInitialState = (): Pick<
   tilesForExchange: [],
   bonusFlash: null,
   timerIntervalId: null,
+  directionChoice: null,
 })
 
 /**
@@ -367,6 +407,12 @@ export const useGameStore = create<GameStoreState>()(
         if (!validation.isValid) {
           console.error('Invalid move:', validation.reason)
           return false
+        }
+
+        // Check if direction choice is needed
+        if (validation.needsDirectionChoice && validation.horizontalOption && validation.verticalOption) {
+          get().showDirectionChoice(placedTiles, validation.horizontalOption, validation.verticalOption)
+          return true // Don't proceed with move yet, wait for user choice
         }
 
         // Place tiles on board
@@ -1235,6 +1281,57 @@ export const useGameStore = create<GameStoreState>()(
        */
       clearBonusFlash: () => {
         set({ bonusFlash: null })
+      },
+
+      /**
+       * Show direction choice dialog
+       */
+      showDirectionChoice: (placedTiles, horizontalOption, verticalOption) => {
+        set({
+          directionChoice: {
+            placedTiles,
+            horizontalOption,
+            verticalOption,
+          },
+        })
+      },
+
+      /**
+       * Make move with chosen direction
+       */
+      makeMoveWithDirection: (direction: Direction): boolean => {
+        const state = get()
+        const { directionChoice, boardInstance } = state
+
+        if (!directionChoice || !boardInstance) {
+          console.error('No direction choice or board instance')
+          return false
+        }
+
+        const { placedTiles } = directionChoice
+
+        // Validate with forced direction
+        const validator = new MoveValidator(boardInstance)
+        const validation = validator.validateMove(placedTiles, direction)
+
+        // Clear the dialog
+        set({ directionChoice: null })
+
+        if (!validation.isValid) {
+          console.error('Invalid move with direction:', validation.reason)
+          return false
+        }
+
+        // Execute the move normally (validation already done with forced direction)
+        // The makeMove function will be called by the component with the validated direction
+        return true
+      },
+
+      /**
+       * Cancel direction choice dialog
+       */
+      cancelDirectionChoice: () => {
+        set({ directionChoice: null })
       },
 
       /**

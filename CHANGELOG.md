@@ -7,11 +7,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Direction Choice Dialog UI** (2026-01-12)
+  - Implemented visual dialog for choosing word direction when single tile forms valid words in both directions
+  - **DirectionChoiceDialog Component** (`src/components/DirectionChoiceDialog/DirectionChoiceDialog.tsx`):
+    - Displays both word options with color-coded buttons (blue for horizontal, green for vertical)
+    - Shows word text for each direction option
+    - Includes directional arrows (→ for horizontal, ↓ for vertical)
+    - Cancel button to abort move and return tiles to rack
+  - **State Management Integration** (`src/store/gameStore.ts`):
+    - Added `directionChoice` state with word options and placed tiles
+    - `showDirectionChoice()` action to display dialog
+    - `makeMoveWithDirection(direction)` action to execute move with chosen direction
+    - `cancelDirectionChoice()` action to dismiss dialog and clear state
+    - Fixed TypeScript errors: Added missing imports (`BoardSquare`, `Direction`)
+    - Updated `createInitialState` to include `directionChoice` field
+  - **Game Component Integration** (`src/components/Game/Game.tsx`):
+    - Wired up dialog to appear when `directionChoice` state is populated
+    - Connected dialog actions to store methods
+    - Dialog appears above all game elements (z-50)
+  - **Translations Added** (`dialogs.json` - English and Serbian):
+    - `directionChoice.title` - "Choose Word Direction" / "Изабери смер речи"
+    - `directionChoice.message` - Explanation of ambiguous placement
+    - `directionChoice.horizontal` - "Horizontal →" / "Хоризонтално →"
+    - `directionChoice.vertical` - "Vertical ↓" / "Вертикално ↓"
+  - **How It Works**:
+    1. Player places single tile that forms words ≥4 letters in both directions
+    2. Game detects ambiguity during validation
+    3. Dialog appears showing both word options
+    4. Player selects preferred direction or cancels
+    5. Move executes with chosen direction, validation enforces correct word
+  - **Build Status**: ✅ TypeScript compilation successful (288.55 KB JS, gzipped: 88.70 KB)
+
+- **Direction Choice Dialog - Multiplayer Implementation** (2026-01-12)
+  - Applied direction choice feature to online multiplayer game
+  - **DirectionChoiceDialog Component** (`multiplayer/packages/client/src/components/DirectionChoiceDialog/`):
+    - Copied from local game with shared package type imports
+    - Same visual design and functionality as local game
+  - **Online Game Store Updates** (`multiplayer/packages/client/src/store/onlineGameStore.ts`):
+    - Added `directionChoice` state with word options and placed tiles
+    - `showDirectionChoice()` action to display dialog
+    - `makeMoveWithDirection()` action to execute move with chosen direction
+    - `cancelDirectionChoice()` action to dismiss dialog
+  - **OnlineGame Component Integration** (`multiplayer/packages/client/src/components/OnlineGame/OnlineGame.tsx`):
+    - Imported DirectionChoiceDialog
+    - Connected dialog to online game store actions
+    - Dialog renders when player places ambiguous single tile
+  - **Translations**: Direction choice translations already present in multiplayer dialogs.json (English and Serbian)
+  - **Build Status**: ✅ TypeScript compilation successful (369.06 KB JS, gzipped: 111.91 KB)
+  - **How It Works**:
+    1. Client validates move locally
+    2. If direction choice needed, dialog appears
+    3. Player selects direction
+    4. Client sends move to server with chosen tiles
+    5. Server validates final move with direction context
+
 ---
 
 ## [0.7.0] - 2026-01-11
 
 ### Added
+- **Direction Choice Dialog for Ambiguous Single-Tile Placements**
+  - When a single tile forms valid words (≥4 letters) in BOTH horizontal and vertical directions, player must choose which word to play
+  - Validation now returns `needsDirectionChoice: true` with both word options
+  - `MoveValidator.validateMove()` accepts optional `forcedDirection` parameter for user's choice
+  - Example: Placing one tile that creates both "CATS" horizontally and "STOP" vertically
+  - Backend implementation complete, UI added in next release (2026-01-12)
+  - Prevents ambiguity in crossword-style scenarios
+  - Affects both local game and online multiplayer
+
 - **Visual Bonus Flash Notification**
   - Large, glowing overlay displays bonus amount when long word bonus is awarded
   - Shows "+20", "+30", "+40", or "+50" depending on bonus tier
@@ -42,6 +106,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All game statistics now visible without scrolling
 
 ### Fixed
+- **CRITICAL: First move validation** - First player can no longer place words that don't cover the center square
+  - Fixed `touchesCenter()` method to require tile placement ON center square (not just adjacent)
+  - Previously allowed words adjacent to center, now correctly enforces center placement
+  - Affects both local game and online multiplayer
+- **CRITICAL: Parallel word validation** - Players can no longer place valid parallel words that don't incorporate existing tiles
+  - Added Rule 5b: Main word must contain at least one tile already on the board (only for non-first moves)
+  - Previously only checked if tiles were adjacent (allowed parallel words like "VOKA" next to "PUBV")
+  - Now correctly validates that the main word being formed includes existing tiles
+  - Example: If "PUBV" is on the board, placing "VOKA" parallel to it is now invalid (must use at least one letter from "PUBV")
+  - Fixed issue where first move was incorrectly rejected by saving `isFirstMove` flag before placing tiles
+  - Affects both local game and online multiplayer
+- **CRITICAL: Single tile direction detection** - Fixed validation failure when placing one tile between existing letters
+  - Fixed `determineSingleTileDirection()` to correctly identify main word direction when tile has neighbors in multiple directions
+  - Previously defaulted to HORIZONTAL when tile had both horizontal and vertical neighbors
+  - Now checks which direction has tiles on BOTH sides (filling a gap) to determine main word
+  - Example: Placing "O" between "MS" and "LJ" to form "MSOLJ" vertically now works correctly
+  - This fixes the intermittent issue where adding a single letter to existing tiles was incorrectly rejected
+  - Affects both local game and online multiplayer
+- **Localized all validation error messages** - All game rule violation errors now properly support Serbian translation
+  - "First move must touch the center square" → "Прва реч мора покрити централно поље"
+  - "Tiles must form a single horizontal or vertical line" → "Плочице морају формирати једну хоризонталну или вертикалну линију"
+  - "Move must connect to existing tiles" → "Нове плочице морају бити повезане са постојећим речима"
+  - "Word must be at least 4 letters long" → "Реч мора имати најмање 4 слова"
+  - MoveValidator.ts now uses i18next for all error messages
+  - Updated validation.json in both local and multiplayer projects
+- Serbian translation strings now use proper Sentence case instead of Title case
+  - "Игра Завршена!" → "Игра завршена!"
+  - "{{playerName}} Побеђује!" → "{{playerName}} побеђује!"
+  - "Играј Поново" → "Играј поново"
+  - Fixed 13+ button and label translations
 - Long word bonus calculation now correctly awards +50 for 11+ letter words when all 10 tiles are used
 - Visual bonus flash now shows correct amount (+50 instead of +40 for qualifying moves)
 - Game complete screen player cards are now perfectly aligned (winner's green border no longer causes size mismatch)

@@ -24,6 +24,8 @@ import {
   PlacedTile,
   Tile,
   Board as BoardType,
+  BoardSquare,
+  Direction,
 } from '../types'
 import {
   Board,
@@ -120,6 +122,24 @@ interface GameStoreState {
    * null = not showing, number = bonus amount to display
    */
   bonusFlash: number | null
+
+  /**
+   * Direction choice dialog (when single tile forms words in both directions)
+   * null = not showing
+   */
+  directionChoice: {
+    placedTiles: PlacedTile[]
+    horizontalOption: {
+      word: BoardSquare[]
+      wordText: string
+      direction: Direction
+    }
+    verticalOption: {
+      word: BoardSquare[]
+      wordText: string
+      direction: Direction
+    }
+  } | null
 
   // ========================================
   // ACTIONS
@@ -256,6 +276,25 @@ interface GameStoreState {
   clearBonusFlash: () => void
 
   /**
+   * Show direction choice dialog
+   */
+  showDirectionChoice: (
+    placedTiles: PlacedTile[],
+    horizontalOption: { word: BoardSquare[]; wordText: string; direction: Direction },
+    verticalOption: { word: BoardSquare[]; wordText: string; direction: Direction }
+  ) => void
+
+  /**
+   * Make move with chosen direction (after user selects from dialog)
+   */
+  makeMoveWithDirection: (direction: Direction) => boolean
+
+  /**
+   * Cancel direction choice dialog
+   */
+  cancelDirectionChoice: () => void
+
+  /**
    * Reset store to initial state
    */
   reset: () => void
@@ -268,7 +307,7 @@ interface GameStoreState {
  */
 const createInitialState = (): Pick<
   GameStoreState,
-  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'placementValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'draggedTile' | 'hoveredSquare' | 'timerIntervalId' | 'bonusFlash'
+  'game' | 'boardInstance' | 'tileBagInstance' | 'selectedTiles' | 'lastValidation' | 'placementValidation' | 'lastPlayedWord' | 'isExchangeMode' | 'tilesForExchange' | 'draggedTile' | 'hoveredSquare' | 'timerIntervalId' | 'bonusFlash' | 'directionChoice'
 > => ({
   game: null,
   boardInstance: null,
@@ -283,6 +322,7 @@ const createInitialState = (): Pick<
   hoveredSquare: null,
   timerIntervalId: null,
   bonusFlash: null,
+  directionChoice: null,
 })
 
 /**
@@ -394,6 +434,17 @@ export const useGameStore = create<GameStoreState>()(
         if (!validation.isValid) {
           console.error('Invalid move:', validation.reason)
           return false
+        }
+
+        // Check if direction choice is needed
+        if (validation.needsDirectionChoice && validation.horizontalOption && validation.verticalOption) {
+          console.log('🔀 Direction choice needed')
+          get().showDirectionChoice(
+            placedTiles,
+            validation.horizontalOption,
+            validation.verticalOption
+          )
+          return true // Don't proceed with move yet, wait for user choice
         }
 
         // Place tiles on board
@@ -1380,6 +1431,181 @@ export const useGameStore = create<GameStoreState>()(
        */
       clearBonusFlash: () => {
         set({ bonusFlash: null })
+      },
+
+      /**
+       * Show direction choice dialog
+       */
+      showDirectionChoice: (placedTiles, horizontalOption, verticalOption) => {
+        set({
+          directionChoice: {
+            placedTiles,
+            horizontalOption,
+            verticalOption,
+          },
+        })
+      },
+
+      /**
+       * Make move with chosen direction
+       */
+      makeMoveWithDirection: (direction: Direction): boolean => {
+        const state = get()
+        const { directionChoice, boardInstance } = state
+
+        if (!directionChoice || !boardInstance) {
+          console.error('No direction choice or board instance')
+          return false
+        }
+
+        const { placedTiles } = directionChoice
+
+        // Validate with forced direction
+        const validator = new MoveValidator(boardInstance)
+        const validation = validator.validateMove(placedTiles, direction)
+
+        // Clear the dialog
+        set({ directionChoice: null })
+
+        if (!validation.isValid) {
+          console.error('Invalid move with direction:', validation.reason)
+          return false
+        }
+
+        // Proceed with the move (reuse makeMove logic by calling it with the validation result)
+        // Instead of calling makeMove again, we'll directly continue with the rest of the move logic
+        const { game, tileBagInstance } = state
+
+        if (!game || !tileBagInstance) {
+          console.error('No active game')
+          return false
+        }
+
+        set({ lastValidation: validation })
+
+        // Place tiles on board
+        for (const placed of placedTiles) {
+          boardInstance.setTile(placed.row, placed.col, placed.tile)
+        }
+
+        // Place blockers around the main word
+        if (validation.direction && validation.wordsFormed && validation.wordsFormed.length > 0) {
+          const mainWord = validation.wordsFormed[0]
+          console.log('🔲 Placing blockers for main word:', {
+            direction: validation.direction,
+            wordLength: mainWord.length,
+            positions: mainWord.map(sq => `(${sq.row},${sq.col})`).join(', ')
+          })
+          boardInstance.placeBlockers(mainWord, validation.direction)
+        }
+
+        // Calculate score
+        const calculator = new ScoreCalculator()
+        const isFirstMove = game.moveHistory.length === 0
+        const currentPlayer = game.players[game.currentPlayerIndex]
+        const tilesDrawn = Math.min(placedTiles.length, tileBagInstance.remaining())
+        const tilesRemainingAfterMove = currentPlayer.tiles.length - placedTiles.length + tilesDrawn
+
+        const scoreBreakdown = calculator.calculateMoveScore(
+          validation.wordsFormed || [],
+          placedTiles,
+          placedTiles.length,
+          isFirstMove,
+          tilesRemainingAfterMove
+        )
+
+        // Show bonus flash if long word bonus awarded
+        if (scoreBreakdown.longWordBonus > 0) {
+          get().showBonusFlash(scoreBreakdown.longWordBonus)
+        }
+
+        // Mark premium squares as used
+        boardInstance.markSquaresAsUsed(placedTiles)
+
+        // Update current player score
+        currentPlayer.score += scoreBreakdown.totalScore
+
+        // Remove used tiles from player's hand
+        const usedTileIds = new Set(placedTiles.map((pt) => pt.tile.id))
+        currentPlayer.tiles = currentPlayer.tiles.filter(
+          (tile) => !usedTileIds.has(tile.id)
+        )
+
+        // Draw new tiles
+        let newTiles: any[] = []
+        if (currentPlayer.roundsPlayed < 9) {
+          newTiles = tileBagInstance.draw(placedTiles.length)
+          currentPlayer.tiles.push(...newTiles)
+        }
+
+        // Increment rounds
+        currentPlayer.roundsPlayed++
+
+        // Create move record
+        const move: Move = {
+          playerId: currentPlayer.id,
+          moveNumber: game.moveHistory.length + 1,
+          type: MoveType.PLACE_TILES,
+          placedTiles,
+          formedWords: validation.wordsFormed?.map((squares) =>
+            squares
+              .map((sq) => {
+                const tile = sq.tile
+                if (tile && 'letter' in tile) {
+                  return tile.isJoker && tile.jokerLetter
+                    ? tile.jokerLetter
+                    : tile.letter
+                }
+                return ''
+              })
+              .join('')
+          ),
+          score: scoreBreakdown.totalScore,
+          drawnTileIds: newTiles.map((t) => t.id), // Track drawn tiles for undo
+          timestamp: new Date(),
+        }
+
+        game.moveHistory.push(move)
+
+        // Set last played word for challenge
+        if (validation.wordText) {
+          set({
+            lastPlayedWord: {
+              word: validation.wordText,
+              playerIndex: game.currentPlayerIndex,
+              moveIndex: game.moveHistory.length - 1,
+            },
+          })
+        }
+
+        // Clear selected tiles
+        set({ selectedTiles: [] })
+
+        // Switch to next player
+        game.currentPlayerIndex = ((game.currentPlayerIndex + 1) % game.players.length) as 0 | 1
+
+        // Update state
+        set({
+          game: {
+            ...game,
+            board: boardInstance.getGrid(),
+            tileBag: state.tileBagInstance!.peekTiles(),
+            updatedAt: new Date(),
+          },
+          selectedTiles: [],
+        })
+
+        // Check if game should end
+        get().checkGameEndConditions()
+
+        return true
+      },
+
+      /**
+       * Cancel direction choice dialog
+       */
+      cancelDirectionChoice: () => {
+        set({ directionChoice: null })
       },
 
       /**

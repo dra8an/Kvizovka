@@ -24,6 +24,7 @@ import { OnlineScorePanel } from '../OnlineScorePanel/OnlineScorePanel'
 import { OnlineGameControls } from '../OnlineGameControls/OnlineGameControls'
 import { Chat } from '../Chat/Chat'
 import { BonusFlash } from '../BonusFlash/BonusFlash'
+import { DirectionChoiceDialog } from '../DirectionChoiceDialog/DirectionChoiceDialog'
 import { GameStatus, PlacedTile } from '@kvizovka/shared'
 
 export function OnlineGame() {
@@ -38,11 +39,14 @@ export function OnlineGame() {
     gameError,
     chatMessages,
     bonusFlash,
+    directionChoice,
     makeMove,
     skipTurn,
     stealJoker,
     sendChatMessage,
     clearBonusFlash,
+    makeMoveWithDirection,
+    cancelDirectionChoice,
     reset,
     forceEndGame,
   } = useOnlineGameStore()
@@ -576,6 +580,16 @@ export function OnlineGame() {
       {/* Bonus flash overlay */}
       {bonusFlash !== null && (
         <BonusFlash bonus={bonusFlash} onComplete={clearBonusFlash} />
+      )}
+
+      {/* Direction choice dialog */}
+      {directionChoice && (
+        <DirectionChoiceDialog
+          horizontalWord={directionChoice.horizontalOption.wordText}
+          verticalWord={directionChoice.verticalOption.wordText}
+          onChoose={makeMoveWithDirection}
+          onCancel={cancelDirectionChoice}
+        />
       )}
     </div>
   )

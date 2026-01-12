@@ -18,7 +18,9 @@
     "build:server": "npm run build --workspace=@kvizovka/server",
     "build": "npm run build:shared && npm run build:client && npm run build:server",
     "type-check": "npm run type-check --workspaces",
-    "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules"
+    "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules",
+    "kill": "lsof -ti:5173 -ti:3000 | xargs kill -9 2>/dev/null || echo 'No processes to kill'",
+    "clean-start": "npm run kill && npm run dev"
   },
   "devDependencies": {
     "typescript": "^5.2.2"

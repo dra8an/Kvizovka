@@ -120,6 +120,22 @@ interface OnlineGameStore {
    */
   bonusFlash: number | null
 
+  /**
+   * Direction choice dialog (when single tile forms words in both directions)
+   * null = not showing
+   */
+  directionChoice: {
+    placedTiles: PlacedTile[]
+    horizontalOption: {
+      wordText: string
+      direction: 'HORIZONTAL'
+    }
+    verticalOption: {
+      wordText: string
+      direction: 'VERTICAL'
+    }
+  } | null
+
   // ========================================
   // CHAT STATE
   // ========================================
@@ -219,6 +235,25 @@ interface OnlineGameStore {
    */
   clearBonusFlash: () => void
 
+  /**
+   * Show direction choice dialog
+   */
+  showDirectionChoice: (
+    placedTiles: PlacedTile[],
+    horizontalWord: string,
+    verticalWord: string
+  ) => void
+
+  /**
+   * Make move with chosen direction
+   */
+  makeMoveWithDirection: (direction: 'HORIZONTAL' | 'VERTICAL') => void
+
+  /**
+   * Cancel direction choice dialog
+   */
+  cancelDirectionChoice: () => void
+
   // ========================================
   // ACTIONS - RESET
   // ========================================
@@ -253,6 +288,7 @@ const initialState = {
   view: 'menu' as ViewState,
   isLoading: false,
   bonusFlash: null,
+  directionChoice: null,
 
   // Chat
   chatMessages: [],
@@ -506,6 +542,42 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
 
   clearBonusFlash: () => {
     set({ bonusFlash: null })
+  },
+
+  showDirectionChoice: (placedTiles, horizontalWord, verticalWord) => {
+    set({
+      directionChoice: {
+        placedTiles,
+        horizontalOption: {
+          wordText: horizontalWord,
+          direction: 'HORIZONTAL',
+        },
+        verticalOption: {
+          wordText: verticalWord,
+          direction: 'VERTICAL',
+        },
+      },
+    })
+  },
+
+  makeMoveWithDirection: (direction: 'HORIZONTAL' | 'VERTICAL') => {
+    const { directionChoice, makeMove } = get()
+
+    if (!directionChoice) {
+      console.error('No direction choice available')
+      return
+    }
+
+    // Clear the dialog
+    set({ directionChoice: null })
+
+    // Make the move with the chosen tiles
+    // The server will validate with the direction context
+    makeMove(directionChoice.placedTiles)
+  },
+
+  cancelDirectionChoice: () => {
+    set({ directionChoice: null })
   },
 
   // ========================================

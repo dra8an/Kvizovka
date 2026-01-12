@@ -18,6 +18,7 @@ import { Board } from './Board'
 import { WordValidator } from './WordValidator'
 import { PlacedTile, Direction, BoardSquare } from '../types'
 import { BOARD_CENTER, MIN_WORD_LENGTH } from '../constants'
+import i18next from 'i18next'
 
 /**
  * Move Validation Result
@@ -49,6 +50,30 @@ export interface MoveValidationResult {
    * The word text (for challenges)
    */
   wordText?: string
+
+  /**
+   * True if player needs to choose between two valid directions
+   * (single tile forming valid words both horizontally and vertically)
+   */
+  needsDirectionChoice?: boolean
+
+  /**
+   * Horizontal word option (when direction choice needed)
+   */
+  horizontalOption?: {
+    word: BoardSquare[]
+    wordText: string
+    direction: Direction
+  }
+
+  /**
+   * Vertical word option (when direction choice needed)
+   */
+  verticalOption?: {
+    word: BoardSquare[]
+    wordText: string
+    direction: Direction
+  }
 }
 
 /**
@@ -81,6 +106,7 @@ export class MoveValidator {
    * Validate a complete move
    *
    * @param placedTiles - Tiles being placed in this move
+   * @param forcedDirection - Optional direction to force (when user chooses between ambiguous options)
    * @returns MoveValidationResult with details
    *
    * Checks (in order):
@@ -90,13 +116,14 @@ export class MoveValidator {
    * 4. First move touches center
    * 5. Subsequent moves connect to existing tiles
    * 6. All words formed are valid
+   * 7. For single tiles: Check if direction choice is needed
    */
-  validateMove(placedTiles: PlacedTile[]): MoveValidationResult {
+  validateMove(placedTiles: PlacedTile[], forcedDirection?: Direction): MoveValidationResult {
     // Rule 1: Must place at least one tile
     if (placedTiles.length === 0) {
       return {
         isValid: false,
-        reason: 'No tiles placed',
+        reason: i18next.t('validation:errors.noTilesPlaced'),
       }
     }
 
@@ -118,16 +145,27 @@ export class MoveValidator {
     }
 
     // Rule 3: Tiles must form a single line (horizontal or vertical)
-    const direction = this.determineDirection(placedTiles)
+    let direction: Direction | null
+
+    if (forcedDirection) {
+      // User has chosen a direction - use it
+      direction = forcedDirection
+    } else {
+      direction = this.determineDirection(placedTiles)
+    }
+
     if (!direction) {
       return {
         isValid: false,
-        reason: 'Tiles must form a single horizontal or vertical line',
+        reason: i18next.t('validation:errors.mustFormLine'),
       }
     }
 
     // Rule 4 & 5: Check connectivity
-    if (this.board.isEmptyBoard()) {
+    // Save whether this is the first move BEFORE placing tiles
+    const isFirstMove = this.board.isEmptyBoard()
+
+    if (isFirstMove) {
       // First move: must touch center
       const touchesCenter = placedTiles.some((tile) =>
         this.board.touchesCenter(tile.row, tile.col)
@@ -136,7 +174,7 @@ export class MoveValidator {
       if (!touchesCenter) {
         return {
           isValid: false,
-          reason: 'First move must touch the center square',
+          reason: i18next.t('validation:errors.mustConnectToCenter'),
         }
       }
     } else {
@@ -144,7 +182,7 @@ export class MoveValidator {
       if (!this.board.areConnected(placedTiles)) {
         return {
           isValid: false,
-          reason: 'Move must connect to existing tiles on the board',
+          reason: i18next.t('validation:errors.mustConnectToExisting'),
         }
       }
     }
@@ -186,6 +224,84 @@ export class MoveValidator {
       word: wordText
     })
 
+    // Rule 6a: Check if direction choice is needed (single tile forming words in both directions)
+    if (placedTiles.length === 1 && !forcedDirection) {
+      // Check if BOTH directions form valid words (≥4 tiles)
+      const horizontalWord = this.board.getTilesInLine(placedTiles[0].row, placedTiles[0].col, 'HORIZONTAL')
+      const verticalWord = this.board.getTilesInLine(placedTiles[0].row, placedTiles[0].col, 'VERTICAL')
+
+      // Count non-blocker tiles in each direction
+      const horizontalTileCount = horizontalWord.filter(sq => {
+        const tile = sq.tile
+        if (!tile) return false
+        if ('type' in tile && tile.type === 'BLOCKER') return false
+        return true
+      }).length
+
+      const verticalTileCount = verticalWord.filter(sq => {
+        const tile = sq.tile
+        if (!tile) return false
+        if ('type' in tile && tile.type === 'BLOCKER') return false
+        return true
+      }).length
+
+      console.log('🔀 Direction ambiguity check:', {
+        horizontalLength: horizontalTileCount,
+        verticalLength: verticalTileCount,
+        bothValid: horizontalTileCount >= MIN_WORD_LENGTH && verticalTileCount >= MIN_WORD_LENGTH
+      })
+
+      // If BOTH directions form valid-length words, ask user to choose
+      if (horizontalTileCount >= MIN_WORD_LENGTH && verticalTileCount >= MIN_WORD_LENGTH) {
+        const horizontalText = this.wordValidator.extractWordFromSquares(horizontalWord)
+        const verticalText = this.wordValidator.extractWordFromSquares(verticalWord)
+
+        // Remove temporary tiles before returning
+        for (const placed of placedTiles) {
+          this.board.removeTile(placed.row, placed.col)
+        }
+
+        return {
+          isValid: true,
+          needsDirectionChoice: true,
+          horizontalOption: {
+            word: horizontalWord,
+            wordText: horizontalText,
+            direction: 'HORIZONTAL'
+          },
+          verticalOption: {
+            word: verticalWord,
+            wordText: verticalText,
+            direction: 'VERTICAL'
+          }
+        }
+      }
+    }
+
+    // Rule 5b: Main word must contain at least one existing tile from the board
+    // This prevents parallel words that don't incorporate existing tiles
+    // Only applies to moves after the first move
+    if (!isFirstMove) {
+      const mainWordContainsExistingTile = mainWord.some((square) => {
+        // Check if this square was NOT in the newly placed tiles
+        return !placedTiles.some(
+          (p) => p.row === square.row && p.col === square.col
+        )
+      })
+
+      if (!mainWordContainsExistingTile) {
+        // Remove temporary tiles before returning
+        for (const placed of placedTiles) {
+          this.board.removeTile(placed.row, placed.col)
+        }
+
+        return {
+          isValid: false,
+          reason: i18next.t('validation:errors.mustConnectToExisting'),
+        }
+      }
+    }
+
     // Remove temporary tiles
     for (const placed of placedTiles) {
       this.board.removeTile(placed.row, placed.col)
@@ -198,7 +314,7 @@ export class MoveValidator {
     if (mainWord.length < MIN_WORD_LENGTH) {
       return {
         isValid: false,
-        reason: `Word must be at least ${MIN_WORD_LENGTH} letters long`,
+        reason: i18next.t('validation:errors.wordTooShort', { minLength: MIN_WORD_LENGTH }),
       }
     }
 
@@ -296,7 +412,24 @@ export class MoveValidator {
       return 'VERTICAL'
     }
 
-    // If both or neither, default to horizontal
+    // If both directions have neighbors, check which has tiles on BOTH sides
+    // The main word direction is the one where the tile is filling a gap or extending
+    if (hasHorizontalNeighbor && hasVerticalNeighbor) {
+      // Vertical has tiles on both sides (filling a gap vertically)
+      if (hasTopNeighbor && hasBottomNeighbor) {
+        return 'VERTICAL'
+      }
+      // Horizontal has tiles on both sides (filling a gap horizontally)
+      if (hasLeftNeighbor && hasRightNeighbor) {
+        return 'HORIZONTAL'
+      }
+      // Only one side in each direction - default to vertical
+      // (prefer vertical when ambiguous, as it's more common in crossword-style games)
+      return 'VERTICAL'
+    }
+
+    // No neighbors - shouldn't happen in valid moves (would fail connectivity check)
+    // Default to horizontal
     return 'HORIZONTAL'
   }
 
