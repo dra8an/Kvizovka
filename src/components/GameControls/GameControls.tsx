@@ -39,6 +39,7 @@ export function GameControls() {
   const game = useGameStore((state) => state.game)
   const selectedTiles = useGameStore((state) => state.selectedTiles)
   const lastValidation = useGameStore((state) => state.lastValidation)
+  const placementValidation = useGameStore((state) => state.placementValidation)
   const lastPlayedWord = useGameStore((state) => state.lastPlayedWord)
   const isExchangeMode = useGameStore((state) => state.isExchangeMode)
   const tilesForExchange = useGameStore((state) => state.tilesForExchange)
@@ -276,6 +277,35 @@ export function GameControls() {
     return !(lastPlayerMove && lastPlayerMove.type === MoveType.EXCHANGE)
   })()
 
+  // Calculate word length for display
+  const getWordLengthDisplay = () => {
+    if (selectedTiles.length === 0) return null
+
+    // Get word length from validation result
+    let wordLength = 0
+    if (placementValidation?.wordsFormed && placementValidation.wordsFormed.length > 0) {
+      // Get main word (first word in wordsFormed)
+      const mainWord = placementValidation.wordsFormed[0]
+      wordLength = mainWord.length
+    } else {
+      // Fallback to selected tiles count if validation not available
+      wordLength = selectedTiles.length
+    }
+
+    const MIN_LENGTH = 4
+    const isValid = wordLength >= MIN_LENGTH
+
+    return {
+      wordLength,
+      isValid,
+      display: isValid
+        ? `${wordLength} ${t('common:plurals.letter', { count: wordLength })} ✓`
+        : `${wordLength}/${MIN_LENGTH} ${t('common:plurals.letter', { count: MIN_LENGTH })}`
+    }
+  }
+
+  const wordLengthInfo = getWordLengthDisplay()
+
   return (
     <div className="flex flex-col gap-3">
       {/* Exchange Mode UI */}
@@ -327,7 +357,16 @@ export function GameControls() {
               }
             `}
           >
-            {t('common:buttons.playWord')} {selectedTiles.length > 0 && `(${selectedTiles.length} ${t('common:plurals.tile', { count: selectedTiles.length })})`}
+            <div className="flex flex-col items-center gap-1">
+              <span>{t('common:buttons.playWord')} {selectedTiles.length > 0 && `(${selectedTiles.length} ${t('common:plurals.tile', { count: selectedTiles.length })})`}</span>
+              {wordLengthInfo && (
+                <span className={`text-sm font-semibold ${
+                  wordLengthInfo.isValid ? 'text-green-200' : 'text-yellow-200'
+                }`}>
+                  {wordLengthInfo.display}
+                </span>
+              )}
+            </div>
           </button>
 
           {/* Challenge button (only shown when opponent just played a word) */}

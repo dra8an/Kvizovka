@@ -7,11 +7,12 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PlacedTile } from '@kvizovka/shared'
+import { PlacedTile, MoveValidationResult } from '@kvizovka/shared'
 
 interface OnlineGameControlsProps {
   isYourTurn: boolean
   selectedTiles: PlacedTile[]
+  placementValidation: MoveValidationResult | null
   gameError: string | null
   onPlayWord: () => void
   onSkipTurn: () => void
@@ -23,6 +24,7 @@ interface OnlineGameControlsProps {
 export function OnlineGameControls({
   isYourTurn,
   selectedTiles,
+  placementValidation,
   gameError,
   onPlayWord,
   onSkipTurn,
@@ -34,6 +36,35 @@ export function OnlineGameControls({
 
   // Local state for custom confirmation dialog
   const [confirmDialog, setConfirmDialog] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null)
+
+  // Calculate word length for display
+  const getWordLengthDisplay = () => {
+    if (selectedTiles.length === 0) return null
+
+    // Get word length from validation result
+    let wordLength = 0
+    if (placementValidation?.wordsFormed && placementValidation.wordsFormed.length > 0) {
+      // Get main word (first word in wordsFormed)
+      const mainWord = placementValidation.wordsFormed[0]
+      wordLength = mainWord.length
+    } else {
+      // Fallback to selected tiles count if validation not available
+      wordLength = selectedTiles.length
+    }
+
+    const MIN_LENGTH = 4
+    const isValid = wordLength >= MIN_LENGTH
+
+    return {
+      wordLength,
+      isValid,
+      display: isValid
+        ? `${wordLength} ${t('common:plurals.letter', { count: wordLength })} ✓`
+        : `${wordLength}/${MIN_LENGTH} ${t('common:plurals.letter', { count: MIN_LENGTH })}`
+    }
+  }
+
+  const wordLengthInfo = getWordLengthDisplay()
   /**
    * Handle Play Word button click
    */
@@ -99,9 +130,20 @@ export function OnlineGameControls({
           }
         `}
       >
-        {selectedTiles.length > 0
-          ? t('online:controls.playWordWithCount', { count: selectedTiles.length })
-          : t('online:controls.playWord')}
+        <div className="flex flex-col items-center gap-1">
+          <span>
+            {selectedTiles.length > 0
+              ? t('online:controls.playWordWithCount', { count: selectedTiles.length })
+              : t('online:controls.playWord')}
+          </span>
+          {wordLengthInfo && (
+            <span className={`text-sm font-semibold ${
+              wordLengthInfo.isValid ? 'text-green-200' : 'text-yellow-200'
+            }`}>
+              {wordLengthInfo.display}
+            </span>
+          )}
+        </div>
       </button>
 
       {/* Secondary actions */}

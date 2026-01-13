@@ -42,6 +42,8 @@
   "plurals": {
     "tile": "плочица",
     "tile_plural": "плочице",
+    "letter": "слово",
+    "letter_plural": "слова",
     "tilesInHand": "{{count}} плочица у руци",
     "tilesInHand_plural": "{{count}} плочица у руци",
     "tilesPlaced": "({{count}} постављено)",

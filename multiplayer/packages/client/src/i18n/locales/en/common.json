@@ -43,6 +43,8 @@
   "plurals": {
     "tile": "tile",
     "tile_plural": "tiles",
+    "letter": "letter",
+    "letter_plural": "letters",
     "tilesInHand": "{{count}} tile in hand",
     "tilesInHand_plural": "{{count}} tiles in hand",
     "tilesPlaced": "({{count}} placed)",

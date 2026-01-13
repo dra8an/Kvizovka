@@ -13,6 +13,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.11] - 2026-01-12
+
+### Added
+- **Real-Time Word Length Counter**
+  - Play Word button now displays word length as tiles are placed
+  - **Yellow indicator**: "3/4 letters" when word is too short (< 4 letters)
+  - **Green indicator**: "5 letters ✓" when word meets minimum length (≥ 4 letters)
+  - Counter shows **actual word length** (including existing board tiles), not just placed tiles
+  - Updates in real-time as tiles are added/removed
+  - Implemented in both local and online multiplayer modes
+  - Helps players know if their word is ready to submit before clicking Play Word
+
+### Implementation Details
+
+**Local Game (`/src/`)**
+- `components/GameControls/GameControls.tsx`:
+  - Added `placementValidation` subscription from gameStore
+  - Created `getWordLengthDisplay()` function to calculate word length from validation result
+  - Updated Play Word button to display counter below button text
+  - Counter uses `placementValidation.wordsFormed[0].length` for accurate count
+  - Falls back to `selectedTiles.length` if validation not available
+  - Color-coded text: `text-yellow-200` for incomplete, `text-green-200` for valid
+
+**Online Game (`packages/client/`)**
+- `components/OnlineGameControls/OnlineGameControls.tsx`:
+  - Added `placementValidation` prop to interface
+  - Imported `MoveValidationResult` from `@kvizovka/shared`
+  - Added same `getWordLengthDisplay()` logic as local game
+  - Updated Play Word button with word length counter display
+- `components/OnlineGame/OnlineGame.tsx`:
+  - Added `placementValidation` state with `useState<MoveValidationResult | null>`
+  - Created `useEffect` to run validation when `selectedTiles` changes
+  - Validation creates temporary board, copies current state, runs MoveValidator
+  - Passes `placementValidation` prop to both OnlineGameControls instances (desktop & mobile)
+
+**Translations**
+- Added `"letter"` and `"letter_plural"` keys to `common.json` (EN/SR)
+- English: "letter" / "letters"
+- Serbian: "слово" / "слова"
+- Used by counter display: `t('common:plurals.letter', { count })`
+
+### Technical Highlights
+- **Accurate Word Length**: Counter shows total word length including existing tiles, not just newly placed tiles
+- **Real-Time Validation**: Runs automatically via useEffect/store subscription
+- **Dual-Mode Support**: Same logic works in both local and online games
+- **No Performance Impact**: Validation already ran for visual feedback, counter reuses result
+- **Consistent UX**: Both game modes have identical counter appearance and behavior
+
+### Files Changed
+- `/src/components/GameControls/GameControls.tsx` - Added word length counter (local)
+- `/src/i18n/locales/en/common.json` - Added "letter" translations (local)
+- `/src/i18n/locales/sr/common.json` - Added "letter" translations (local)
+- `packages/client/src/components/OnlineGameControls/OnlineGameControls.tsx` - Added counter logic
+- `packages/client/src/components/OnlineGame/OnlineGame.tsx` - Added validation state management
+- `packages/client/src/i18n/locales/en/common.json` - Added "letter" translations (online)
+- `packages/client/src/i18n/locales/sr/common.json` - Added "letter" translations (online)
+
+### User Experience Improvements
+- **Before**: No indication of word length until submission - players had to count manually
+- **After**: Instant visual feedback showing progress toward 4-letter minimum
+  - Yellow "3/4 letters" = "Add one more tile!"
+  - Green "5 letters ✓" = "Ready to submit!"
+- Reduces frustration from rejected moves due to too-short words
+- Players can see exact word length at a glance
+- Clear visual distinction between incomplete (yellow) and valid (green)
+- Counter positioned directly on Play Word button for maximum visibility
+
+### Example
+```
+Placing tiles to form "KUĆA" (4 letters):
+- Place K: "1/4 letters" (yellow)
+- Place U: "2/4 letters" (yellow)
+- Place Ć: "3/4 letters" (yellow)
+- Place A: "4 letters ✓" (green) - Ready to submit!
+
+Placing single tile 'D' between 'I' and 'A' to form "IDA":
+- Shows "3/4 letters" (yellow) - word too short
+- Need to form longer word or choose different placement
+```
+
+### Tested
+- ✅ Local game: Counter appears when placing tiles
+- ✅ Local game: Yellow for <4 letters, green for ≥4 letters
+- ✅ Local game: Counter updates as tiles added/removed
+- ✅ Local game: Accurate count includes existing board tiles
+- ✅ Online game: Same counter behavior as local
+- ✅ Online game: Counter updates on both desktop and mobile layouts
+- ✅ English and Serbian translations work correctly
+- ✅ Counter disappears when all tiles recalled
+
+---
+
 ## [0.2.10] - 2026-01-12
 
 ### Fixed

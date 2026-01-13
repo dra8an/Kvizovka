@@ -25,7 +25,7 @@ import { OnlineGameControls } from '../OnlineGameControls/OnlineGameControls'
 import { Chat } from '../Chat/Chat'
 import { BonusFlash } from '../BonusFlash/BonusFlash'
 import { DirectionChoiceDialog } from '../DirectionChoiceDialog/DirectionChoiceDialog'
-import { GameStatus, PlacedTile } from '@kvizovka/shared'
+import { GameStatus, PlacedTile, MoveValidationResult, MoveValidator, Board as BoardEngine, BOARD_SIZE } from '@kvizovka/shared'
 
 export function OnlineGame() {
   const { t } = useTranslation(['online', 'common', 'dialogs'])
@@ -61,6 +61,9 @@ export function OnlineGame() {
   const [infoModal, setInfoModal] = useState<{ title: string; message: string } | null>(null)
   const [errorModal, setErrorModal] = useState<{ title: string; message: string } | null>(null)
 
+  // Local state for placement validation
+  const [placementValidation, setPlacementValidation] = useState<MoveValidationResult | null>(null)
+
   // Clear selected tiles when game state updates (after successful move)
   useEffect(() => {
     // When the server sends updated game state, clear our local placement
@@ -78,6 +81,45 @@ export function OnlineGame() {
       })
     }
   }, [gameError, t])
+
+  // Run validation when selectedTiles changes
+  useEffect(() => {
+    if (!gameState) {
+      setPlacementValidation(null)
+      return
+    }
+
+    if (selectedTiles.length === 0) {
+      setPlacementValidation(null)
+      return
+    }
+
+    // Create a temporary board instance for validation
+    const tempBoard = new BoardEngine()
+    tempBoard.initialize()
+
+    // Copy the current board state
+    const currentBoard = gameState.board
+    for (let row = 0; row < BOARD_SIZE; row++) {
+      for (let col = 0; col < BOARD_SIZE; col++) {
+        const square = currentBoard[row][col]
+        if (square.tile) {
+          tempBoard.setTile(row, col, square.tile)
+        }
+        if (square.isUsed) {
+          const tempSquare = tempBoard.getSquare(row, col)
+          if (tempSquare) {
+            tempSquare.isUsed = true
+          }
+        }
+      }
+    }
+
+    // Run validation
+    const validator = new MoveValidator(tempBoard)
+    const result = validator.validateMove(selectedTiles)
+    setPlacementValidation(result)
+  }, [selectedTiles, gameState])
 
   // If not in playing or finished view, show menu/waiting
   if (view !== 'playing' && view !== 'finished') {
@@ -457,6 +499,7 @@ export function OnlineGame() {
               <OnlineGameControls
                 isYourTurn={isYourTurn}
                 selectedTiles={selectedTiles}
+                placementValidation={placementValidation}
                 gameError={gameError}
                 onPlayWord={handlePlayWord}
                 onSkipTurn={handleSkip}
@@ -500,6 +543,7 @@ export function OnlineGame() {
             <OnlineGameControls
               isYourTurn={isYourTurn}
               selectedTiles={selectedTiles}
+              placementValidation={placementValidation}
               gameError={gameError}
               onPlayWord={handlePlayWord}
               onSkipTurn={handleSkip}
