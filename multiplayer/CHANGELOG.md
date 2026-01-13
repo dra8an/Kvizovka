@@ -13,6 +13,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.10] - 2026-01-12
+
+### Fixed
+- **Single-Tile Direction Detection Bug**
+  - Fixed validator incorrectly choosing direction when single tile has neighbors in both directions
+  - **Bug**: When placing a tile that forms both horizontal and vertical words, validator chose shorter word direction
+  - **Example**: Placing 'D' between 'I' and 'A' formed 3-tile horizontal word "IDA" and 5-tile vertical word - validator incorrectly chose horizontal
+  - **Root Cause**: "Both sides" heuristic failed when horizontal had neighbors on BOTH sides but vertical had neighbors on ONLY ONE side
+  - **Fix**: Removed unreliable heuristic - now ALWAYS scans actual word lengths when tile has neighbors in both directions
+  - Validator now correctly chooses the longer direction (main word) every time
+
+### Technical Details
+- Changed `determineSingleTileDirection()` in `MoveValidator.ts`
+- **Before**: Used `verticalBothSides && horizontalBothSides` check - would skip word length comparison if false ❌
+- **After**: Always temporarily places tile and compares word lengths when both directions have neighbors ✅
+- Logic now:
+  1. Check if tile has horizontal neighbors (left OR right, ignoring blockers)
+  2. Check if tile has vertical neighbors (top OR bottom, ignoring blockers)
+  3. If BOTH directions have neighbors → temporarily place tile, scan both directions, choose longer word
+  4. If only ONE direction has neighbors → choose that direction
+- If both directions have equal length, defaults to VERTICAL
+
+### Example
+```
+Board state:
+    K E
+I D A
+    K
+    O
+    K
+
+Placing 'D' at position between I and A:
+Horizontal: I + D + A = 3 tiles
+Vertical: D + A + K + O + K = 5 tiles
+
+Before fix: Chose HORIZONTAL (heuristic skipped length check) ❌
+After fix: Chose VERTICAL (scanned lengths, picked longer) ✅
+```
+
+### Files Changed
+- `packages/shared/src/game-engine/MoveValidator.ts` - Fixed direction detection (lines 416-448)
+
+### Tested
+- ✅ Single tile between two horizontal tiles → chooses horizontal
+- ✅ Single tile between two vertical tiles → chooses vertical
+- ✅ Single tile with neighbors in BOTH directions → chooses longer word direction
+- ✅ Edge case: Horizontal neighbors on both sides, vertical on one side → correctly chooses longer direction
+- ✅ Console logs show word length comparison working correctly
+
+---
+
 ## [0.2.9] - 2026-01-11
 
 ### Changed

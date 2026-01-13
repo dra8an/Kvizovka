@@ -22,6 +22,8 @@ import {
   GameStatus,
   PlacedTile,
   ChatMessage,
+  Board,
+  MoveValidator,
 } from '@kvizovka/shared'
 import { socketService } from '../services/socket'
 
@@ -407,12 +409,44 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   // ========================================
 
   makeMove: (placedTiles: PlacedTile[]) => {
-    const { gameId } = get()
+    const { gameId, gameState } = get()
     console.log('[OnlineStore] makeMove called, gameId:', gameId, 'tiles:', placedTiles.length)
 
     if (!gameId) {
       console.error('[OnlineStore] ERROR: No gameId, cannot make move')
       return
+    }
+
+    if (!gameState) {
+      console.error('[OnlineStore] ERROR: No gameState, cannot validate move')
+      return
+    }
+
+    // Create temporary board instance from current game state for client-side validation
+    const board = new Board()
+    board.setGrid(gameState.board)
+
+    // Validate move client-side
+    const validator = new MoveValidator(board)
+    const validation = validator.validateMove(placedTiles)
+
+    console.log('[OnlineStore] Client-side validation result:', validation)
+
+    if (!validation.isValid) {
+      console.error('[OnlineStore] Invalid move (client-side):', validation.reason)
+      set({ gameError: validation.reason || 'Invalid move' })
+      return
+    }
+
+    // Check if direction choice is needed
+    if (validation.needsDirectionChoice && validation.horizontalOption && validation.verticalOption) {
+      console.log('[OnlineStore] Direction choice needed, showing dialog')
+      get().showDirectionChoice(
+        placedTiles,
+        validation.horizontalOption.wordText,
+        validation.verticalOption.wordText
+      )
+      return // Don't send to server yet, wait for user choice
     }
 
     console.log('[OnlineStore] Socket connected:', socketService.isConnected())
@@ -561,19 +595,37 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   },
 
   makeMoveWithDirection: (direction: 'HORIZONTAL' | 'VERTICAL') => {
-    const { directionChoice, makeMove } = get()
+    const { directionChoice, gameId } = get()
 
     if (!directionChoice) {
       console.error('No direction choice available')
       return
     }
 
-    // Clear the dialog
-    set({ directionChoice: null })
+    if (!gameId) {
+      console.error('No gameId')
+      return
+    }
 
-    // Make the move with the chosen tiles
-    // The server will validate with the direction context
-    makeMove(directionChoice.placedTiles)
+    const { placedTiles } = directionChoice
+
+    // Clear the dialog
+    set({ directionChoice: null, gameError: null })
+
+    console.log('[OnlineStore] Sending move with chosen direction:', direction)
+    console.log('[OnlineStore] Emitting game:make-move event with direction...')
+
+    // Send move to server with the chosen direction
+    socketService.emit('game:make-move', { gameId, placedTiles, direction }, (response) => {
+      console.log('[OnlineStore] Received response from server:', response)
+      if (!response.success) {
+        console.error('[OnlineStore] Move failed:', response.error)
+        set({ gameError: response.error || 'Invalid move' })
+      } else {
+        console.log('[OnlineStore] Move accepted by server')
+      }
+      // Server will send game:state-update event if successful
+    })
   },
 
   cancelDirectionChoice: () => {

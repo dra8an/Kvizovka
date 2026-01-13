@@ -116,7 +116,7 @@ export interface ClientToServerEvents {
    * Make a move (place tiles)
    */
   'game:make-move': (
-    data: { gameId: string; placedTiles: PlacedTile[] },
+    data: { gameId: string; placedTiles: PlacedTile[]; direction?: 'HORIZONTAL' | 'VERTICAL' },
     callback: (response: { success: boolean; error?: string }) => void
   ) => void
 

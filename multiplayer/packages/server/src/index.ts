@@ -242,8 +242,8 @@ async function initializeServer() {
      */
     socket.on('game:make-move', (data, callback) => {
       try {
-        const { gameId, placedTiles } = data
-        console.log(`[game:make-move] Received move for game ${gameId}, ${placedTiles.length} tiles`)
+        const { gameId, placedTiles, direction } = data
+        console.log(`[game:make-move] Received move for game ${gameId}, ${placedTiles.length} tiles, direction: ${direction || 'auto'}`)
         const game = gameManager.getGame(gameId)
 
         if (!game) {
@@ -262,7 +262,7 @@ async function initializeServer() {
         }
 
         console.log(`[game:make-move] Processing move for player ${playerId}`)
-        const result = gameManager.makeMove(gameId, playerId, placedTiles)
+        const result = gameManager.makeMove(gameId, playerId, placedTiles, direction)
 
         if (!result.success) {
           console.log(`[game:make-move] Move rejected: ${result.error}`)

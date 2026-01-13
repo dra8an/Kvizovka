@@ -25,6 +25,7 @@ import {
   ScoreCalculator,
   WordValidator,
   MoveType,
+  Direction,
   TILES_PER_PLAYER,
   DEFAULT_TIME_LIMIT,
 } from '@kvizovka/shared'
@@ -205,7 +206,7 @@ export class GameManager {
    * @param placedTiles - Tiles to place
    * @returns Move result
    */
-  makeMove(gameId: string, playerId: string, placedTiles: PlacedTile[]): MoveResult {
+  makeMove(gameId: string, playerId: string, placedTiles: PlacedTile[], forcedDirection?: Direction): MoveResult {
     const game = this.games.get(gameId)
 
     if (!game) {
@@ -227,10 +228,19 @@ export class GameManager {
     board.setGrid(game.board)
 
     const moveValidator = new MoveValidator(board)
-    const validation = moveValidator.validateMove(placedTiles)
+    const validation = moveValidator.validateMove(placedTiles, forcedDirection)
 
     if (!validation.isValid) {
       return { success: false, error: validation.reason || 'Invalid move' }
+    }
+
+    // Check if direction choice is needed (ambiguous single tile placement)
+    // This should only happen if client didn't handle it properly
+    if (validation.needsDirectionChoice && !forcedDirection) {
+      return {
+        success: false,
+        error: 'This placement requires direction choice. Please try again from the client.',
+      }
     }
 
     // Update board BEFORE calculating score (so wordsFormed have the tiles!)
