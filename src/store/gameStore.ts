@@ -197,6 +197,11 @@ interface GameStoreState {
   clearSelection: () => void
 
   /**
+   * Undo last tile placement
+   */
+  undoLastTile: () => void
+
+  /**
    * Set joker letter for a placed joker tile
    */
   setJokerLetter: (row: number, col: number, letter: string) => void
@@ -833,6 +838,38 @@ export const useGameStore = create<GameStoreState>()(
         }
 
         set({ selectedTiles: [], placementValidation: null })
+      },
+
+      /**
+       * Undo last tile placement
+       *
+       * Removes the most recently placed tile and returns it to the rack.
+       * Also resets joker letter if the tile was a joker.
+       */
+      undoLastTile: () => {
+        const { selectedTiles, game } = get()
+
+        if (selectedTiles.length === 0 || !game) {
+          return
+        }
+
+        // Get the last tile
+        const lastTile = selectedTiles[selectedTiles.length - 1]
+
+        // Reset joker letter if it was a joker
+        if (lastTile.tile.isJoker) {
+          const currentPlayer = game.players[game.currentPlayerIndex]
+          const tileInHand = currentPlayer.tiles.find((t) => t.id === lastTile.tile.id)
+          if (tileInHand && tileInHand.isJoker) {
+            tileInHand.jokerLetter = undefined
+          }
+        }
+
+        // Remove the last tile
+        set({ selectedTiles: selectedTiles.slice(0, -1) })
+
+        // Validate placement in real-time for visual feedback
+        get().validateCurrentPlacement()
       },
 
       /**

@@ -4,6 +4,8 @@
     "playAgain": "Play Again",
     "playWord": "Play Word",
     "recallTiles": "Recall Tiles",
+    "undo": "Undo",
+    "undoTooltip": "Remove last placed tile",
     "skipTurn": "Skip Turn",
     "exchange": "Exchange Tiles",
     "confirmExchange": "Confirm Exchange",

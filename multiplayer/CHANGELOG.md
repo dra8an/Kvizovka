@@ -13,6 +13,119 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.12] - 2026-01-12
+
+### Added
+- **Undo Last Tile Placement Button**
+  - New "↶ Undo" button removes the most recently placed tile
+  - Tile automatically returns to the rack
+  - Helpful for quick corrections without dragging tiles back
+  - Button appears in secondary actions row with Recall and Skip Turn
+  - Disabled when no tiles are placed or game not in progress
+  - Includes tooltip: "Remove last placed tile"
+  - Implemented in both local and online multiplayer modes
+
+### Implementation Details
+
+**Local Game (`/src/`)**
+- `store/gameStore.ts`:
+  - Added `undoLastTile()` action to interface
+  - Implementation removes last tile from `selectedTiles` array using `slice(0, -1)`
+  - Resets joker letter if removed tile was a joker
+  - Calls `validateCurrentPlacement()` to update real-time visual feedback
+  - Logic mirrors `clearSelection()` but only affects last tile
+- `components/GameControls/GameControls.tsx`:
+  - Added `undoLastTile` subscription from gameStore
+  - Changed secondary actions from 2-column to 3-column grid
+  - Added Undo button as first button in row: `↶ {t('common:buttons.undo')}`
+  - Button styled with `btn btn-secondary text-sm` for compact layout
+  - Disabled state: `selectedTiles.length === 0 || !isInProgress`
+  - Title tooltip: `t('common:buttons.undoTooltip')`
+
+**Online Game (`packages/client/`)**
+- `components/OnlineGame/OnlineGame.tsx`:
+  - Added `handleUndoLastTile()` handler function
+  - Uses `setSelectedTiles(prev => prev.slice(0, -1))` for state update
+  - Passed as `onUndoLastTile` prop to both OnlineGameControls instances (desktop & mobile)
+- `components/OnlineGameControls/OnlineGameControls.tsx`:
+  - Added `onUndoLastTile: () => void` to interface
+  - Added Undo button to 3-column secondary actions grid
+  - Same styling and disabled logic as local game
+  - Calls `onUndoLastTile` callback on click
+
+**Translations**
+- Added to all 4 translation files (local EN/SR, online EN/SR):
+  - `"undo": "Undo"` / `"undo": "Поништи"`
+  - `"undoTooltip": "Remove last placed tile"` / `"undoTooltip": "Уклони последњу постављену плочицу"`
+- Keys added to `buttons` section in `common.json`
+
+### Technical Highlights
+- **Non-Destructive**: Only removes last tile, preserves rest of placement
+- **Joker Support**: Automatically resets joker letter when undoing joker tile
+- **Real-Time Validation**: Validation updates immediately after undo
+- **State Consistency**: Uses functional state updates (`prev => prev.slice(0, -1)`) in online mode
+- **Dual-Mode Support**: Same behavior in local and online games
+- **UI Consistency**: 3-column button layout fits naturally with existing controls
+
+### UI Changes
+- **Before**: Secondary actions in 2-column grid (Recall | Skip Turn)
+- **After**: Secondary actions in 3-column grid (Undo | Recall | Skip Turn)
+- All three buttons use `text-sm` class for compact, balanced appearance
+- Undo button positioned first (leftmost) for easy access
+
+### Files Changed
+- `/src/store/gameStore.ts` - Added undoLastTile action (local)
+- `/src/components/GameControls/GameControls.tsx` - Added Undo button (local)
+- `/src/i18n/locales/en/common.json` - Added translations (local)
+- `/src/i18n/locales/sr/common.json` - Added translations (local)
+- `packages/client/src/components/OnlineGame/OnlineGame.tsx` - Added handler
+- `packages/client/src/components/OnlineGameControls/OnlineGameControls.tsx` - Added Undo button
+- `packages/client/src/i18n/locales/en/common.json` - Added translations (online)
+- `packages/client/src/i18n/locales/sr/common.json` - Added translations (online)
+
+### User Experience Improvements
+- **Before**: To correct last tile placement, users had to:
+  1. Drag the tile back to rack manually, OR
+  2. Click "Recall Tiles" to remove all tiles
+- **After**: Single click on "↶ Undo" removes just the last tile
+  - Much faster for quick corrections
+  - No need to replay entire word if one tile wrong
+  - Maintains placement order for remaining tiles
+  - Reduces friction in tile placement workflow
+
+### Use Cases
+1. **Typo Correction**: Placed wrong letter, undo and place correct one
+2. **Position Adjustment**: Placed tile in wrong square, undo and reposition
+3. **Direction Change**: Started wrong direction, undo and try different approach
+4. **Joker Letter Change**: Set joker to wrong letter, undo to reset and choose again
+5. **Quick Experimentation**: Try different tile placements rapidly using undo
+
+### Example Workflow
+```
+Player placing "HOUSE":
+1. Place H at (8,8)
+2. Place O at (8,9)
+3. Place U at (8,10)
+4. Place S at (8,11) ← Oops, meant to place different letter
+5. Click "↶ Undo" → S returns to rack
+6. Place correct tile instead
+7. Continue with remaining tiles
+```
+
+### Tested
+- ✅ Local game: Undo removes last tile
+- ✅ Local game: Tile returns to rack correctly
+- ✅ Local game: Joker letter reset when undoing joker
+- ✅ Local game: Validation updates after undo
+- ✅ Local game: Button disabled when no tiles placed
+- ✅ Online game: Same undo behavior as local
+- ✅ Online game: Works on both desktop and mobile layouts
+- ✅ Both games: Tooltip displays correctly
+- ✅ Both games: 3-column button layout looks good
+- ✅ Translations work in English and Serbian
+
+---
+
 ## [0.2.11] - 2026-01-12
 
 ### Added

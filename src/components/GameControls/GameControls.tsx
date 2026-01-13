@@ -49,6 +49,7 @@ export function GameControls() {
   const makeMove = useGameStore((state) => state.makeMove)
   const skipTurn = useGameStore((state) => state.skipTurn)
   const clearSelection = useGameStore((state) => state.clearSelection)
+  const undoLastTile = useGameStore((state) => state.undoLastTile)
   const challengeLastWord = useGameStore((state) => state.challengeLastWord)
   const pauseGame = useGameStore((state) => state.pauseGame)
   const resumeGame = useGameStore((state) => state.resumeGame)
@@ -380,11 +381,20 @@ export function GameControls() {
           )}
 
           {/* Secondary actions */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => undoLastTile()}
+              disabled={selectedTiles.length === 0 || !isInProgress}
+              className="btn btn-secondary text-sm"
+              title={t('common:buttons.undoTooltip')}
+            >
+              ↶ {t('common:buttons.undo')}
+            </button>
+
             <button
               onClick={handleRecallTiles}
               disabled={selectedTiles.length === 0 || !isInProgress}
-              className="btn btn-secondary"
+              className="btn btn-secondary text-sm"
             >
               {t('common:buttons.recallTiles')}
             </button>
@@ -392,7 +402,7 @@ export function GameControls() {
             <button
               onClick={handleSkipTurn}
               disabled={!isInProgress}
-              className="btn btn-secondary"
+              className="btn btn-secondary text-sm"
             >
               {t('common:buttons.skipTurn')}
             </button>

@@ -418,6 +418,11 @@ export function OnlineGame() {
     setSelectedTiles([])
   }
 
+  // Handle undo last tile
+  const handleUndoLastTile = () => {
+    setSelectedTiles(prev => prev.slice(0, -1))
+  }
+
   // Handle back to menu
   const handleBackToMenu = () => {
     reset()
@@ -504,6 +509,7 @@ export function OnlineGame() {
                 onPlayWord={handlePlayWord}
                 onSkipTurn={handleSkip}
                 onRecallTiles={handleRecallTiles}
+                onUndoLastTile={handleUndoLastTile}
                 onBackToMenu={handleBackToMenu}
                 onEndGameTest={forceEndGame}
               />
@@ -548,6 +554,7 @@ export function OnlineGame() {
               onPlayWord={handlePlayWord}
               onSkipTurn={handleSkip}
               onRecallTiles={handleRecallTiles}
+              onUndoLastTile={handleUndoLastTile}
               onBackToMenu={handleBackToMenu}
               onEndGameTest={forceEndGame}
             />

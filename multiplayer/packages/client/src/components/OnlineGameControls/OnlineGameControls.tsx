@@ -17,6 +17,7 @@ interface OnlineGameControlsProps {
   onPlayWord: () => void
   onSkipTurn: () => void
   onRecallTiles: () => void
+  onUndoLastTile: () => void
   onBackToMenu: () => void
   onEndGameTest?: () => void  // For testing game completion
 }
@@ -29,6 +30,7 @@ export function OnlineGameControls({
   onPlayWord,
   onSkipTurn,
   onRecallTiles,
+  onUndoLastTile,
   onBackToMenu,
   onEndGameTest,
 }: OnlineGameControlsProps) {
@@ -147,11 +149,20 @@ export function OnlineGameControls({
       </button>
 
       {/* Secondary actions */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          onClick={onUndoLastTile}
+          disabled={selectedTiles.length === 0 || !isYourTurn}
+          className="btn btn-secondary text-sm"
+          title={t('common:buttons.undoTooltip')}
+        >
+          ↶ {t('common:buttons.undo')}
+        </button>
+
         <button
           onClick={handleRecallTiles}
           disabled={selectedTiles.length === 0 || !isYourTurn}
-          className="btn btn-secondary"
+          className="btn btn-secondary text-sm"
         >
           {t('online:controls.recallTiles')}
         </button>
@@ -159,7 +170,7 @@ export function OnlineGameControls({
         <button
           onClick={handleSkipTurn}
           disabled={!isYourTurn}
-          className="btn btn-secondary"
+          className="btn btn-secondary text-sm"
         >
           {t('online:controls.skipTurn')}
         </button>
