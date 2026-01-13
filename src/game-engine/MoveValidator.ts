@@ -391,13 +391,13 @@ export class MoveValidator {
   private determineSingleTileDirection(tile: PlacedTile): Direction | null {
     const { row, col } = tile
 
-    // Check horizontal neighbors
-    const hasLeftNeighbor = !this.board.isEmpty(row, col - 1)
-    const hasRightNeighbor = !this.board.isEmpty(row, col + 1)
+    // Check horizontal neighbors (ignore blockers - they shouldn't influence direction)
+    const hasLeftNeighbor = !this.board.isEmpty(row, col - 1) && !this.board.isBlocker(row, col - 1)
+    const hasRightNeighbor = !this.board.isEmpty(row, col + 1) && !this.board.isBlocker(row, col + 1)
 
-    // Check vertical neighbors
-    const hasTopNeighbor = !this.board.isEmpty(row - 1, col)
-    const hasBottomNeighbor = !this.board.isEmpty(row + 1, col)
+    // Check vertical neighbors (ignore blockers)
+    const hasTopNeighbor = !this.board.isEmpty(row - 1, col) && !this.board.isBlocker(row - 1, col)
+    const hasBottomNeighbor = !this.board.isEmpty(row + 1, col) && !this.board.isBlocker(row + 1, col)
 
     const hasHorizontalNeighbor = hasLeftNeighbor || hasRightNeighbor
     const hasVerticalNeighbor = hasTopNeighbor || hasBottomNeighbor
@@ -412,20 +412,38 @@ export class MoveValidator {
       return 'VERTICAL'
     }
 
-    // If both directions have neighbors, check which has tiles on BOTH sides
-    // The main word direction is the one where the tile is filling a gap or extending
+    // If both directions have neighbors, we need to determine which forms the main word
+    // We ALWAYS check word lengths instead of using the "both sides" heuristic
     if (hasHorizontalNeighbor && hasVerticalNeighbor) {
-      // Vertical has tiles on both sides (filling a gap vertically)
-      if (hasTopNeighbor && hasBottomNeighbor) {
+      console.log('🔍 Both directions have neighbors - scanning to find longer word')
+
+      // Temporarily place the tile to check word lengths
+      this.board.setTile(row, col, tile.tile)
+
+      const horizontalWord = this.board.getTilesInLine(row, col, 'HORIZONTAL')
+      const verticalWord = this.board.getTilesInLine(row, col, 'VERTICAL')
+
+      console.log('🔍 Word lengths:', {
+        position: `(${row},${col})`,
+        horizontal: horizontalWord.length,
+        vertical: verticalWord.length
+      })
+
+      // Remove the tile
+      this.board.removeTile(row, col)
+
+      // Choose the direction with more tiles (likely the main word)
+      // If both have same length, prefer vertical
+      if (verticalWord.length > horizontalWord.length) {
+        console.log('🔍 → Choosing VERTICAL (longer)')
         return 'VERTICAL'
-      }
-      // Horizontal has tiles on both sides (filling a gap horizontally)
-      if (hasLeftNeighbor && hasRightNeighbor) {
+      } else if (horizontalWord.length > verticalWord.length) {
+        console.log('🔍 → Choosing HORIZONTAL (longer)')
         return 'HORIZONTAL'
+      } else {
+        console.log('🔍 → Choosing VERTICAL (equal length, default)')
+        return 'VERTICAL' // Default to vertical when equal
       }
-      // Only one side in each direction - default to vertical
-      // (prefer vertical when ambiguous, as it's more common in crossword-style games)
-      return 'VERTICAL'
     }
 
     // No neighbors - shouldn't happen in valid moves (would fail connectivity check)
