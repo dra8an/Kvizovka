@@ -91,7 +91,7 @@ export function ScorePanel() {
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-bold">{player1.name}</h3>
           {game.currentPlayerIndex === 0 && (
-            <span className="text-xs font-semibold bg-white text-blue-600 px-2 py-1 rounded">
+            <span className="text-xs font-semibold bg-white text-blue-600 px-2 py-1 rounded animate-pulse">
               {t('common:labels.currentTurn')}
             </span>
           )}
@@ -169,7 +169,7 @@ export function ScorePanel() {
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-bold">{player2.name}</h3>
           {game.currentPlayerIndex === 1 && (
-            <span className="text-xs font-semibold bg-white text-green-600 px-2 py-1 rounded">
+            <span className="text-xs font-semibold bg-white text-green-600 px-2 py-1 rounded animate-pulse">
               {t('common:labels.currentTurn')}
             </span>
           )}

@@ -61,7 +61,7 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-bold">{you.name} ({t('online:room.you')})</h3>
           {isYourTurn && (
-            <span className="text-xs font-semibold bg-white text-blue-600 px-2 py-1 rounded">
+            <span className="text-xs font-semibold bg-white text-blue-600 px-2 py-1 rounded animate-pulse">
               {t('common:labels.currentTurn')}
             </span>
           )}
@@ -139,7 +139,7 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-bold">{opponentName}</h3>
           {isOpponentTurn && (
-            <span className="text-xs font-semibold bg-white text-green-600 px-2 py-1 rounded">
+            <span className="text-xs font-semibold bg-white text-green-600 px-2 py-1 rounded animate-pulse">
               {t('common:labels.currentTurn')}
             </span>
           )}

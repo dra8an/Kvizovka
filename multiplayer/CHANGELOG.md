@@ -13,6 +13,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.13] - 2026-01-12
+
+### Added
+- **Pulsing Animation on Turn Indicator**
+  - "Your Turn" / "Current Turn" badge now pulses smoothly to catch attention
+  - Animation uses Tailwind's `animate-pulse` CSS class
+  - Gentle fade in/out effect makes turn indicator much more prominent
+  - Helps players quickly identify when it's their turn
+  - Implemented in both local and online multiplayer modes
+  - No performance impact - pure CSS animation
+
+### Implementation Details
+
+**Local Game (`/src/`)**
+- `components/ScorePanel/ScorePanel.tsx`:
+  - Added `animate-pulse` class to Player 1 turn indicator badge (line 94)
+  - Added `animate-pulse` class to Player 2 turn indicator badge (line 172)
+  - Badge location: Top-right of active player's score panel
+  - Animation applies to the white badge with blue/green text
+
+**Online Game (`packages/client/`)**
+- `components/OnlineScorePanel/OnlineScorePanel.tsx`:
+  - Added `animate-pulse` class to "You" turn indicator badge (line 64)
+  - Added `animate-pulse` class to Opponent turn indicator badge (line 142)
+  - Same visual effect as local game for consistency
+
+**Technical Details**
+- Uses Tailwind CSS built-in `animate-pulse` utility
+- Animation: Smooth opacity fade from 100% to 50% and back (2s cycle)
+- Applied to: `<span className="... animate-pulse">`
+- CSS animation runs continuously while badge is visible
+- No JavaScript required - pure CSS performance
+
+### Visual Effect
+- **Before**: Static turn indicator badge
+- **After**: Badge smoothly pulses (fades in/out)
+- Cycle: ~2 seconds per pulse
+- Effect: Subtle but attention-grabbing
+- Makes it immediately obvious whose turn it is
+
+### Files Changed
+- `/src/components/ScorePanel/ScorePanel.tsx` - Added animation to both players (local)
+- `packages/client/src/components/OnlineScorePanel/OnlineScorePanel.tsx` - Added animation (online)
+
+### User Experience Improvements
+- **Problem**: Turn indicator could get lost among other UI elements
+- **Solution**: Pulsing animation draws eye to current turn
+- **Benefit**: Players immediately know when it's their turn without searching
+- Especially helpful in:
+  - Hotseat mode (local) when passing device between players
+  - Online mode when waiting for opponent to finish their turn
+  - Long games where players might be distracted
+
+### Design Considerations
+- **Subtle**: Pulse animation is gentle, not jarring or distracting
+- **Professional**: Uses standard CSS animation, not flashy effects
+- **Consistent**: Same animation in both local and online modes
+- **Accessible**: Visual cue complements existing color coding
+- **Performance**: CSS-only animation has zero performance cost
+
+### Tested
+- ✅ Local game: Player 1 turn indicator pulses
+- ✅ Local game: Player 2 turn indicator pulses
+- ✅ Local game: Animation stops when not active player
+- ✅ Online game: "Your Turn" badge pulses
+- ✅ Online game: Opponent turn badge pulses
+- ✅ Animation smooth and consistent
+- ✅ No performance issues
+- ✅ Works on both desktop and mobile layouts
+
+---
+
 ## [0.2.12] - 2026-01-12
 
 ### Added
