@@ -473,6 +473,14 @@ export function Board() {
                 ? { ...square, tile: selectedTile.tile }
                 : square
 
+              // Determine if this square should show a preview tile
+              const shouldShowPreview =
+                draggedTile &&
+                hoveredSquare &&
+                hoveredSquare.row === rowIndex &&
+                hoveredSquare.col === colIndex &&
+                !displaySquare.tile // Only show preview on empty squares
+
               return (
                 <Square
                   key={`${rowIndex}-${colIndex}`}
@@ -484,6 +492,7 @@ export function Board() {
                   onTileDragStart={handleTileDragStart}
                   placementState={getTileState(rowIndex, colIndex)}
                   isHighlightedLine={isInHighlightedLine(rowIndex, colIndex)}
+                  previewTile={shouldShowPreview ? draggedTile : null}
                 />
               )
             })

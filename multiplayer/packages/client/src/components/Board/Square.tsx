@@ -19,7 +19,7 @@
  */
 
 import { useTranslation } from 'react-i18next'
-import { BoardSquare, TilePlacementState } from '@kvizovka/shared'
+import { BoardSquare, TilePlacementState, Tile } from '@kvizovka/shared'
 import { latinToCyrillic } from '../../utils/letterMapping'
 
 /**
@@ -67,6 +67,12 @@ interface SquareProps {
    * Used to show direction indicator when 2+ tiles are placed
    */
   isHighlightedLine?: boolean
+
+  /**
+   * Preview tile to show when dragging over this square
+   * Shows a semi-transparent preview of where the tile will land
+   */
+  previewTile?: Tile | null
 }
 
 /**
@@ -89,7 +95,8 @@ export function Square({
   isDraggable,
   onTileDragStart,
   placementState = TilePlacementState.NEUTRAL,
-  isHighlightedLine = false
+  isHighlightedLine = false,
+  previewTile = null
 }: SquareProps) {
   const { i18n } = useTranslation()
 
@@ -287,6 +294,29 @@ export function Square({
 
       {/* Tile (if placed) */}
       {renderTile()}
+
+      {/* Preview tile (when dragging over) */}
+      {previewTile && !square.tile && (
+        <div className="absolute inset-1 rounded shadow-md flex flex-col items-center justify-center border-2 border-dashed border-blue-400 bg-blue-50 opacity-60 pointer-events-none transition-all duration-100">
+          {/* Joker icon (top-left corner) */}
+          {previewTile.isJoker && (
+            <div className="absolute top-0 left-0.5 text-xs">🃏</div>
+          )}
+
+          {/* Letter */}
+          <div className={`text-xl font-bold ${previewTile.isJoker ? 'text-purple-900' : 'text-gray-900'}`}>
+            {previewTile.isJoker
+              ? (previewTile.jokerLetter ? latinToCyrillic(previewTile.jokerLetter, i18n.language) : '?')
+              : latinToCyrillic(previewTile.letter, i18n.language)
+            }
+          </div>
+
+          {/* Value (bottom-right corner) */}
+          <div className={`absolute bottom-0 right-0.5 text-[9px] font-semibold ${previewTile.isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
+            {previewTile.value}
+          </div>
+        </div>
+      )}
 
       {/* Coordinates (for debugging - can be removed later) */}
       {/* <div className="absolute top-0 left-0 text-[6px] text-gray-400">

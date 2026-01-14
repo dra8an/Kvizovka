@@ -13,6 +13,138 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.14] - 2026-01-12
+
+### Added
+- **Drag Preview Enhancement**
+  - Semi-transparent tile preview appears when dragging over empty board squares
+  - Shows exactly where tile will land before dropping
+  - Makes placement more intuitive, especially on mobile devices
+  - Preview displays letter, value, and joker icon (if applicable)
+  - Language-aware: Shows Cyrillic letters in Serbian mode
+  - Implemented in both local and online multiplayer modes
+
+### Implementation Details
+
+**Local Game (`/src/`)**
+- `components/Board/Square.tsx`:
+  - Added `previewTile?: Tile | null` prop to interface
+  - Added preview tile rendering section (lines 297-317)
+  - Preview displays when `previewTile` prop is provided and square is empty
+  - Visual styling: `border-dashed border-blue-400 bg-blue-50 opacity-60`
+  - Shows full tile with letter, value, and joker icon if applicable
+  - `pointer-events-none` ensures preview doesn't interfere with drag/drop
+
+- `components/Board/Board.tsx`:
+  - Added preview logic using existing `draggedTile` and `hoveredSquare` state
+  - Determines if square should show preview: tile being dragged + cursor over empty square
+  - Passes `previewTile` prop to Square component
+  - Logic: `shouldShowPreview = draggedTile && hoveredSquare && matching position && !tile`
+
+**Online Game (`packages/client/`)**
+- `components/Board/Square.tsx`:
+  - Same `previewTile` prop and rendering as local game
+  - Imported `Tile` type from `@kvizovka/shared`
+  - Consistent visual appearance and behavior
+
+- `components/Board/Board.tsx`:
+  - Same preview logic using `currentDraggedTile` and `hoveredSquare`
+  - Works with online game's props-based architecture
+  - Reuses existing hover tracking state
+
+### Technical Details
+- **Visual Design**:
+  - Background: Light blue (`bg-blue-50`) at 60% opacity
+  - Border: 2px dashed blue (`border-dashed border-blue-400`)
+  - Shadow: Standard shadow-md for depth
+  - Transition: 100ms duration for smooth appearance
+  - Positioning: `absolute inset-1` matches regular tile placement
+
+- **Rendering Logic**:
+  - Only shows on empty squares (`!square.tile`)
+  - Requires active drag operation (`draggedTile !== null`)
+  - Must be hovering over specific square (`hoveredSquare.row/col === current position`)
+  - Preview is non-interactive (`pointer-events-none`)
+
+- **Tile Display**:
+  - Letter: Converted to Cyrillic if Serbian language active
+  - Value: Shown in bottom-right corner (same as regular tiles)
+  - Joker icon: Shows 🃏 emoji in top-left if joker
+  - Font styling: Same as regular tiles (text-xl font-bold)
+
+### Visual Effect
+- **Before**: No visual indication of where tile would land during drag
+- **After**: Semi-transparent preview shows exact placement location
+- Effect: Immediately obvious where tile will be placed
+- Especially helpful:
+  - On mobile/touch devices (harder to aim precisely)
+  - For new players learning the game
+  - When placing tiles in crowded board areas
+  - For players with visual or motor difficulties
+
+### Files Changed
+- `/src/components/Board/Square.tsx` - Added previewTile prop and rendering (local)
+- `/src/components/Board/Board.tsx` - Added preview logic (local)
+- `packages/client/src/components/Board/Square.tsx` - Added previewTile prop and rendering (online)
+- `packages/client/src/components/Board/Board.tsx` - Added preview logic (online)
+
+### User Experience Improvements
+- **Problem**: Users couldn't see exactly where tile would land until after dropping
+  - Led to misplaced tiles requiring undo/recall
+  - Especially problematic on touch devices
+  - Slowed down gameplay
+
+- **Solution**: Real-time visual preview as you drag
+  - See exactly where tile will go before committing
+  - Reduces placement errors significantly
+  - Faster, more confident tile placement
+
+- **Benefits**:
+  1. **Accuracy**: No more accidental misplacements
+  2. **Speed**: Faster tile placement with visual confirmation
+  3. **Confidence**: Players know exactly what will happen
+  4. **Accessibility**: Easier for users with motor difficulties
+  5. **Mobile-friendly**: Makes touch/drag much more intuitive
+
+### Design Considerations
+- **Subtle but clear**: Blue tint distinguishes preview from real tiles
+- **Dashed border**: Indicates temporary/preview state
+- **60% opacity**: Semi-transparent so premium fields still visible
+- **Non-blocking**: Doesn't interfere with drag/drop operations
+- **Consistent**: Same appearance in local and online modes
+- **Performance**: CSS-only rendering, no JavaScript calculations
+
+### Example Workflow
+```
+Before (no preview):
+1. Start dragging tile 'K' from rack
+2. Move cursor over board - no visual feedback
+3. Try to drop on desired square
+4. Oops, dropped one square off - use Undo button
+5. Try again
+
+After (with preview):
+1. Start dragging tile 'K' from rack
+2. Move cursor over board - see blue preview of 'K' on each square
+3. Position cursor until preview shows exactly where you want
+4. Drop - tile lands exactly where preview showed ✓
+```
+
+### Tested
+- ✅ Local game: Preview appears when dragging tile
+- ✅ Local game: Preview shows correct letter and value
+- ✅ Local game: Preview shows joker icon for joker tiles
+- ✅ Local game: Preview only shows on empty squares
+- ✅ Local game: Preview disappears when drag ends
+- ✅ Local game: Cyrillic letters shown in Serbian mode
+- ✅ Online game: Same preview behavior as local
+- ✅ Online game: Works on both desktop and mobile
+- ✅ Preview doesn't interfere with drop functionality
+- ✅ Smooth transition when moving between squares
+- ✅ No performance issues during drag operations
+
+---
+
 ## [0.2.13] - 2026-01-12
 
 ### Added
