@@ -54,6 +54,11 @@ interface TileRackProps {
   onTileDragEnd?: () => void
 
   /**
+   * Callback for reordering tiles in rack (for online mode)
+   */
+  onReorderTiles?: (fromIndex: number, toIndex: number) => void
+
+  /**
    * Disabled state (for online mode when not your turn)
    */
   disabled?: boolean
@@ -121,10 +126,13 @@ export function TileRack(props: TileRackProps = {}) {
   }
 
   const reorderPlayerTiles = (fromIndex: number, toIndex: number) => {
-    if (!isOnlineMode) {
+    if (props.onReorderTiles) {
+      // Use callback for online mode
+      props.onReorderTiles(fromIndex, toIndex)
+    } else if (!isOnlineMode) {
+      // Use store for local mode
       storeReorderPlayerTiles(fromIndex, toIndex)
     }
-    // Online mode doesn't support reordering
   }
 
   const toggleTileForExchange = (tile: TileType) => {
@@ -278,7 +286,7 @@ export function TileRack(props: TileRackProps = {}) {
     <div className="flex flex-col gap-1.5">
       {/* Player info */}
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-baseline gap-2">
           <h3 className="text-base font-bold text-gray-800">{t('game:tileRack.playerTiles', { playerName })}</h3>
           <p className="text-xs text-gray-600">
             {t('game:tileRack.tilesInHand', { count: availableTiles.length })}

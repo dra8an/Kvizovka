@@ -19,7 +19,6 @@ interface OnlineGameControlsProps {
   onRecallTiles: () => void
   onUndoLastTile: () => void
   onBackToMenu: () => void
-  onEndGameTest?: () => void  // For testing game completion
 }
 
 export function OnlineGameControls({
@@ -32,7 +31,6 @@ export function OnlineGameControls({
   onRecallTiles,
   onUndoLastTile,
   onBackToMenu,
-  onEndGameTest,
 }: OnlineGameControlsProps) {
   const { t } = useTranslation(['online', 'common', 'dialogs'])
 
@@ -187,17 +185,6 @@ export function OnlineGameControls({
 
       {/* Game management */}
       <div className="grid grid-cols-1 gap-2 mt-2 pt-3 border-t border-gray-300">
-        {/* Test button - only show if handler provided */}
-        {onEndGameTest && (
-          <button
-            onClick={onEndGameTest}
-            className="btn bg-orange-500 hover:bg-orange-600 text-white text-sm"
-            title={t('online:controls.endGameTestTitle')}
-          >
-            🧪 {t('online:controls.endGameTest')}
-          </button>
-        )}
-
         <button
           onClick={handleBackToMenu}
           className="btn bg-red-500 hover:bg-red-600 text-white text-sm"

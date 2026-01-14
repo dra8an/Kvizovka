@@ -164,7 +164,7 @@ export function Tile({ tile, tileIndex, isWithinRack, onDragStart, onDragEnd, is
       <div className="text-2xl font-bold text-gray-900">{getDisplayLetter()}</div>
 
       {/* Value (bottom-right corner) */}
-      <div className="absolute bottom-1 right-1.5 text-xs font-semibold text-gray-600">
+      <div className="absolute bottom-0.5 right-1 text-[10px] font-semibold leading-none text-gray-600">
         {getDisplayValue()}
       </div>
 

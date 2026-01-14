@@ -53,11 +53,13 @@ export function OnlineGame() {
     makeMoveWithDirection,
     cancelDirectionChoice,
     reset,
-    forceEndGame,
   } = useOnlineGameStore()
 
   // Local UI state for tile placement
   const [selectedTiles, setSelectedTiles] = useState<PlacedTile[]>([])
+
+  // Local UI state for tile order (for reordering in rack)
+  const [playerTileOrder, setPlayerTileOrder] = useState<any[]>([])
 
   // Local UI state for joker stealing tooltip
   const [draggedTile, setDraggedTile] = useState<any>(null)
@@ -76,6 +78,21 @@ export function OnlineGame() {
       setSelectedTiles([])
     }
   }, [gameState?.round, gameState?.currentPlayerIndex])
+
+  // Update player tile order when game state changes
+  useEffect(() => {
+    if (gameState && yourPlayerId) {
+      const you = gameState.players.find((p) => p.id === yourPlayerId)
+      if (you && you.tiles) {
+        setPlayerTileOrder(you.tiles)
+      }
+    } else if (gameState && isSpectator) {
+      // Spectators see player 1's tiles
+      if (gameState.players[0]?.tiles) {
+        setPlayerTileOrder(gameState.players[0].tiles)
+      }
+    }
+  }, [gameState, yourPlayerId, isSpectator])
 
   // Show error modal when gameError is set
   useEffect(() => {
@@ -443,6 +460,34 @@ export function OnlineGame() {
     setSelectedTiles(prev => prev.slice(0, -1))
   }
 
+  // Handle tile reordering in rack
+  const handleReorderTiles = (fromIndex: number, toIndex: number) => {
+    // Get tiles that are currently available in the rack (not placed on board)
+    const selectedTileIds = new Set(selectedTiles.map((st) => st.tile.id))
+    const availableTiles = playerTileOrder.filter(
+      (tile) => !selectedTileIds.has(tile.id)
+    )
+
+    // Validate indices
+    if (fromIndex < 0 || fromIndex >= availableTiles.length ||
+        toIndex < 0 || toIndex >= availableTiles.length) {
+      return
+    }
+
+    // Remove tile from old position
+    const [movedTile] = availableTiles.splice(fromIndex, 1)
+
+    // Insert at new position
+    availableTiles.splice(toIndex, 0, movedTile)
+
+    // Reconstruct the full tiles array (available tiles + placed tiles)
+    const placedTiles = playerTileOrder.filter((tile) =>
+      selectedTileIds.has(tile.id)
+    )
+
+    setPlayerTileOrder([...availableTiles, ...placedTiles])
+  }
+
   // Handle back to menu
   const handleBackToMenu = () => {
     reset()
@@ -515,12 +560,13 @@ export function OnlineGame() {
 
             {/* Tile rack */}
             <TileRack
-              tiles={you.tiles}
+              tiles={playerTileOrder.length > 0 ? playerTileOrder : you.tiles}
               playerName={you.name}
               selectedTiles={selectedTiles}
               onTileRemoved={handleTileRemoved}
               onTileDragStart={handleTileDragStart}
               onTileDragEnd={handleTileDragEnd}
+              onReorderTiles={handleReorderTiles}
               disabled={!isYourTurn || isSpectator}
             />
 
@@ -541,7 +587,6 @@ export function OnlineGame() {
                   onRecallTiles={handleRecallTiles}
                   onUndoLastTile={handleUndoLastTile}
                   onBackToMenu={handleBackToMenu}
-                  onEndGameTest={forceEndGame}
                 />
               )}
             </div>
@@ -600,7 +645,6 @@ export function OnlineGame() {
                   onRecallTiles={handleRecallTiles}
                   onUndoLastTile={handleUndoLastTile}
                   onBackToMenu={handleBackToMenu}
-                  onEndGameTest={forceEndGame}
                 />
               </>
             )}

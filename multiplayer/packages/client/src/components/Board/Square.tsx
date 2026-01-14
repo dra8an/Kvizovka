@@ -266,7 +266,7 @@ export function Square({
         </div>
 
         {/* Value (bottom-right corner) - smaller and more in corner */}
-        <div className={`absolute bottom-0 right-0.5 text-[9px] font-semibold ${isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
+        <div className={`absolute bottom-0 right-0 text-[8px] font-semibold leading-none ${isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
           {value}
         </div>
       </div>
@@ -312,7 +312,7 @@ export function Square({
           </div>
 
           {/* Value (bottom-right corner) */}
-          <div className={`absolute bottom-0 right-0.5 text-[9px] font-semibold ${previewTile.isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
+          <div className={`absolute bottom-0 right-0 text-[8px] font-semibold leading-none ${previewTile.isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
             {previewTile.value}
           </div>
         </div>
