@@ -71,9 +71,6 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName, specta
   const isYourTurn = gameState.players[gameState.currentPlayerIndex].id === yourPlayerId
   const isOpponentTurn = gameState.players[gameState.currentPlayerIndex].id === opponent.id
 
-  // Get last move
-  const lastMove = gameState.moveHistory[gameState.moveHistory.length - 1]
-
   return (
     <div className="flex flex-col gap-4">
       {/* Spectators list (if any) */}
@@ -247,29 +244,6 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName, specta
           </div>
         </div>
       </div>
-
-      {/* Last move info */}
-      {lastMove && (
-        <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200">
-          <h4 className="text-sm font-bold text-purple-900 mb-1">{t('common:labels.lastMove')}</h4>
-          <div className="text-xs text-purple-800">
-            <p>
-              <span className="font-semibold">{t('common:labels.type')}:</span> {lastMove.type}
-            </p>
-            {lastMove.score > 0 && (
-              <p>
-                <span className="font-semibold">{t('common:labels.score')}:</span> +{lastMove.score} {t('common:labels.points')}
-              </p>
-            )}
-            {lastMove.formedWords && lastMove.formedWords.length > 0 && (
-              <p>
-                <span className="font-semibold">{t('common:labels.words')}:</span>{' '}
-                {lastMove.formedWords.join(', ')}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

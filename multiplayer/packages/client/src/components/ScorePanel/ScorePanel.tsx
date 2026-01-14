@@ -67,10 +67,6 @@ export function ScorePanel() {
   const [player1, player2] = game.players
   const currentPlayer = game.players[game.currentPlayerIndex]
 
-  // Get last move score
-  const lastMove = game.moveHistory[game.moveHistory.length - 1]
-  const lastMoveScore = lastMove?.score || 0
-
   // Count tiles remaining in bag
   const tilesRemaining = game.tileBag.filter((tile) => tile !== null).length
 
@@ -194,29 +190,6 @@ export function ScorePanel() {
           <span>Tiles: {player2.tiles.length}</span>
         </div>
       </div>
-
-      {/* Last move info */}
-      {lastMove && (
-        <div className="bg-purple-50 p-3 rounded-lg border-2 border-purple-200">
-          <h4 className="text-sm font-bold text-purple-900 mb-1">Last Move</h4>
-          <div className="text-xs text-purple-800">
-            <p>
-              <span className="font-semibold">Type:</span> {lastMove.type}
-            </p>
-            {lastMove.score > 0 && (
-              <p>
-                <span className="font-semibold">Score:</span> +{lastMove.score} points
-              </p>
-            )}
-            {lastMove.formedWords && lastMove.formedWords.length > 0 && (
-              <p>
-                <span className="font-semibold">Words:</span>{' '}
-                {lastMove.formedWords.join(', ')}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
