@@ -6,6 +6,7 @@
  */
 
 import { useTranslation } from 'react-i18next'
+import { useState, useEffect } from 'react'
 import { GameState } from '@kvizovka/shared'
 
 interface OnlineScorePanelProps {
@@ -16,6 +17,33 @@ interface OnlineScorePanelProps {
 
 export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: OnlineScorePanelProps) {
   const { t } = useTranslation(['common', 'online'])
+
+  // Local state for live timer countdown
+  const [displayTime, setDisplayTime] = useState<{ [playerId: string]: number }>({})
+
+  // Sync display time with server ONLY when turn changes or round changes
+  useEffect(() => {
+    const newDisplayTime: { [playerId: string]: number } = {}
+    gameState.players.forEach(player => {
+      newDisplayTime[player.id] = player.timeRemaining
+    })
+    setDisplayTime(newDisplayTime)
+  }, [gameState.currentPlayerIndex, gameState.round]) // Only sync on turn/round change, NOT on every player update
+
+  // Countdown timer for current player
+  useEffect(() => {
+    const currentPlayer = gameState.players[gameState.currentPlayerIndex]
+
+    const interval = setInterval(() => {
+      setDisplayTime(prev => ({
+        ...prev,
+        [currentPlayer.id]: Math.max(0, (prev[currentPlayer.id] || currentPlayer.timeRemaining) - 1000)
+      }))
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [gameState.currentPlayerIndex, gameState.players])
+
   /**
    * Format time in MM:SS
    */
@@ -80,10 +108,10 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
             </p>
             <p
               className={`text-2xl font-bold ${
-                you.timeRemaining < 60000 ? 'text-red-300' : ''
+                (displayTime[you.id] ?? you.timeRemaining) < 60000 ? 'text-red-300' : ''
               }`}
             >
-              {formatTime(you.timeRemaining)}
+              {formatTime(displayTime[you.id] ?? you.timeRemaining)}
             </p>
           </div>
         </div>
@@ -158,10 +186,10 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName }: Onli
             </p>
             <p
               className={`text-2xl font-bold ${
-                opponent.timeRemaining < 60000 ? 'text-red-300' : ''
+                (displayTime[opponent.id] ?? opponent.timeRemaining) < 60000 ? 'text-red-300' : ''
               }`}
             >
-              {formatTime(opponent.timeRemaining)}
+              {formatTime(displayTime[opponent.id] ?? opponent.timeRemaining)}
             </p>
           </div>
         </div>

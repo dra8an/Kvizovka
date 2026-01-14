@@ -240,10 +240,10 @@ async function initializeServer() {
     /**
      * Make Move
      */
-    socket.on('game:make-move', (data, callback) => {
+    socket.on('game:make-move', (data: { gameId: string; placedTiles: any[]; timeTaken?: number; direction?: 'HORIZONTAL' | 'VERTICAL' }, callback) => {
       try {
-        const { gameId, placedTiles, direction } = data
-        console.log(`[game:make-move] Received move for game ${gameId}, ${placedTiles.length} tiles, direction: ${direction || 'auto'}`)
+        const { gameId, placedTiles, timeTaken, direction } = data
+        console.log(`[game:make-move] Received move for game ${gameId}, ${placedTiles.length} tiles, time: ${timeTaken}ms, direction: ${direction || 'auto'}`)
         const game = gameManager.getGame(gameId)
 
         if (!game) {
@@ -262,7 +262,7 @@ async function initializeServer() {
         }
 
         console.log(`[game:make-move] Processing move for player ${playerId}`)
-        const result = gameManager.makeMove(gameId, playerId, placedTiles, direction)
+        const result = gameManager.makeMove(gameId, playerId, placedTiles, timeTaken || 0, direction)
 
         if (!result.success) {
           console.log(`[game:make-move] Move rejected: ${result.error}`)
@@ -296,9 +296,9 @@ async function initializeServer() {
     /**
      * Skip Turn
      */
-    socket.on('game:skip-turn', (data, callback) => {
+    socket.on('game:skip-turn', (data: { gameId: string; timeTaken?: number }, callback) => {
       try {
-        const { gameId } = data
+        const { gameId, timeTaken } = data
         const game = gameManager.getGame(gameId)
 
         if (!game) {
@@ -313,7 +313,7 @@ async function initializeServer() {
           return
         }
 
-        const result = gameManager.skipTurn(gameId, playerId)
+        const result = gameManager.skipTurn(gameId, playerId, timeTaken || 0)
 
         if (!result.success) {
           callback({ success: false, error: result.error })
@@ -344,9 +344,9 @@ async function initializeServer() {
     /**
      * Exchange Tiles
      */
-    socket.on('game:exchange-tiles', (data, callback) => {
+    socket.on('game:exchange-tiles', (data: { gameId: string; tileIds: string[]; timeTaken?: number }, callback) => {
       try {
-        const { gameId, tileIds } = data
+        const { gameId, tileIds, timeTaken } = data
         const game = gameManager.getGame(gameId)
 
         if (!game) {
@@ -361,7 +361,7 @@ async function initializeServer() {
           return
         }
 
-        const result = gameManager.exchangeTiles(gameId, playerId, tileIds)
+        const result = gameManager.exchangeTiles(gameId, playerId, tileIds, timeTaken || 0)
 
         if (!result.success) {
           callback({ success: false, error: result.error })

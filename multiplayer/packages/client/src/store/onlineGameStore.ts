@@ -147,6 +147,12 @@ interface OnlineGameStore {
    */
   chatMessages: ChatMessage[]
 
+  /**
+   * When the current player's turn started (for time tracking)
+   * Used to calculate elapsed time when making a move
+   */
+  turnStartTime: number | null
+
   // ========================================
   // ACTIONS - CONNECTION
   // ========================================
@@ -294,6 +300,9 @@ const initialState = {
 
   // Chat
   chatMessages: [],
+
+  // Timer
+  turnStartTime: null,
 }
 
 /**
@@ -453,7 +462,11 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     console.log('[OnlineStore] Emitting game:make-move event...')
     set({ gameError: null })
 
-    socketService.emit('game:make-move', { gameId, placedTiles }, (response) => {
+    // Calculate time taken for this move
+    const { turnStartTime } = get()
+    const timeTaken = turnStartTime ? Date.now() - turnStartTime : 0
+
+    socketService.emit('game:make-move', { gameId, placedTiles, timeTaken }, (response) => {
       console.log('[OnlineStore] Received response from server:', response)
       if (!response.success) {
         console.error('[OnlineStore] Move failed:', response.error)
@@ -466,13 +479,16 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   },
 
   skipTurn: () => {
-    const { gameId } = get()
+    const { gameId, turnStartTime } = get()
     if (!gameId) return
 
     console.log('[OnlineStore] Skipping turn...')
     set({ gameError: null })
 
-    socketService.emit('game:skip-turn', { gameId }, (response) => {
+    // Calculate time taken for this turn
+    const timeTaken = turnStartTime ? Date.now() - turnStartTime : 0
+
+    socketService.emit('game:skip-turn', { gameId, timeTaken }, (response) => {
       if (!response.success) {
         console.error('[OnlineStore] Skip failed:', response.error)
         set({ gameError: response.error || 'Failed to skip turn' })
@@ -482,13 +498,16 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   },
 
   exchangeTiles: (tileIds: string[]) => {
-    const { gameId } = get()
+    const { gameId, turnStartTime } = get()
     if (!gameId) return
 
     console.log('[OnlineStore] Exchanging tiles...', tileIds)
     set({ gameError: null })
 
-    socketService.emit('game:exchange-tiles', { gameId, tileIds }, (response) => {
+    // Calculate time taken for this turn
+    const timeTaken = turnStartTime ? Date.now() - turnStartTime : 0
+
+    socketService.emit('game:exchange-tiles', { gameId, tileIds, timeTaken }, (response) => {
       if (!response.success) {
         console.error('[OnlineStore] Exchange failed:', response.error)
         set({ gameError: response.error || 'Failed to exchange tiles' })
@@ -608,6 +627,7 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     }
 
     const { placedTiles } = directionChoice
+    const { turnStartTime } = get()
 
     // Clear the dialog
     set({ directionChoice: null, gameError: null })
@@ -615,8 +635,11 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     console.log('[OnlineStore] Sending move with chosen direction:', direction)
     console.log('[OnlineStore] Emitting game:make-move event with direction...')
 
+    // Calculate time taken for this move
+    const timeTaken = turnStartTime ? Date.now() - turnStartTime : 0
+
     // Send move to server with the chosen direction
-    socketService.emit('game:make-move', { gameId, placedTiles, direction }, (response) => {
+    socketService.emit('game:make-move', { gameId, placedTiles, timeTaken, direction }, (response) => {
       console.log('[OnlineStore] Received response from server:', response)
       if (!response.success) {
         console.error('[OnlineStore] Move failed:', response.error)
@@ -662,11 +685,16 @@ function setupGameEventHandlers(
   // Game started
   socketService.on('game:started', (data) => {
     console.log('[OnlineStore] Game started!', data.gameId)
+
+    // Check if it's your turn and set turnStartTime
+    const isYourTurn = data.gameState.players[data.gameState.currentPlayerIndex].id === data.yourPlayerId
+
     set({
       gameId: data.gameId,
       gameState: data.gameState,
       yourPlayerId: data.yourPlayerId,
       view: 'playing',
+      turnStartTime: isYourTurn ? Date.now() : null,
     })
   })
 
@@ -676,7 +704,18 @@ function setupGameEventHandlers(
     console.log('[OnlineStore] Game status:', data.gameState.status)
 
     const previousState = get().gameState
-    set({ gameState: data.gameState })
+    const yourPlayerId = get().yourPlayerId
+
+    // Check if turn changed
+    const turnChanged = previousState && previousState.currentPlayerIndex !== data.gameState.currentPlayerIndex
+    const isYourTurn = yourPlayerId && data.gameState.players[data.gameState.currentPlayerIndex].id === yourPlayerId
+
+    // Update state
+    set({
+      gameState: data.gameState,
+      // Reset turnStartTime when it becomes your turn
+      turnStartTime: turnChanged && isYourTurn ? Date.now() : get().turnStartTime,
+    })
 
     // Check if a new move was made (moveHistory grew)
     if (previousState && data.gameState.moveHistory.length > previousState.moveHistory.length) {

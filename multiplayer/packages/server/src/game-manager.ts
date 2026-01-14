@@ -204,9 +204,10 @@ export class GameManager {
    * @param gameId - Game ID
    * @param playerId - Player making the move
    * @param placedTiles - Tiles to place
+   * @param timeTaken - Time elapsed on this turn (milliseconds, from client)
    * @returns Move result
    */
-  makeMove(gameId: string, playerId: string, placedTiles: PlacedTile[], forcedDirection?: Direction): MoveResult {
+  makeMove(gameId: string, playerId: string, placedTiles: PlacedTile[], timeTaken: number, forcedDirection?: Direction): MoveResult {
     const game = this.games.get(gameId)
 
     if (!game) {
@@ -221,6 +222,15 @@ export class GameManager {
 
     if (currentPlayer.id !== playerId) {
       return { success: false, error: 'Not your turn' }
+    }
+
+    // Validate timeTaken
+    if (timeTaken < 0) {
+      return { success: false, error: 'Invalid time taken (negative)' }
+    }
+    if (timeTaken > currentPlayer.timeRemaining) {
+      // Client sent more time than available - clamp to remaining time
+      timeTaken = currentPlayer.timeRemaining
     }
 
     // Validate move
@@ -306,7 +316,11 @@ export class GameManager {
     // Increment rounds
     currentPlayer.roundsPlayed++
 
+    // Update player's remaining time based on client-provided timeTaken
+    currentPlayer.timeRemaining = Math.max(0, currentPlayer.timeRemaining - timeTaken)
+
     // Add move to history
+    const now = new Date()
     game.moveHistory.push({
       moveNumber: game.moveHistory.length + 1,
       playerId: currentPlayer.id,
@@ -315,8 +329,9 @@ export class GameManager {
       formedWords: scoreResult.wordScores.map(ws => ws.word),
       score: scoreResult.totalScore,
       scoreBreakdown: scoreResult,
-      timestamp: new Date(),
+      timestamp: now,
       drawnTileIds,
+      timeTaken,
     })
 
     // Update board
@@ -337,7 +352,7 @@ export class GameManager {
     game.currentPlayerIndex = (game.currentPlayerIndex + 1) % 2 as 0 | 1
 
     // Update metadata
-    game.updatedAt = new Date()
+    game.updatedAt = now
 
     // Check game end conditions
     this.checkGameEnd(game)
@@ -352,9 +367,10 @@ export class GameManager {
    *
    * @param gameId - Game ID
    * @param playerId - Player skipping
+   * @param timeTaken - Time elapsed on this turn (milliseconds, from client)
    * @returns Move result
    */
-  skipTurn(gameId: string, playerId: string): MoveResult {
+  skipTurn(gameId: string, playerId: string, timeTaken: number): MoveResult {
     const game = this.games.get(gameId)
 
     if (!game) {
@@ -371,13 +387,26 @@ export class GameManager {
       return { success: false, error: 'Not your turn' }
     }
 
+    // Validate timeTaken
+    if (timeTaken < 0) {
+      return { success: false, error: 'Invalid time taken (negative)' }
+    }
+    if (timeTaken > currentPlayer.timeRemaining) {
+      timeTaken = currentPlayer.timeRemaining
+    }
+
+    // Update player's remaining time
+    currentPlayer.timeRemaining = Math.max(0, currentPlayer.timeRemaining - timeTaken)
+
     // Record skip in history
+    const now = new Date()
     game.moveHistory.push({
       moveNumber: game.moveHistory.length + 1,
       playerId: currentPlayer.id,
       type: MoveType.SKIP,
       score: 0,
-      timestamp: new Date(),
+      timestamp: now,
+      timeTaken,
     })
 
     currentPlayer.roundsPlayed++
@@ -388,7 +417,7 @@ export class GameManager {
 
     // Switch turn
     game.currentPlayerIndex = (game.currentPlayerIndex + 1) % 2 as 0 | 1
-    game.updatedAt = new Date()
+    game.updatedAt = now
 
     // Check game end
     this.checkGameEnd(game)
@@ -404,9 +433,10 @@ export class GameManager {
    * @param gameId - Game ID
    * @param playerId - Player exchanging
    * @param tileIds - Tile IDs to exchange
+   * @param timeTaken - Time elapsed on this turn (milliseconds, from client)
    * @returns Move result
    */
-  exchangeTiles(gameId: string, playerId: string, tileIds: string[]): MoveResult {
+  exchangeTiles(gameId: string, playerId: string, tileIds: string[], timeTaken: number): MoveResult {
     const game = this.games.get(gameId)
 
     if (!game) {
@@ -444,6 +474,17 @@ export class GameManager {
       return { success: false, error: 'No valid tiles to exchange' }
     }
 
+    // Validate timeTaken
+    if (timeTaken < 0) {
+      return { success: false, error: 'Invalid time taken (negative)' }
+    }
+    if (timeTaken > currentPlayer.timeRemaining) {
+      timeTaken = currentPlayer.timeRemaining
+    }
+
+    // Update player's remaining time
+    currentPlayer.timeRemaining = Math.max(0, currentPlayer.timeRemaining - timeTaken)
+
     // Return tiles to bag
     game.tileBagInstance.returnTiles(tilesToExchange)
 
@@ -457,13 +498,15 @@ export class GameManager {
     }
 
     // Record exchange
+    const now = new Date()
     game.moveHistory.push({
       moveNumber: game.moveHistory.length + 1,
       playerId: currentPlayer.id,
       type: MoveType.EXCHANGE,
       score: 0,
       tilesExchanged: tilesToExchange.length,
-      timestamp: new Date(),
+      timestamp: now,
+      timeTaken,
     })
 
     currentPlayer.roundsPlayed++
@@ -474,7 +517,7 @@ export class GameManager {
 
     // Switch turn
     game.currentPlayerIndex = (game.currentPlayerIndex + 1) % 2 as 0 | 1
-    game.updatedAt = new Date()
+    game.updatedAt = now
 
     console.log(`[GameManager] ${currentPlayer.name} exchanged ${tilesToExchange.length} tiles`)
 

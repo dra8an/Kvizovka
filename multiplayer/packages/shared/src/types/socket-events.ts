@@ -116,7 +116,7 @@ export interface ClientToServerEvents {
    * Make a move (place tiles)
    */
   'game:make-move': (
-    data: { gameId: string; placedTiles: PlacedTile[]; direction?: 'HORIZONTAL' | 'VERTICAL' },
+    data: { gameId: string; placedTiles: PlacedTile[]; timeTaken?: number; direction?: 'HORIZONTAL' | 'VERTICAL' },
     callback: (response: { success: boolean; error?: string }) => void
   ) => void
 
@@ -124,7 +124,7 @@ export interface ClientToServerEvents {
    * Skip turn
    */
   'game:skip-turn': (
-    data: { gameId: string },
+    data: { gameId: string; timeTaken?: number },
     callback: (response: { success: boolean; error?: string }) => void
   ) => void
 
@@ -132,7 +132,7 @@ export interface ClientToServerEvents {
    * Exchange tiles
    */
   'game:exchange-tiles': (
-    data: { gameId: string; tileIds: string[] },
+    data: { gameId: string; tileIds: string[]; timeTaken?: number },
     callback: (response: { success: boolean; error?: string }) => void
   ) => void
 
