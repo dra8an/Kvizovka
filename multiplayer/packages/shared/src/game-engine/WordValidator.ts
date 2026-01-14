@@ -12,9 +12,9 @@
  * This uses the Dictionary utility we created in Step 4.
  */
 
-import { BoardSquare, ValidationResult } from '../types'
-import { dictionary } from '../utils/dictionary'
-import { MIN_WORD_LENGTH } from '../constants'
+import { BoardSquare, ValidationResult } from '../types/index.js'
+import { dictionary } from '../utils/dictionary.js'
+import { MIN_WORD_LENGTH } from '../constants/index.js'
 
 /**
  * WordValidator Class

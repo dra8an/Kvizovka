@@ -5,26 +5,26 @@
  * Makes imports cleaner in other files.
  *
  * Instead of:
- *   import { Board } from './types/board.types'
- *   import { Tile } from './types/tile.types'
- *   import { GameState } from './types/game.types'
+ *   import { Board } from './types/board.types.js'
+ *   import { Tile } from './types/tile.types.js'
+ *   import { GameState } from './types/game.types.js'
  *
  * You can do:
- *   import { Board, Tile, GameState } from './types'
+ *   import { Board, Tile, GameState } from './types.js'
  */
 
 // Export all board-related types
-export * from './board.types'
+export * from './board.types.js'
 
 // Export all tile-related types
-export * from './tile.types'
+export * from './tile.types.js'
 
 // Export all game-related types
-export * from './game.types'
+export * from './game.types.js'
 
 // Export all socket event types
-export * from './socket-events'
-export type { ChatMessage } from './socket-events'
+export * from './socket-events.js'
+export type { ChatMessage } from './socket-events.js'
 
 /**
  * Re-export commonly used types for convenience
@@ -41,12 +41,12 @@ export type {
   PlacedTile,
   Word,
   BlockerTile,
-} from './board.types'
+} from './board.types.js'
 
 export {
   // Board enums
   TilePlacementState,
-} from './board.types'
+} from './board.types.js'
 
 export type {
   // Tile types
@@ -55,12 +55,12 @@ export type {
   TileBagState,
   DictionaryWord,
   ValidationResult,
-} from './tile.types'
+} from './tile.types.js'
 
 export {
   // Tile enums
   WordCategory,
-} from './tile.types'
+} from './tile.types.js'
 
 export type {
   // Game types
@@ -70,11 +70,11 @@ export type {
   ScoreBreakdown,
   WordScore,
   GameSettings,
-} from './game.types'
+} from './game.types.js'
 
 export {
   // Game enums
   GameMode,
   GameStatus,
   MoveType,
-} from './game.types'
+} from './game.types.js'

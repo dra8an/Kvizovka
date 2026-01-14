@@ -10,8 +10,8 @@
  * - Game mode (local, AI, online)
  */
 
-import { Board, PlacedTile } from './board.types'
-import { Tile } from './tile.types'
+import { Board, PlacedTile } from './board.types.js'
+import { Tile } from './tile.types.js'
 
 /**
  * Game Mode Enum

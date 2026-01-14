@@ -13,7 +13,7 @@
  * - DŽ, LJ, NJ (digraphs - two characters that count as one letter)
  */
 
-import { TileDistribution } from '../types'
+import { TileDistribution } from '../types/index.js'
 
 /**
  * Tile Distribution Map

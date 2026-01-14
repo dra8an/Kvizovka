@@ -7,7 +7,7 @@
  * Words can be validated and searched by category.
  */
 
-import { DictionaryWord, WordCategory, ValidationResult } from '../types'
+import { DictionaryWord, WordCategory, ValidationResult } from '../types/index.js'
 
 /**
  * Dictionary Data Structure
@@ -430,7 +430,7 @@ export class Dictionary {
  *
  * Usage in other files:
  * ```typescript
- * import { dictionary } from './utils/dictionary'
+ * import { dictionary } from './utils/dictionary.js'
  *
  * // In your component or game logic:
  * await dictionary.load()  // Call once at app start
@@ -444,7 +444,7 @@ export const dictionary = new Dictionary()
  *
  * ```typescript
  * // 1. Load dictionary at app startup
- * import { dictionary } from './utils/dictionary'
+ * import { dictionary } from './utils/dictionary.js'
  *
  * async function initializeApp() {
  *   try {

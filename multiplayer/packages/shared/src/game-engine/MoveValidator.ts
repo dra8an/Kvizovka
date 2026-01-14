@@ -14,10 +14,10 @@
  * This is the "referee" that enforces all game rules!
  */
 
-import { Board } from './Board'
-import { WordValidator } from './WordValidator'
-import { PlacedTile, Direction, BoardSquare } from '../types'
-import { MIN_WORD_LENGTH } from '../constants'
+import { Board } from './Board.js'
+import { WordValidator } from './WordValidator.js'
+import { PlacedTile, Direction, BoardSquare } from '../types/index.js'
+import { MIN_WORD_LENGTH } from '../constants/index.js'
 
 /**
  * Move Validation Result

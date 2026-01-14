@@ -19,14 +19,14 @@ import {
   BlockerTile,
   Direction,
   PlacedTile,
-} from '../types'
+} from '../types/index.js'
 import {
   BOARD_SIZE,
   BOARD_CENTER,
   getPremiumField,
   isValidPosition,
   getAdjacentPositions,
-} from '../constants'
+} from '../constants/index.js'
 
 /**
  * Board Class

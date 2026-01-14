@@ -9,8 +9,8 @@
  * - game:* - Game actions (move, skip, exchange, challenge)
  */
 
-import type { GameState } from './game.types'
-import type { PlacedTile } from './board.types'
+import type { GameState } from './game.types.js'
+import type { PlacedTile } from './board.types.js'
 
 /**
  * Room Information

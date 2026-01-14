@@ -10,4 +10,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    include: ['@kvizovka/shared'],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/@kvizovka\/shared/, /node_modules/],
+      transformMixedEsModules: true,
+    },
+  },
 })

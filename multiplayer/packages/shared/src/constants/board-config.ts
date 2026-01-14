@@ -19,7 +19,7 @@
  * - Black with star = CENTER (starting square)
  */
 
-import { PremiumFieldType, Coordinate } from '../types'
+import { PremiumFieldType, Coordinate } from '../types/index.js'
 
 /**
  * Board dimensions

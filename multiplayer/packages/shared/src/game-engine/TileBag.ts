@@ -13,8 +13,8 @@
  * Think of this as the "pile" of tiles players draw from.
  */
 
-import { Tile } from '../types'
-import { TILE_DISTRIBUTION, TOTAL_TILES } from '../constants'
+import { Tile } from '../types/index.js'
+import { TILE_DISTRIBUTION, TOTAL_TILES } from '../constants/index.js'
 
 /**
  * TileBag Class

@@ -13,12 +13,12 @@
  * Scoring is complex in Kvizovka with many rules!
  */
 
-import { BoardSquare, ScoreBreakdown, WordScore, PlacedTile } from '../types'
+import { BoardSquare, ScoreBreakdown, WordScore, PlacedTile } from '../types/index.js'
 import {
   MULTIPLIERS,
   ALL_TILES_BONUS,
   getLongWordBonus,
-} from '../constants'
+} from '../constants/index.js'
 
 /**
  * ScoreCalculator Class
