@@ -445,7 +445,7 @@ export function OnlineGame() {
 
       {/* Main game layout: [Scoresheets] [Board+Rack] [ScorePanel+Controls] */}
       <div className="max-w-[2000px] mx-auto">
-        <div className="grid grid-cols-1 xl:grid-cols-[280px_1fr_300px] gap-2 lg:gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-[450px_1fr_300px] gap-2 lg:gap-4">
           {/* Left sidebar: Scoresheets + Chat (desktop only) */}
           <div className="hidden xl:block space-y-3">
             {/* Scoresheets side-by-side */}
