@@ -82,5 +82,14 @@
       "title": "Leave Game?",
       "message": "Are you sure you want to leave the game? This will disconnect you from the match."
     }
+  },
+  "spectator": {
+    "watching": "Watching Game",
+    "cannotPlay": "You cannot make moves as a spectator",
+    "helpText": "You can watch the game and use chat",
+    "leaveConfirm": {
+      "title": "Leave Game?",
+      "message": "Are you sure you want to stop watching this game?"
+    }
   }
 }

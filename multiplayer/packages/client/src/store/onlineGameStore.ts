@@ -78,6 +78,16 @@ interface OnlineGameStore {
    */
   opponentName: string | null
 
+  /**
+   * Is this user a spectator?
+   */
+  isSpectator: boolean
+
+  /**
+   * List of spectators in the room
+   */
+  spectators: Array<{ socketId: string; name: string }>
+
   // ========================================
   // GAME STATE
   // ========================================
@@ -96,6 +106,13 @@ interface OnlineGameStore {
    * This player's ID in the game
    */
   yourPlayerId: string | null
+
+  /**
+   * ID to use for chat identification
+   * - For players: same as yourPlayerId
+   * - For spectators: socket.id
+   */
+  chatId: string | null
 
   /**
    * Last error from game action
@@ -180,6 +197,11 @@ interface OnlineGameStore {
    * Join an existing room
    */
   joinRoom: (roomCode: string, playerName: string) => void
+
+  /**
+   * Join an existing room as spectator
+   */
+  joinRoomAsSpectator: (roomCode: string, spectatorName: string) => void
 
   /**
    * Mark ready to start game
@@ -285,11 +307,14 @@ const initialState = {
   playerName: null,
   isHost: false,
   opponentName: null,
+  isSpectator: false,
+  spectators: [],
 
   // Game
   gameId: null,
   gameState: null,
   yourPlayerId: null,
+  chatId: null,
   gameError: null,
 
   // UI
@@ -386,11 +411,38 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
           roomCode,
           playerName,
           isHost: false,
+          isSpectator: false,
           view: 'waiting',
         })
       } else {
         console.error('[OnlineStore] Failed to join room:', response.error)
         set({ gameError: response.error || 'Failed to join room' })
+      }
+    })
+  },
+
+  joinRoomAsSpectator: (roomCode: string, spectatorName: string) => {
+    console.log('[OnlineStore] Joining room as spectator...', roomCode, spectatorName)
+    set({ isLoading: true, gameError: null })
+
+    socketService.emit('room:join-spectator', { roomCode, spectatorName }, (response) => {
+      set({ isLoading: false })
+
+      if (response.success) {
+        console.log('[OnlineStore] Joined room as spectator:', roomCode)
+        set({
+          roomCode,
+          playerName: spectatorName,
+          isHost: false,
+          isSpectator: true,
+          chatId: socketService.getSocketId() || null, // Use socket.id for spectator chat identification
+          // If game already started, will receive game:started event
+          // If waiting, will stay in waiting view
+          view: 'waiting',
+        })
+      } else {
+        console.error('[OnlineStore] Failed to join as spectator:', response.error)
+        set({ gameError: response.error || 'Failed to join as spectator' })
       }
     })
   },
@@ -682,17 +734,33 @@ function setupGameEventHandlers(
     set({ opponentName: data.playerName })
   })
 
+  // Spectator joined room
+  socketService.on('room:spectator-joined', (data) => {
+    console.log('[OnlineStore] Spectator joined:', data.spectatorName)
+    set({ spectators: data.spectators })
+  })
+
+  // Spectator left room
+  socketService.on('room:spectator-left', (data) => {
+    console.log('[OnlineStore] Spectator left:', data.spectatorName)
+    set({ spectators: data.spectators })
+  })
+
   // Game started
   socketService.on('game:started', (data) => {
     console.log('[OnlineStore] Game started!', data.gameId)
 
-    // Check if it's your turn and set turnStartTime
-    const isYourTurn = data.gameState.players[data.gameState.currentPlayerIndex].id === data.yourPlayerId
+    // Check if it's your turn and set turnStartTime (only for players, not spectators)
+    const isYourTurn = data.yourPlayerId && data.gameState.players[data.gameState.currentPlayerIndex].id === data.yourPlayerId
+
+    // Set chatId: for players use yourPlayerId, for spectators use socket.id
+    const chatId = data.yourPlayerId || socketService.getSocketId() || null
 
     set({
       gameId: data.gameId,
       gameState: data.gameState,
-      yourPlayerId: data.yourPlayerId,
+      yourPlayerId: data.yourPlayerId || null, // undefined for spectators
+      chatId, // Use socket.id for spectators, yourPlayerId for players
       view: 'playing',
       turnStartTime: isYourTurn ? Date.now() : null,
     })

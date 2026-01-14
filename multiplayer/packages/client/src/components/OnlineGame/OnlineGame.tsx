@@ -22,6 +22,8 @@ import { TileRack } from '../TileRack/TileRack'
 import { Scoresheet } from '../Scoresheet/Scoresheet'
 import { OnlineScorePanel } from '../OnlineScorePanel/OnlineScorePanel'
 import { OnlineGameControls } from '../OnlineGameControls/OnlineGameControls'
+import { SpectatorScorePanel } from '../SpectatorScorePanel/SpectatorScorePanel'
+import { SpectatorControls } from '../SpectatorControls/SpectatorControls'
 import { Chat } from '../Chat/Chat'
 import { BonusFlash } from '../BonusFlash/BonusFlash'
 import { DirectionChoiceDialog } from '../DirectionChoiceDialog/DirectionChoiceDialog'
@@ -33,9 +35,12 @@ export function OnlineGame() {
     view,
     gameState,
     yourPlayerId,
+    chatId,
     playerName,
     opponentName,
     isConnected,
+    isSpectator,
+    spectators,
     gameError,
     chatMessages,
     bonusFlash,
@@ -127,7 +132,7 @@ export function OnlineGame() {
   }
 
   // Must have game state to play
-  if (!gameState || !yourPlayerId) {
+  if (!gameState) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="card text-center">
@@ -138,21 +143,33 @@ export function OnlineGame() {
     )
   }
 
+  // For spectators, yourPlayerId will be null/undefined
   // Get player data
-  const you = gameState.players.find((p) => p.id === yourPlayerId)
-  const opponent = gameState.players.find((p) => p.id !== yourPlayerId)
+  let you = yourPlayerId ? gameState.players.find((p) => p.id === yourPlayerId) : null
+  let opponent = yourPlayerId ? gameState.players.find((p) => p.id !== yourPlayerId) : null
+
+  // If not a spectator and can't find player data, show error
+  if (!isSpectator && (!you || !opponent)) {
+    return <div>{t('online:game.errorPlayerNotFound')}</div>
+  }
+
+  // For spectators, assign player data (we'll use first two players)
+  if (isSpectator) {
+    you = gameState.players[0]
+    opponent = gameState.players[1]
+  }
 
   if (!you || !opponent) {
     return <div>{t('online:game.errorPlayerNotFound')}</div>
   }
 
-  // Check if it's your turn
-  const isYourTurn = gameState.players[gameState.currentPlayerIndex].id === yourPlayerId
+  // Check if it's your turn (always false for spectators)
+  const isYourTurn = !isSpectator && yourPlayerId && gameState.players[gameState.currentPlayerIndex].id === yourPlayerId
 
   // Game completed
   if (gameState.status === GameStatus.COMPLETED) {
     const winner = gameState.players.find((p) => p.id === gameState.winner)
-    const youWon = winner?.id === yourPlayerId
+    const youWon = !isSpectator && winner?.id === yourPlayerId
     const isTie = !winner || gameState.winner === undefined
 
     // Get tile penalties from player objects (set by server when game ends)
@@ -193,7 +210,7 @@ export function OnlineGame() {
 
             {/* Winner announcement */}
             <div className="text-6xl mb-4">
-              {isTie ? '🤝' : youWon ? '🏆' : '😔'}
+              {isTie ? '🤝' : (isSpectator ? '🏆' : (youWon ? '🏆' : '😔'))}
             </div>
 
             {isTie ? (
@@ -203,7 +220,10 @@ export function OnlineGame() {
             ) : (
               <>
                 <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                  {youWon ? t('online:game.youWon') : t('online:game.wins', { name: winner?.name })}
+                  {isSpectator
+                    ? t('online:game.wins', { name: winner?.name })
+                    : (youWon ? t('online:game.youWon') : t('online:game.wins', { name: winner?.name }))
+                  }
                 </h2>
                 <p className="text-xl text-gray-600 mb-4">
                   {t('dialogs:gameOver.winnerPoints', { points: winner?.score })}
@@ -218,7 +238,7 @@ export function OnlineGame() {
             <div className="space-y-4">
               {/* Score Summary */}
               <div className={`p-6 rounded-lg ${youWon && !isTie ? 'bg-green-100 border-2 border-green-500' : 'bg-white shadow-md'}`}>
-                <p className="font-bold text-xl mb-2">{you.name} (You)</p>
+                <p className="font-bold text-xl mb-2">{you.name}{!isSpectator && ' (You)'}</p>
                 <p className="text-4xl font-bold text-gray-900">{you.score}</p>
                 <div className="mt-3 text-sm text-gray-600 space-y-1">
                   <p>
@@ -254,7 +274,7 @@ export function OnlineGame() {
               {/* Full Scoresheet */}
               <Scoresheet
                 playerId={you.id}
-                playerName={`${you.name} (You)`}
+                playerName={isSpectator ? you.name : `${you.name} (You)`}
                 moves={gameState.moveHistory}
               />
             </div>
@@ -453,7 +473,7 @@ export function OnlineGame() {
               {/* Your Scoresheet */}
               <Scoresheet
                 playerId={you.id}
-                playerName={`${you.name} (You)`}
+                playerName={isSpectator ? you.name : `${you.name} (You)`}
                 moves={gameState.moveHistory}
                 compact
               />
@@ -471,7 +491,7 @@ export function OnlineGame() {
             <div className="max-h-96 overflow-y-auto">
               <Chat
                 messages={chatMessages}
-                yourPlayerId={you.id}
+                yourPlayerId={chatId || you.id}
                 onSendMessage={sendChatMessage}
               />
             </div>
@@ -490,7 +510,7 @@ export function OnlineGame() {
               onJokerSteal={handleJokerSteal}
               gameState={gameState}
               draggedTile={draggedTile}
-              disabled={!isYourTurn}
+              disabled={!isYourTurn || isSpectator}
             />
 
             {/* Tile rack */}
@@ -501,30 +521,36 @@ export function OnlineGame() {
               onTileRemoved={handleTileRemoved}
               onTileDragStart={handleTileDragStart}
               onTileDragEnd={handleTileDragEnd}
-              disabled={!isYourTurn}
+              disabled={!isYourTurn || isSpectator}
             />
 
             {/* Game controls (mobile: show below rack) */}
             <div className="xl:hidden">
-              <OnlineGameControls
-                isYourTurn={isYourTurn}
-                selectedTiles={selectedTiles}
-                placementValidation={placementValidation}
-                gameError={gameError}
-                onPlayWord={handlePlayWord}
-                onSkipTurn={handleSkip}
-                onRecallTiles={handleRecallTiles}
-                onUndoLastTile={handleUndoLastTile}
-                onBackToMenu={handleBackToMenu}
-                onEndGameTest={forceEndGame}
-              />
+              {isSpectator ? (
+                <SpectatorControls
+                  onLeaveGame={handleBackToMenu}
+                />
+              ) : (
+                <OnlineGameControls
+                  isYourTurn={isYourTurn}
+                  selectedTiles={selectedTiles}
+                  placementValidation={placementValidation}
+                  gameError={gameError}
+                  onPlayWord={handlePlayWord}
+                  onSkipTurn={handleSkip}
+                  onRecallTiles={handleRecallTiles}
+                  onUndoLastTile={handleUndoLastTile}
+                  onBackToMenu={handleBackToMenu}
+                  onEndGameTest={forceEndGame}
+                />
+              )}
             </div>
 
             {/* Scoresheets (mobile: show below controls) */}
             <div className="xl:hidden grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
               <Scoresheet
                 playerId={you.id}
-                playerName={`${you.name} (You)`}
+                playerName={isSpectator ? you.name : `${you.name} (You)`}
                 moves={gameState.moveHistory}
               />
               <Scoresheet
@@ -538,7 +564,7 @@ export function OnlineGame() {
             <div className="xl:hidden mt-4">
               <Chat
                 messages={chatMessages}
-                yourPlayerId={you.id}
+                yourPlayerId={chatId || you.id}
                 onSendMessage={sendChatMessage}
               />
             </div>
@@ -546,23 +572,38 @@ export function OnlineGame() {
 
           {/* Right sidebar: Score panel and controls (desktop) */}
           <div className="hidden xl:block space-y-3">
-            <OnlineScorePanel
-              gameState={gameState}
-              yourPlayerId={yourPlayerId}
-              opponentName={opponentName}
-            />
-            <OnlineGameControls
-              isYourTurn={isYourTurn}
-              selectedTiles={selectedTiles}
-              placementValidation={placementValidation}
-              gameError={gameError}
-              onPlayWord={handlePlayWord}
-              onSkipTurn={handleSkip}
-              onRecallTiles={handleRecallTiles}
-              onUndoLastTile={handleUndoLastTile}
-              onBackToMenu={handleBackToMenu}
-              onEndGameTest={forceEndGame}
-            />
+            {isSpectator ? (
+              <>
+                <SpectatorScorePanel
+                  gameState={gameState}
+                  spectators={spectators}
+                />
+                <SpectatorControls
+                  onLeaveGame={handleBackToMenu}
+                />
+              </>
+            ) : (
+              <>
+                <OnlineScorePanel
+                  gameState={gameState}
+                  yourPlayerId={yourPlayerId!}
+                  opponentName={opponentName}
+                  spectators={spectators}
+                />
+                <OnlineGameControls
+                  isYourTurn={isYourTurn}
+                  selectedTiles={selectedTiles}
+                  placementValidation={placementValidation}
+                  gameError={gameError}
+                  onPlayWord={handlePlayWord}
+                  onSkipTurn={handleSkip}
+                  onRecallTiles={handleRecallTiles}
+                  onUndoLastTile={handleUndoLastTile}
+                  onBackToMenu={handleBackToMenu}
+                  onEndGameTest={forceEndGame}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>

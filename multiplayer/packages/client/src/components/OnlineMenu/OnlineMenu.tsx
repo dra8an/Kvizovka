@@ -28,6 +28,8 @@ export function OnlineMenu() {
     playerName,
     isHost,
     opponentName,
+    isSpectator,
+    spectators,
     view,
     gameError,
     isLoading,
@@ -35,6 +37,7 @@ export function OnlineMenu() {
     disconnect,
     createRoom,
     joinRoom,
+    joinRoomAsSpectator,
     ready,
   } = useOnlineGameStore()
 
@@ -42,6 +45,7 @@ export function OnlineMenu() {
   const [inputName, setInputName] = useState('')
   const [inputRoomCode, setInputRoomCode] = useState('')
   const [copied, setCopied] = useState(false)
+  const [joinAsSpectator, setJoinAsSpectator] = useState(false)
 
   // Connect to server on mount
   // NOTE: We don't disconnect on unmount because the connection
@@ -59,7 +63,12 @@ export function OnlineMenu() {
   // Handle join room
   const handleJoinRoom = () => {
     if (!inputRoomCode.trim() || !inputName.trim()) return
-    joinRoom(inputRoomCode.trim().toUpperCase(), inputName.trim())
+
+    if (joinAsSpectator) {
+      joinRoomAsSpectator(inputRoomCode.trim().toUpperCase(), inputName.trim())
+    } else {
+      joinRoom(inputRoomCode.trim().toUpperCase(), inputName.trim())
+    }
   }
 
   // Handle ready
@@ -132,19 +141,37 @@ export function OnlineMenu() {
             </p>
           </div>
 
+          {/* Spectators (small, discreet) */}
+          {spectators.length > 0 && (
+            <div className="mb-3 px-3 py-2 bg-gray-50 rounded border border-gray-200">
+              <p className="text-xs font-medium text-gray-500 mb-1">
+                👁️ {t('online:room.spectators', 'Spectators')} ({spectators.length}/5)
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {spectators.map((spectator, index) => (
+                  <span key={index} className="text-xs text-gray-600 bg-white px-2 py-0.5 rounded border border-gray-200">
+                    {spectator.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Players */}
           <div className="space-y-3 mb-6">
-            {/* Player 1 (You) */}
-            <div className="player-card">
-              <div className="text-2xl mr-3">👤</div>
-              <div className="flex-1">
-                <p className="font-semibold text-gray-800">{playerName}</p>
-                <p className="text-sm text-gray-600">
-                  {isHost ? t('online:room.host') : t('online:room.guest')} · {t('online:room.you')}
-                </p>
+            {/* Player 1 (You) - unless you're a spectator */}
+            {!isSpectator && (
+              <div className="player-card">
+                <div className="text-2xl mr-3">👤</div>
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-800">{playerName}</p>
+                  <p className="text-sm text-gray-600">
+                    {isHost ? t('online:room.host') : t('online:room.guest')} · {t('online:room.you')}
+                  </p>
+                </div>
+                <div className="text-green-600">✓</div>
               </div>
-              <div className="text-green-600">✓</div>
-            </div>
+            )}
 
             {/* Player 2 (Opponent) */}
             <div className="player-card">
@@ -168,8 +195,8 @@ export function OnlineMenu() {
             </div>
           </div>
 
-          {/* Ready Button */}
-          {opponentName && (
+          {/* Ready Button - only for players, not spectators */}
+          {opponentName && !isSpectator && (
             <button
               onClick={handleReady}
               disabled={isLoading}
@@ -177,6 +204,15 @@ export function OnlineMenu() {
             >
               {isLoading ? t('online:room.starting') : t('online:room.ready')}
             </button>
+          )}
+
+          {/* Spectator message */}
+          {isSpectator && (
+            <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded">
+              <p className="text-sm text-purple-800">
+                👁️ {t('online:room.spectatorWaiting', 'You are spectating. Game will start when both players are ready.')}
+              </p>
+            </div>
           )}
 
           {/* Error */}
@@ -341,6 +377,20 @@ export function OnlineMenu() {
               />
             </div>
 
+            {/* Spectator checkbox */}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="spectator-checkbox"
+                checked={joinAsSpectator}
+                onChange={(e) => setJoinAsSpectator(e.target.checked)}
+                className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              />
+              <label htmlFor="spectator-checkbox" className="ml-2 text-sm text-gray-700">
+                {t('online:room.joinAsSpectator', 'Join as spectator (watch only)')}
+              </label>
+            </div>
+
             {gameError && (
               <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
                 {gameError}
@@ -354,7 +404,10 @@ export function OnlineMenu() {
               }
               className="btn-primary w-full"
             >
-              {isLoading ? t('online:room.joining') : t('online:room.join')}
+              {isLoading
+                ? (joinAsSpectator ? t('online:room.joiningAsSpectator', 'Joining as spectator...') : t('online:room.joining'))
+                : (joinAsSpectator ? t('online:room.joinAsSpectatorButton', 'Join as Spectator') : t('online:room.join'))
+              }
             </button>
           </div>
         </div>

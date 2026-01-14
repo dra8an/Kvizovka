@@ -80,6 +80,7 @@ export class RoomManager {
       hostName,
       guestId: null,
       guestName: null,
+      spectators: [],
       gameId: null,
       ready: false,
       createdAt: new Date(),
@@ -122,6 +123,79 @@ export class RoomManager {
     console.log(`[RoomManager] ${guestName} (${guestId}) joined room ${room.code}`)
 
     return room
+  }
+
+  /**
+   * Join an existing room as spectator
+   *
+   * @param roomCode - Room code to join
+   * @param spectatorId - Spectator's socket ID
+   * @param spectatorName - Spectator's name
+   * @returns Room object or null if room not found/spectator limit reached
+   */
+  joinRoomAsSpectator(roomCode: string, spectatorId: string, spectatorName: string): Room | null {
+    const room = this.rooms.get(roomCode.toUpperCase())
+
+    if (!room) {
+      console.log(`[RoomManager] Room not found: ${roomCode}`)
+      return null
+    }
+
+    // Check spectator limit (max 5)
+    if (room.spectators.length >= 5) {
+      console.log(`[RoomManager] Spectator limit reached for room ${roomCode}`)
+      return null
+    }
+
+    // Check if spectator already in room
+    if (room.spectators.some(s => s.socketId === spectatorId)) {
+      console.log(`[RoomManager] Spectator ${spectatorName} already in room ${roomCode}`)
+      return room
+    }
+
+    // Add spectator to room
+    room.spectators.push({ socketId: spectatorId, name: spectatorName })
+    this.playerToRoom.set(spectatorId, room.code)
+
+    console.log(`[RoomManager] Spectator ${spectatorName} (${spectatorId}) joined room ${room.code}`)
+
+    return room
+  }
+
+  /**
+   * Remove spectator from room
+   *
+   * @param socketId - Spectator's socket ID
+   * @returns Room object if spectator was removed, undefined otherwise
+   */
+  removeSpectator(socketId: string): { room: Room; spectatorName: string } | undefined {
+    const roomCode = this.playerToRoom.get(socketId)
+
+    if (!roomCode) {
+      return undefined
+    }
+
+    const room = this.rooms.get(roomCode)
+
+    if (!room) {
+      this.playerToRoom.delete(socketId)
+      return undefined
+    }
+
+    // Find and remove spectator
+    const spectatorIndex = room.spectators.findIndex(s => s.socketId === socketId)
+
+    if (spectatorIndex === -1) {
+      return undefined
+    }
+
+    const spectatorName = room.spectators[spectatorIndex].name
+    room.spectators.splice(spectatorIndex, 1)
+    this.playerToRoom.delete(socketId)
+
+    console.log(`[RoomManager] Spectator ${spectatorName} left room ${room.code}`)
+
+    return { room, spectatorName }
   }
 
   /**
@@ -190,6 +264,20 @@ export class RoomManager {
   }
 
   /**
+   * Check if a socket ID is a spectator
+   *
+   * @param socketId - Socket ID to check
+   * @returns true if spectator, false otherwise
+   */
+  isSpectator(socketId: string): boolean {
+    const room = this.getRoomByPlayer(socketId)
+    if (!room) {
+      return false
+    }
+    return room.spectators.some(s => s.socketId === socketId)
+  }
+
+  /**
    * Remove player from room (on disconnect)
    *
    * @param socketId - Player's socket ID
@@ -243,6 +331,11 @@ export class RoomManager {
     if (room.guestId) {
       this.playerToRoom.delete(room.guestId)
     }
+
+    // Remove spectator mappings
+    room.spectators.forEach(spectator => {
+      this.playerToRoom.delete(spectator.socketId)
+    })
 
     // Delete room
     this.rooms.delete(room.code)

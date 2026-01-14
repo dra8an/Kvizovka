@@ -13,6 +13,21 @@ import type { GameState } from './game.types.js'
 import type { PlacedTile } from './board.types.js'
 
 /**
+ * Spectator Information
+ */
+export interface Spectator {
+  /**
+   * Spectator socket ID
+   */
+  socketId: string
+
+  /**
+   * Spectator name
+   */
+  name: string
+}
+
+/**
  * Room Information
  */
 export interface Room {
@@ -40,6 +55,11 @@ export interface Room {
    * Guest player name (null if waiting)
    */
   guestName: string | null
+
+  /**
+   * Spectators watching the game (max 5)
+   */
+  spectators: Spectator[]
 
   /**
    * Game ID (set when game starts)
@@ -101,6 +121,14 @@ export interface ClientToServerEvents {
    */
   'room:join': (
     data: { roomCode: string; playerName: string },
+    callback: (response: { success: boolean; error?: string }) => void
+  ) => void
+
+  /**
+   * Join an existing room as spectator
+   */
+  'room:join-spectator': (
+    data: { roomCode: string; spectatorName: string },
     callback: (response: { success: boolean; error?: string }) => void
   ) => void
 
@@ -186,9 +214,19 @@ export interface ServerToClientEvents {
   'room:player-joined': (data: { playerName: string }) => void
 
   /**
+   * Spectator joined the room
+   */
+  'room:spectator-joined': (data: { spectatorName: string; spectators: Spectator[] }) => void
+
+  /**
+   * Spectator left the room
+   */
+  'room:spectator-left': (data: { spectatorName: string; spectators: Spectator[] }) => void
+
+  /**
    * Both players ready, game starting
    */
-  'game:started': (data: { gameId: string; gameState: GameState; yourPlayerId: string }) => void
+  'game:started': (data: { gameId: string; gameState: GameState; yourPlayerId?: string }) => void
 
   /**
    * Game state updated (after any move)

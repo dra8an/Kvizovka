@@ -116,6 +116,32 @@ async function initializeServer() {
 
   console.log('🔌 Socket.io ready for connections')
 
+  /**
+   * Helper function to broadcast game state to all room members (players + spectators)
+   */
+  const broadcastGameState = (room: any, game: any) => {
+    const [player1, player2] = game.players
+
+    // Send to host
+    io.to(room.hostId).emit('game:state-update', {
+      gameState: gameManager.sanitizeGameState(game, player1.id),
+    })
+
+    // Send to guest
+    if (room.guestId) {
+      io.to(room.guestId).emit('game:state-update', {
+        gameState: gameManager.sanitizeGameState(game, player2.id),
+      })
+    }
+
+    // Send to all spectators
+    room.spectators.forEach((spectator: any) => {
+      io.to(spectator.socketId).emit('game:state-update', {
+        gameState: gameManager.sanitizeGameState(game, player1.id),
+      })
+    })
+  }
+
   // 6. Socket.io event handlers
   io.on('connection', (socket: CustomSocket) => {
     console.log(`[Socket.io] Client connected: ${socket.id}`)
@@ -169,6 +195,58 @@ async function initializeServer() {
       } catch (error) {
         console.error('[room:join] Error:', error)
         callback({ success: false, error: 'Failed to join room' })
+      }
+    })
+
+    /**
+     * Join Room as Spectator
+     */
+    socket.on('room:join-spectator', (data, callback) => {
+      try {
+        const { roomCode, spectatorName } = data
+        const room = roomManager.joinRoomAsSpectator(roomCode, socket.id, spectatorName)
+
+        if (!room) {
+          callback({ success: false, error: 'Room not found or spectator limit reached' })
+          return
+        }
+
+        // Join socket.io room
+        socket.join(room.code)
+
+        // Store data on socket
+        socket.data.playerName = spectatorName
+        socket.data.roomCode = room.code
+
+        // Notify room that spectator joined
+        socket.to(room.code).emit('room:spectator-joined', {
+          spectatorName,
+          spectators: room.spectators
+        })
+
+        // Also notify the spectator who just joined
+        socket.emit('room:spectator-joined', {
+          spectatorName,
+          spectators: room.spectators
+        })
+
+        // If game is already in progress, send game state to spectator
+        if (room.gameId) {
+          const game = gameManager.getGame(room.gameId)
+          if (game) {
+            // Send game state without yourPlayerId (spectator has no player ID)
+            socket.emit('game:started', {
+              gameId: room.gameId,
+              gameState: gameManager.sanitizeGameState(game, ''), // Empty player ID for spectator
+              yourPlayerId: undefined, // No player ID for spectators
+            })
+          }
+        }
+
+        callback({ success: true })
+      } catch (error) {
+        console.error('[room:join-spectator] Error:', error)
+        callback({ success: false, error: 'Failed to join as spectator' })
       }
     })
 
@@ -230,6 +308,15 @@ async function initializeServer() {
           yourPlayerId: player2Id,
         })
 
+        // Send game started event to all spectators (with no player ID)
+        room.spectators.forEach((spectator) => {
+          io.to(spectator.socketId).emit('game:started', {
+            gameId,
+            gameState: gameManager.sanitizeGameState(gameManager.getGame(gameId)!, player1Id), // Use player1's sanitized state
+            // yourPlayerId is omitted for spectators
+          })
+        })
+
         callback({ success: true })
       } catch (error) {
         console.error('[room:ready] Error:', error)
@@ -242,6 +329,12 @@ async function initializeServer() {
      */
     socket.on('game:make-move', (data: { gameId: string; placedTiles: any[]; timeTaken?: number; direction?: 'HORIZONTAL' | 'VERTICAL' }, callback) => {
       try {
+        // Block spectators from making moves
+        if (roomManager.isSpectator(socket.id)) {
+          callback({ success: false, error: 'Spectators cannot make moves' })
+          return
+        }
+
         const { gameId, placedTiles, timeTaken, direction } = data
         console.log(`[game:make-move] Received move for game ${gameId}, ${placedTiles.length} tiles, time: ${timeTaken}ms, direction: ${direction || 'auto'}`)
         const game = gameManager.getGame(gameId)
@@ -272,18 +365,11 @@ async function initializeServer() {
 
         console.log(`[game:make-move] Move successful!`)
 
-        // Broadcast updated state to both players
-        const [player1, player2] = game.players
+        // Broadcast updated state to all room members
         const room = roomManager.getRoomByPlayer(socket.id)
 
         if (room && room.gameId === gameId) {
-          io.to(room.hostId).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player1.id),
-          })
-
-          io.to(room.guestId!).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player2.id),
-          })
+          broadcastGameState(room, game)
         }
 
         callback({ success: true })
@@ -298,6 +384,12 @@ async function initializeServer() {
      */
     socket.on('game:skip-turn', (data: { gameId: string; timeTaken?: number }, callback) => {
       try {
+        // Block spectators from skipping turns
+        if (roomManager.isSpectator(socket.id)) {
+          callback({ success: false, error: 'Spectators cannot skip turns' })
+          return
+        }
+
         const { gameId, timeTaken } = data
         const game = gameManager.getGame(gameId)
 
@@ -320,18 +412,11 @@ async function initializeServer() {
           return
         }
 
-        // Broadcast state
-        const [player1, player2] = game.players
+        // Broadcast state to all room members
         const room = roomManager.getRoomByPlayer(socket.id)
 
         if (room && room.gameId === gameId) {
-          io.to(room.hostId).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player1.id),
-          })
-
-          io.to(room.guestId!).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player2.id),
-          })
+          broadcastGameState(room, game)
         }
 
         callback({ success: true })
@@ -346,6 +431,12 @@ async function initializeServer() {
      */
     socket.on('game:exchange-tiles', (data: { gameId: string; tileIds: string[]; timeTaken?: number }, callback) => {
       try {
+        // Block spectators from exchanging tiles
+        if (roomManager.isSpectator(socket.id)) {
+          callback({ success: false, error: 'Spectators cannot exchange tiles' })
+          return
+        }
+
         const { gameId, tileIds, timeTaken } = data
         const game = gameManager.getGame(gameId)
 
@@ -368,18 +459,11 @@ async function initializeServer() {
           return
         }
 
-        // Broadcast state
-        const [player1, player2] = game.players
+        // Broadcast state to all room members
         const room = roomManager.getRoomByPlayer(socket.id)
 
         if (room && room.gameId === gameId) {
-          io.to(room.hostId).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player1.id),
-          })
-
-          io.to(room.guestId!).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player2.id),
-          })
+          broadcastGameState(room, game)
         }
 
         callback({ success: true })
@@ -394,6 +478,12 @@ async function initializeServer() {
      */
     socket.on('game:challenge', (data, callback) => {
       try {
+        // Block spectators from challenging
+        if (roomManager.isSpectator(socket.id)) {
+          callback({ success: false, error: 'Spectators cannot challenge words' })
+          return
+        }
+
         const { gameId } = data
         const game = gameManager.getGame(gameId)
 
@@ -416,18 +506,11 @@ async function initializeServer() {
           return
         }
 
-        // Broadcast state
-        const [player1, player2] = game.players
+        // Broadcast state to all room members
         const room = roomManager.getRoomByPlayer(socket.id)
 
         if (room && room.gameId === gameId) {
-          io.to(room.hostId).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player1.id),
-          })
-
-          io.to(room.guestId!).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player2.id),
-          })
+          broadcastGameState(room, game)
         }
 
         callback({ success: true, challengeSucceeded: result.challengeSucceeded })
@@ -442,6 +525,12 @@ async function initializeServer() {
      */
     socket.on('game:steal-joker', (data, callback) => {
       try {
+        // Block spectators from stealing jokers
+        if (roomManager.isSpectator(socket.id)) {
+          callback({ success: false, error: 'Spectators cannot steal jokers' })
+          return
+        }
+
         const { gameId, row, col, replacementTileId } = data
         const game = gameManager.getGame(gameId)
 
@@ -464,18 +553,11 @@ async function initializeServer() {
           return
         }
 
-        // Broadcast state
-        const [player1, player2] = game.players
+        // Broadcast state to all room members
         const room = roomManager.getRoomByPlayer(socket.id)
 
         if (room && room.gameId === gameId) {
-          io.to(room.hostId).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player1.id),
-          })
-
-          io.to(room.guestId!).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player2.id),
-          })
+          broadcastGameState(room, game)
         }
 
         callback({ success: true })
@@ -539,17 +621,11 @@ async function initializeServer() {
 
         console.log(`[game:force-end] Final scores: ${player1.name} ${player1.score}, ${player2.name} ${player2.score}`)
 
-        // Broadcast updated state to both players
+        // Broadcast updated state to all room members
         const room = roomManager.getRoomByPlayer(socket.id)
 
         if (room && room.gameId === gameId) {
-          io.to(room.hostId).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player1.id),
-          })
-
-          io.to(room.guestId!).emit('game:state-update', {
-            gameState: gameManager.sanitizeGameState(game, player2.id),
-          })
+          broadcastGameState(room, game)
         }
 
         callback({ success: true })
@@ -585,9 +661,12 @@ async function initializeServer() {
           return
         }
 
-        // Verify socket is in this room
-        if (socket.id !== room.hostId && socket.id !== room.guestId) {
-          console.log('[chat:message] Player not in room')
+        // Verify socket is in this room (as player or spectator)
+        const isPlayer = socket.id === room.hostId || socket.id === room.guestId
+        const isSpectator = room.spectators.some(s => s.socketId === socket.id)
+
+        if (!isPlayer && !isSpectator) {
+          console.log('[chat:message] User not in room')
           return
         }
 
@@ -613,12 +692,24 @@ async function initializeServer() {
     socket.on('disconnect', () => {
       console.log(`[Socket.io] Client disconnected: ${socket.id}`)
 
-      // Remove player from room
+      // Try to remove as player first
       const roomCode = roomManager.removePlayer(socket.id)
 
       if (roomCode) {
-        // Notify other player
+        // Was a player - notify other player
         socket.to(roomCode).emit('game:opponent-disconnected')
+        return
+      }
+
+      // Try to remove as spectator
+      const spectatorResult = roomManager.removeSpectator(socket.id)
+
+      if (spectatorResult) {
+        // Was a spectator - notify room
+        socket.to(spectatorResult.room.code).emit('room:spectator-left', {
+          spectatorName: spectatorResult.spectatorName,
+          spectators: spectatorResult.room.spectators
+        })
       }
     })
   })

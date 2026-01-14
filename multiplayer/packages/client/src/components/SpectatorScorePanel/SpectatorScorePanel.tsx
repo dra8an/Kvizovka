@@ -1,22 +1,20 @@
 /**
- * OnlineScorePanel Component
+ * SpectatorScorePanel Component
  *
- * Props-based version of ScorePanel for online multiplayer.
- * Displays game scores, timer, and statistics for both players.
+ * Displays game information for spectators.
+ * Shows both players with live scores and timers.
  */
 
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect } from 'react'
 import { GameState } from '@kvizovka/shared'
 
-interface OnlineScorePanelProps {
+interface SpectatorScorePanelProps {
   gameState: GameState
-  yourPlayerId: string
-  opponentName: string
   spectators?: Array<{ socketId: string; name: string }>
 }
 
-export function OnlineScorePanel({ gameState, yourPlayerId, opponentName, spectators = [] }: OnlineScorePanelProps) {
+export function SpectatorScorePanel({ gameState, spectators = [] }: SpectatorScorePanelProps) {
   const { t } = useTranslation(['common', 'online'])
 
   // Local state for live timer countdown
@@ -29,7 +27,7 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName, specta
       newDisplayTime[player.id] = player.timeRemaining
     })
     setDisplayTime(newDisplayTime)
-  }, [gameState.currentPlayerIndex, gameState.round]) // Only sync on turn/round change, NOT on every player update
+  }, [gameState.currentPlayerIndex, gameState.round])
 
   // Countdown timer for current player
   useEffect(() => {
@@ -55,11 +53,9 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName, specta
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
 
-  // Get players
-  const you = gameState.players.find((p) => p.id === yourPlayerId)
-  const opponent = gameState.players.find((p) => p.id !== yourPlayerId)
+  const [player1, player2] = gameState.players
 
-  if (!you || !opponent) {
+  if (!player1 || !player2) {
     return (
       <div className="flex items-center justify-center p-6 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300">
         <p className="text-gray-500">Loading players...</p>
@@ -67,9 +63,9 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName, specta
     )
   }
 
-  // Determine if it's your turn
-  const isYourTurn = gameState.players[gameState.currentPlayerIndex].id === yourPlayerId
-  const isOpponentTurn = gameState.players[gameState.currentPlayerIndex].id === opponent.id
+  // Determine current turn
+  const isPlayer1Turn = gameState.players[gameState.currentPlayerIndex].id === player1.id
+  const isPlayer2Turn = gameState.players[gameState.currentPlayerIndex].id === player2.id
 
   // Get last move
   const lastMove = gameState.moveHistory[gameState.moveHistory.length - 1]
@@ -92,20 +88,20 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName, specta
         </div>
       )}
 
-      {/* You (Player 1 style) */}
+      {/* Player 1 */}
       <div
         className={`
         p-4 rounded-lg shadow-md transition-all
         ${
-          isYourTurn
+          isPlayer1Turn
             ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white ring-4 ring-blue-300'
             : 'bg-white text-gray-800'
         }
       `}
       >
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-bold">{you.name} ({t('online:room.you')})</h3>
-          {isYourTurn && (
+          <h3 className="text-lg font-bold">{player1.name}</h3>
+          {isPlayer1Turn && (
             <span className="text-xs font-semibold bg-white text-blue-600 px-2 py-1 rounded animate-pulse">
               {t('common:labels.currentTurn')}
             </span>
@@ -114,49 +110,49 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName, specta
 
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <p className={isYourTurn ? 'opacity-90' : 'text-gray-600'}>
+            <p className={isPlayer1Turn ? 'opacity-90' : 'text-gray-600'}>
               {t('common:labels.score')}
             </p>
-            <p className="text-3xl font-bold">{you.score}</p>
+            <p className="text-3xl font-bold">{player1.score}</p>
           </div>
           <div>
-            <p className={isYourTurn ? 'opacity-90' : 'text-gray-600'}>
+            <p className={isPlayer1Turn ? 'opacity-90' : 'text-gray-600'}>
               {t('common:labels.timeLeft')}
             </p>
             <p
               className={`text-2xl font-bold ${
-                (displayTime[you.id] ?? you.timeRemaining) < 60000 ? 'text-red-300' : ''
+                (displayTime[player1.id] ?? player1.timeRemaining) < 60000 ? 'text-red-300' : ''
               }`}
             >
-              {formatTime(displayTime[you.id] ?? you.timeRemaining)}
+              {formatTime(displayTime[player1.id] ?? player1.timeRemaining)}
             </p>
           </div>
         </div>
 
         <div className="mt-3 text-xs opacity-80">
-          <span>{t('online:game.roundsPlayed')} {you.roundsPlayed}</span>
+          <span>{t('online:game.roundsPlayed')} {player1.roundsPlayed}</span>
           <span className="mx-2">•</span>
-          <span>{t('online:game.tilesCount')} {you.tiles.length}</span>
+          <span>{t('online:game.tilesCount')} {player1.tiles.length}</span>
         </div>
 
-        {/* Your tiles */}
+        {/* Player 1 tiles */}
         <div className="mt-3 pt-3 border-t border-white/20">
           <p className="text-xs opacity-80 mb-2">{t('common:labels.tiles')}:</p>
           <div className="flex flex-wrap gap-0.5">
-            {you.tiles.map((tile, index) => (
+            {player1.tiles.map((tile, index) => (
               <div
                 key={`${tile.id}-${index}`}
                 className={`relative w-6 h-6 rounded shadow-sm flex items-center justify-center ${
-                  isYourTurn
+                  isPlayer1Turn
                     ? 'bg-white/20 border border-white/30'
                     : 'bg-gray-100 border border-gray-300'
                 }`}
                 title={tile.isJoker ? `Joker${tile.jokerLetter ? ` (${tile.jokerLetter})` : ''}` : tile.letter}
               >
-                <span className={`text-[10px] font-bold ${isYourTurn ? 'text-white' : 'text-gray-700'}`}>
+                <span className={`text-[10px] font-bold ${isPlayer1Turn ? 'text-white' : 'text-gray-700'}`}>
                   {tile.isJoker ? (tile.jokerLetter || '*') : tile.letter}
                 </span>
-                <span className={`absolute bottom-0 right-0.5 text-[6px] font-semibold ${isYourTurn ? 'text-white/80' : 'text-gray-600'}`}>
+                <span className={`absolute bottom-0 right-0.5 text-[6px] font-semibold ${isPlayer1Turn ? 'text-white/80' : 'text-gray-600'}`}>
                   {tile.value}
                 </span>
                 {tile.isJoker && (
@@ -170,20 +166,20 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName, specta
         </div>
       </div>
 
-      {/* Opponent (Player 2 style) */}
+      {/* Player 2 */}
       <div
         className={`
         p-4 rounded-lg shadow-md transition-all
         ${
-          isOpponentTurn
+          isPlayer2Turn
             ? 'bg-gradient-to-r from-green-500 to-green-600 text-white ring-4 ring-green-300'
             : 'bg-white text-gray-800'
         }
       `}
       >
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-bold">{opponentName}</h3>
-          {isOpponentTurn && (
+          <h3 className="text-lg font-bold">{player2.name}</h3>
+          {isPlayer2Turn && (
             <span className="text-xs font-semibold bg-white text-green-600 px-2 py-1 rounded animate-pulse">
               {t('common:labels.currentTurn')}
             </span>
@@ -192,49 +188,49 @@ export function OnlineScorePanel({ gameState, yourPlayerId, opponentName, specta
 
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <p className={isOpponentTurn ? 'opacity-90' : 'text-gray-600'}>
+            <p className={isPlayer2Turn ? 'opacity-90' : 'text-gray-600'}>
               {t('common:labels.score')}
             </p>
-            <p className="text-3xl font-bold">{opponent.score}</p>
+            <p className="text-3xl font-bold">{player2.score}</p>
           </div>
           <div>
-            <p className={isOpponentTurn ? 'opacity-90' : 'text-gray-600'}>
+            <p className={isPlayer2Turn ? 'opacity-90' : 'text-gray-600'}>
               {t('common:labels.timeLeft')}
             </p>
             <p
               className={`text-2xl font-bold ${
-                (displayTime[opponent.id] ?? opponent.timeRemaining) < 60000 ? 'text-red-300' : ''
+                (displayTime[player2.id] ?? player2.timeRemaining) < 60000 ? 'text-red-300' : ''
               }`}
             >
-              {formatTime(displayTime[opponent.id] ?? opponent.timeRemaining)}
+              {formatTime(displayTime[player2.id] ?? player2.timeRemaining)}
             </p>
           </div>
         </div>
 
         <div className="mt-3 text-xs opacity-80">
-          <span>{t('online:game.roundsPlayed')} {opponent.roundsPlayed}</span>
+          <span>{t('online:game.roundsPlayed')} {player2.roundsPlayed}</span>
           <span className="mx-2">•</span>
-          <span>{t('online:game.tilesCount')} {opponent.tiles.length}</span>
+          <span>{t('online:game.tilesCount')} {player2.tiles.length}</span>
         </div>
 
-        {/* Opponent tiles */}
+        {/* Player 2 tiles */}
         <div className="mt-3 pt-3 border-t border-white/20">
           <p className="text-xs opacity-80 mb-2">{t('common:labels.tiles')}:</p>
           <div className="flex flex-wrap gap-0.5">
-            {opponent.tiles.map((tile, index) => (
+            {player2.tiles.map((tile, index) => (
               <div
                 key={`${tile.id}-${index}`}
                 className={`relative w-6 h-6 rounded shadow-sm flex items-center justify-center ${
-                  isOpponentTurn
+                  isPlayer2Turn
                     ? 'bg-white/20 border border-white/30'
                     : 'bg-gray-100 border border-gray-300'
                 }`}
                 title={tile.isJoker ? `Joker${tile.jokerLetter ? ` (${tile.jokerLetter})` : ''}` : tile.letter}
               >
-                <span className={`text-[10px] font-bold ${isOpponentTurn ? 'text-white' : 'text-gray-700'}`}>
+                <span className={`text-[10px] font-bold ${isPlayer2Turn ? 'text-white' : 'text-gray-700'}`}>
                   {tile.isJoker ? (tile.jokerLetter || '*') : tile.letter}
                 </span>
-                <span className={`absolute bottom-0 right-0.5 text-[6px] font-semibold ${isOpponentTurn ? 'text-white/80' : 'text-gray-600'}`}>
+                <span className={`absolute bottom-0 right-0.5 text-[6px] font-semibold ${isPlayer2Turn ? 'text-white/80' : 'text-gray-600'}`}>
                   {tile.value}
                 </span>
                 {tile.isJoker && (

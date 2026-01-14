@@ -13,6 +13,140 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.15] - 2026-01-14
+
+### Added
+- **Spectator Mode for Online Multiplayer**
+  - Users can now join games as spectators to watch and chat without playing
+  - Maximum 5 spectators per room
+  - Spectators see both players' full information (scores, timers, tiles, moves)
+  - Spectators can use chat to communicate with players
+  - Clean, separate UI components for spectators
+  - Spectator list displayed discretely in score panel
+
+### Implementation Details
+
+**Shared Package (`packages/shared/`)**
+- Added `Spectator` interface to `types/socket-events.ts`:
+  - `socketId: string` - Spectator's connection ID
+  - `name: string` - Spectator's display name
+- Updated `Room` interface:
+  - Added `spectators: Spectator[]` - List of spectators in room
+- Added socket events:
+  - `room:join-spectator` - Client requests to join as spectator
+  - `room:spectator-joined` - Notify room when spectator joins
+  - `room:spectator-left` - Notify room when spectator leaves
+- Updated `game:started` event:
+  - `yourPlayerId` now optional (undefined for spectators)
+
+**Server (`packages/server/`)**
+- `room-manager.ts`: Added spectator management:
+  - `joinRoomAsSpectator(roomCode, spectatorId, spectatorName)` - Add spectator to room
+  - `removeSpectator(socketId)` - Remove spectator from room
+  - `isSpectator(socketId)` - Check if socket is a spectator
+  - Updated `deleteRoom()` to clean up spectator mappings
+  - 5-spectator limit enforcement
+- `index.ts`: Added socket event handlers:
+  - `room:join-spectator` handler with limit validation
+  - Spectator blocking on all game actions (make-move, skip-turn, exchange-tiles, etc.)
+  - Updated disconnect handler to remove spectators properly
+  - Chat handler updated to allow spectators to send messages
+- Game state broadcasting:
+  - Created `broadcastGameState()` helper function
+  - Broadcasts to players AND spectators on every game action
+  - Spectators receive game:started event when game begins
+  - Spectators receive game:state-update on all moves
+
+**Client (`packages/client/`)**
+- Created separate spectator components (clean architecture):
+  - `SpectatorScorePanel.tsx` - Shows both players' full information
+  - `SpectatorControls.tsx` - Minimal controls (only "Leave Game" button)
+- `onlineGameStore.ts`: Added spectator state:
+  - `isSpectator: boolean` - Tracks if user is spectator
+  - `spectators: Spectator[]` - List of spectators in room
+  - `chatId: string | null` - ID for chat identification (socket.id for spectators)
+  - `joinRoomAsSpectator(roomCode, spectatorName)` - Action to join as spectator
+  - Event handlers for spectator-joined/spectator-left
+- `OnlineMenu.tsx`: Added spectator join UI:
+  - Checkbox to "Join as spectator"
+  - Conditional ready button (hidden for spectators)
+  - Spectator message: "You are spectating. Game will start when both players are ready."
+  - Spectator list display in waiting room
+- `OnlineGame.tsx`: Conditional rendering:
+  - Uses `SpectatorScorePanel` + `SpectatorControls` for spectators
+  - Uses `OnlineScorePanel` + `OnlineGameControls` for players
+  - Board and TileRack disabled for spectators
+  - Spectators see both players without "(You)" labels
+- `OnlineScorePanel.tsx`: Added spectator list:
+  - Small discrete box showing "👁️ Spectators (X/5)"
+  - Displays spectator names below count
+
+**Translations**
+- Added spectator translations to `online.json` (EN/SR):
+  - `spectator.watching` - "Watching Game" / "Гледате игру"
+  - `spectator.cannotPlay` - "You cannot make moves as a spectator" / "Не можете играти као посматрач"
+  - `spectator.helpText` - "You can watch the game and use chat" / "Можете гледати игру и користити чет"
+  - `spectator.leaveConfirm` - Confirmation dialog messages
+
+### Technical Highlights
+- **Clean Separation**: Separate components for spectators (no spaghetti logic)
+- **Real-Time Updates**: Spectators see all game state changes instantly
+- **Chat Integration**: Spectators identified by socket.id for proper "You" labeling
+- **Server-Authoritative**: All spectator actions validated server-side
+- **Proper Cleanup**: Spectators removed from room on disconnect
+- **Game Continuity**: Spectators leaving doesn't affect the game
+
+### Files Changed
+- `packages/shared/src/types/socket-events.ts` - Added Spectator interface and events
+- `packages/server/src/room-manager.ts` - Added spectator management methods
+- `packages/server/src/index.ts` - Added spectator handlers and broadcast logic
+- `packages/client/src/components/SpectatorScorePanel/SpectatorScorePanel.tsx` - New component
+- `packages/client/src/components/SpectatorControls/SpectatorControls.tsx` - New component
+- `packages/client/src/store/onlineGameStore.ts` - Added spectator state and actions
+- `packages/client/src/components/OnlineMenu/OnlineMenu.tsx` - Added spectator join UI
+- `packages/client/src/components/OnlineGame/OnlineGame.tsx` - Conditional rendering for spectators
+- `packages/client/src/components/OnlineScorePanel/OnlineScorePanel.tsx` - Added spectator list
+- `packages/client/src/i18n/locales/en/online.json` - Added spectator translations
+- `packages/client/src/i18n/locales/sr/online.json` - Added spectator translations
+
+### User Experience Improvements
+- **Before**: Only 2 players could participate in a game
+- **After**: Up to 5 additional spectators can watch and chat
+- **Use Cases**:
+  - Friends watching a match between two players
+  - Learning the game by watching experienced players
+  - Tournament spectating
+  - Teaching/coaching scenarios
+- **Benefits**:
+  - More engaging multiplayer experience
+  - Social gameplay - spectators can cheer and comment
+  - No need for screen sharing to watch games
+  - Clean, focused UI for spectators (no game controls clutter)
+
+### Design Decisions
+- **Limit of 5 spectators**: Balances engagement with server load
+- **Separate components**: Keeps code clean and maintainable
+- **Read-only access**: Spectators can't interfere with gameplay
+- **Full visibility**: Spectators see everything players see (strategic gameplay)
+- **Chat enabled**: Allows spectators to engage without playing
+- **Minimal UI**: Spectators don't need game controls, just viewing area
+
+### Tested
+- ✅ Join room as spectator via checkbox
+- ✅ Spectator enters waiting room correctly
+- ✅ Spectator joins game when it starts
+- ✅ Spectator sees both players' information
+- ✅ Spectator sees real-time game updates
+- ✅ Spectator can send and receive chat messages
+- ✅ Spectator "You" label works correctly in chat
+- ✅ Spectator list displays for players
+- ✅ Spectator can leave without ending game
+- ✅ Spectator limit (5) enforced
+- ✅ All game controls disabled for spectators
+- ✅ Works on both desktop and mobile layouts
+
+---
+
 ## [0.2.14] - 2026-01-12
 
 ### Added
