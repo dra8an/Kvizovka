@@ -22,9 +22,9 @@ import type {
 } from '@kvizovka/shared'
 import { WordValidator, GameStatus } from '@kvizovka/shared'
 
-import { loadDictionary } from './dictionary-loader'
-import { roomManager } from './room-manager'
-import { GameManager } from './game-manager'
+import { loadDictionary } from './dictionary-loader.js'
+import { roomManager } from './room-manager.js'
+import { GameManager } from './game-manager.js'
 
 /**
  * Type for Socket.io server with custom events
