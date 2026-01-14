@@ -448,28 +448,33 @@ export function OnlineGame() {
         <div className="grid grid-cols-1 xl:grid-cols-[280px_1fr_300px] gap-2 lg:gap-4">
           {/* Left sidebar: Scoresheets + Chat (desktop only) */}
           <div className="hidden xl:block space-y-3">
-            {/* Your Scoresheet */}
-            <Scoresheet
-              playerId={you.id}
-              playerName={`${you.name} (You)`}
-              moves={gameState.moveHistory}
-              compact
-            />
+            {/* Scoresheets side-by-side */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Your Scoresheet */}
+              <Scoresheet
+                playerId={you.id}
+                playerName={`${you.name} (You)`}
+                moves={gameState.moveHistory}
+                compact
+              />
 
-            {/* Opponent Scoresheet */}
-            <Scoresheet
-              playerId={opponent.id}
-              playerName={opponent.name}
-              moves={gameState.moveHistory}
-              compact
-            />
+              {/* Opponent Scoresheet */}
+              <Scoresheet
+                playerId={opponent.id}
+                playerName={opponent.name}
+                moves={gameState.moveHistory}
+                compact
+              />
+            </div>
 
-            {/* Chat */}
-            <Chat
-              messages={chatMessages}
-              yourPlayerId={you.id}
-              onSendMessage={sendChatMessage}
-            />
+            {/* Chat with fixed height */}
+            <div className="max-h-96 overflow-y-auto">
+              <Chat
+                messages={chatMessages}
+                yourPlayerId={you.id}
+                onSendMessage={sendChatMessage}
+              />
+            </div>
           </div>
 
           {/* Center: Board and Tile Rack */}
