@@ -13,6 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.19] - 2026-01-14
+
+### Fixed
+- **CRITICAL: Game freeze when spectator disconnects**
+  - Bug: `removePlayer()` was returning roomCode for spectators, causing `game:opponent-disconnected` to be emitted
+  - This made the game think a player disconnected, freezing gameplay for actual players
+  - Fix: `removePlayer()` now returns undefined if socket is not a player (host/guest)
+  - Spectator disconnects now properly call `removeSpectator()` instead
+  - Players can continue playing normally when spectators leave
+
+---
+
 ## [0.2.18] - 2026-01-14
 
 ### Changed

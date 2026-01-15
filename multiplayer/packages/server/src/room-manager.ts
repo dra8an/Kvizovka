@@ -303,6 +303,7 @@ export class RoomManager {
       Logger.warn(`[RoomManager] Host ${room.hostName} left room ${room.code}`)
       // If host leaves, delete the entire room
       this.deleteRoom(roomCode)
+      return roomCode
     } else if (room.guestId === socketId) {
       Logger.warn(`[RoomManager] Guest ${room.guestName} left room ${room.code}`)
       // If guest leaves, keep room but remove guest
@@ -310,9 +311,11 @@ export class RoomManager {
       room.guestName = null
       room.ready = false
       this.playerToRoom.delete(socketId)
+      return roomCode
     }
 
-    return roomCode
+    // Not a player (could be spectator) - return undefined
+    return undefined
   }
 
   /**
