@@ -11,6 +11,7 @@
  */
 
 import type { Room } from '@kvizovka/shared'
+import { Logger } from '@kvizovka/shared'
 
 /**
  * Room Manager Class
@@ -89,7 +90,7 @@ export class RoomManager {
     this.rooms.set(code, room)
     this.playerToRoom.set(hostId, code)
 
-    console.log(`[RoomManager] Room created: ${code} by ${hostName} (${hostId})`)
+    Logger.info(`[RoomManager] Room created: ${code} by ${hostName}`)
 
     return { code, room }
   }
@@ -106,12 +107,12 @@ export class RoomManager {
     const room = this.rooms.get(roomCode.toUpperCase())
 
     if (!room) {
-      console.log(`[RoomManager] Room not found: ${roomCode}`)
+      Logger.debug(`[RoomManager] Room not found: ${roomCode}`)
       return null
     }
 
     if (room.guestId !== null) {
-      console.log(`[RoomManager] Room full: ${roomCode}`)
+      Logger.debug(`[RoomManager] Room full: ${roomCode}`)
       return null
     }
 
@@ -120,7 +121,7 @@ export class RoomManager {
     room.guestName = guestName
     this.playerToRoom.set(guestId, room.code)
 
-    console.log(`[RoomManager] ${guestName} (${guestId}) joined room ${room.code}`)
+    Logger.info(`[RoomManager] ${guestName} joined room ${room.code}`)
 
     return room
   }
@@ -137,19 +138,19 @@ export class RoomManager {
     const room = this.rooms.get(roomCode.toUpperCase())
 
     if (!room) {
-      console.log(`[RoomManager] Room not found: ${roomCode}`)
+      Logger.debug(`[RoomManager] Room not found: ${roomCode}`)
       return null
     }
 
     // Check spectator limit (max 5)
     if (room.spectators.length >= 5) {
-      console.log(`[RoomManager] Spectator limit reached for room ${roomCode}`)
+      Logger.debug(`[RoomManager] Spectator limit reached for room ${roomCode}`)
       return null
     }
 
     // Check if spectator already in room
     if (room.spectators.some(s => s.socketId === spectatorId)) {
-      console.log(`[RoomManager] Spectator ${spectatorName} already in room ${roomCode}`)
+      Logger.debug(`[RoomManager] Spectator ${spectatorName} already in room ${roomCode}`)
       return room
     }
 
@@ -157,7 +158,7 @@ export class RoomManager {
     room.spectators.push({ socketId: spectatorId, name: spectatorName })
     this.playerToRoom.set(spectatorId, room.code)
 
-    console.log(`[RoomManager] Spectator ${spectatorName} (${spectatorId}) joined room ${room.code}`)
+    Logger.info(`[RoomManager] Spectator ${spectatorName} joined room ${room.code}`)
 
     return room
   }
@@ -193,7 +194,7 @@ export class RoomManager {
     room.spectators.splice(spectatorIndex, 1)
     this.playerToRoom.delete(socketId)
 
-    console.log(`[RoomManager] Spectator ${spectatorName} left room ${room.code}`)
+    Logger.info(`[RoomManager] Spectator ${spectatorName} left room ${room.code}`)
 
     return { room, spectatorName }
   }
@@ -212,12 +213,12 @@ export class RoomManager {
     }
 
     if (room.guestId === null) {
-      console.log(`[RoomManager] Cannot mark room ready - waiting for second player`)
+      Logger.debug(`[RoomManager] Cannot mark room ready - waiting for second player`)
       return false
     }
 
     room.ready = true
-    console.log(`[RoomManager] Room ${room.code} is ready to start`)
+    Logger.info(`[RoomManager] Room ${room.code} is ready to start`)
 
     return true
   }
@@ -236,7 +237,7 @@ export class RoomManager {
     }
 
     room.gameId = gameId
-    console.log(`[RoomManager] Room ${room.code} linked to game ${gameId}`)
+    Logger.info(`[RoomManager] Room ${room.code} linked to game ${gameId}`)
   }
 
   /**
@@ -299,11 +300,11 @@ export class RoomManager {
 
     // Determine if player is host or guest
     if (room.hostId === socketId) {
-      console.log(`[RoomManager] Host ${room.hostName} left room ${room.code}`)
+      Logger.info(`[RoomManager] Host ${room.hostName} left room ${room.code}`)
       // If host leaves, delete the entire room
       this.deleteRoom(roomCode)
     } else if (room.guestId === socketId) {
-      console.log(`[RoomManager] Guest ${room.guestName} left room ${room.code}`)
+      Logger.info(`[RoomManager] Guest ${room.guestName} left room ${room.code}`)
       // If guest leaves, keep room but remove guest
       room.guestId = null
       room.guestName = null
@@ -339,7 +340,7 @@ export class RoomManager {
 
     // Delete room
     this.rooms.delete(room.code)
-    console.log(`[RoomManager] Room deleted: ${room.code}`)
+    Logger.debug(`[RoomManager] Room deleted: ${room.code}`)
   }
 
   /**

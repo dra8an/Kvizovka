@@ -20,7 +20,7 @@ import type {
   InterServerEvents,
   SocketData,
 } from '@kvizovka/shared'
-import { WordValidator, GameStatus } from '@kvizovka/shared'
+import { WordValidator, GameStatus, Logger } from '@kvizovka/shared'
 
 import { loadDictionary } from './dictionary-loader.js'
 import { roomManager } from './room-manager.js'
@@ -55,7 +55,7 @@ let gameManager: GameManager
  * Initialize server
  */
 async function initializeServer() {
-  console.log('🚀 Starting Kvizovka server...')
+  Logger.info('🚀 Starting Kvizovka server...')
 
   // 1. Load dictionary
   await loadDictionary()
@@ -63,7 +63,7 @@ async function initializeServer() {
 
   // 2. Create game manager
   gameManager = new GameManager(wordValidator)
-  console.log('[Server] Game manager initialized')
+  Logger.info('Game manager initialized')
 
   // 3. Create Hono app
   const app = new Hono()
@@ -102,7 +102,7 @@ async function initializeServer() {
       createServer,
     },
     (info) => {
-      console.log(`🚀 Kvizovka server running on http://localhost:${info.port}`)
+      Logger.info(`🚀 Kvizovka server running on http://localhost:${info.port}`)
     }
   )
 
@@ -114,7 +114,7 @@ async function initializeServer() {
     },
   })
 
-  console.log('🔌 Socket.io ready for connections')
+  Logger.info('🔌 Socket.io ready for connections')
 
   /**
    * Helper function to broadcast game state to all room members (players + spectators)
@@ -144,7 +144,7 @@ async function initializeServer() {
 
   // 6. Socket.io event handlers
   io.on('connection', (socket: CustomSocket) => {
-    console.log(`[Socket.io] Client connected: ${socket.id}`)
+    Logger.info(`Client connected: ${socket.id}`)
 
     /**
      * Create Room
@@ -163,7 +163,7 @@ async function initializeServer() {
 
         callback({ success: true, roomCode: code })
       } catch (error) {
-        console.error('[room:create] Error:', error)
+        Logger.error('[room:create] Error:', error)
         callback({ success: false, error: 'Failed to create room' })
       }
     })
@@ -193,7 +193,7 @@ async function initializeServer() {
 
         callback({ success: true })
       } catch (error) {
-        console.error('[room:join] Error:', error)
+        Logger.error('[room:join] Error:', error)
         callback({ success: false, error: 'Failed to join room' })
       }
     })
@@ -245,7 +245,7 @@ async function initializeServer() {
 
         callback({ success: true })
       } catch (error) {
-        console.error('[room:join-spectator] Error:', error)
+        Logger.error('[room:join-spectator] Error:', error)
         callback({ success: false, error: 'Failed to join as spectator' })
       }
     })
@@ -319,7 +319,7 @@ async function initializeServer() {
 
         callback({ success: true })
       } catch (error) {
-        console.error('[room:ready] Error:', error)
+        Logger.error('[room:ready] Error:', error)
         callback({ success: false, error: 'Failed to start game' })
       }
     })
@@ -336,11 +336,11 @@ async function initializeServer() {
         }
 
         const { gameId, placedTiles, timeTaken, direction } = data
-        console.log(`[game:make-move] Received move for game ${gameId}, ${placedTiles.length} tiles, time: ${timeTaken}ms, direction: ${direction || 'auto'}`)
+        Logger.debug(`[game:make-move] Received move for game ${gameId}, ${placedTiles.length} tiles, time: ${timeTaken}ms, direction: ${direction || 'auto'}`)
         const game = gameManager.getGame(gameId)
 
         if (!game) {
-          console.log(`[game:make-move] ERROR: Game ${gameId} not found`)
+          Logger.warn(`[game:make-move] Game ${gameId} not found`)
           callback({ success: false, error: 'Game not found' })
           return
         }
@@ -349,21 +349,21 @@ async function initializeServer() {
         const playerId = socket.data.playerId
 
         if (!playerId) {
-          console.log(`[game:make-move] ERROR: Player ID not found in socket data`)
+          Logger.warn(`[game:make-move] Player ID not found in socket data`)
           callback({ success: false, error: 'Player ID not found' })
           return
         }
 
-        console.log(`[game:make-move] Processing move for player ${playerId}`)
+        Logger.debug(`[game:make-move] Processing move for player ${playerId}`)
         const result = gameManager.makeMove(gameId, playerId, placedTiles, timeTaken || 0, direction)
 
         if (!result.success) {
-          console.log(`[game:make-move] Move rejected: ${result.error}`)
+          Logger.warn(`[game:make-move] Move rejected: ${result.error}`)
           callback({ success: false, error: result.error })
           return
         }
 
-        console.log(`[game:make-move] Move successful!`)
+        Logger.debug(`[game:make-move] Move successful!`)
 
         // Broadcast updated state to all room members
         const room = roomManager.getRoomByPlayer(socket.id)
@@ -374,7 +374,7 @@ async function initializeServer() {
 
         callback({ success: true })
       } catch (error) {
-        console.error('[game:make-move] Error:', error)
+        Logger.error('[game:make-move] Error:', error)
         callback({ success: false, error: 'Failed to make move' })
       }
     })
@@ -421,7 +421,7 @@ async function initializeServer() {
 
         callback({ success: true })
       } catch (error) {
-        console.error('[game:skip-turn] Error:', error)
+        Logger.error('[game:skip-turn] Error:', error)
         callback({ success: false, error: 'Failed to skip turn' })
       }
     })
@@ -468,7 +468,7 @@ async function initializeServer() {
 
         callback({ success: true })
       } catch (error) {
-        console.error('[game:exchange-tiles] Error:', error)
+        Logger.error('[game:exchange-tiles] Error:', error)
         callback({ success: false, error: 'Failed to exchange tiles' })
       }
     })
@@ -515,7 +515,7 @@ async function initializeServer() {
 
         callback({ success: true, challengeSucceeded: result.challengeSucceeded })
       } catch (error) {
-        console.error('[game:challenge] Error:', error)
+        Logger.error('[game:challenge] Error:', error)
         callback({ success: false, error: 'Failed to challenge word' })
       }
     })
@@ -562,7 +562,7 @@ async function initializeServer() {
 
         callback({ success: true })
       } catch (error) {
-        console.error('[game:steal-joker] Error:', error)
+        Logger.error('[game:steal-joker] Error:', error)
         callback({ success: false, error: 'Failed to steal joker' })
       }
     })
@@ -580,7 +580,7 @@ async function initializeServer() {
           return
         }
 
-        console.log(`[game:force-end] Forcing game ${gameId} to end (test mode)`)
+        Logger.info(`[game:force-end] Forcing game ${gameId} to end (test mode)`)
 
         // Force the game to end with rounds_completed reason
         game.status = GameStatus.COMPLETED
@@ -619,7 +619,7 @@ async function initializeServer() {
           game.winner = player2.id
         }
 
-        console.log(`[game:force-end] Final scores: ${player1.name} ${player1.score}, ${player2.name} ${player2.score}`)
+        Logger.info(`[game:force-end] Final scores: ${player1.name} ${player1.score}, ${player2.name} ${player2.score}`)
 
         // Broadcast updated state to all room members
         const room = roomManager.getRoomByPlayer(socket.id)
@@ -630,7 +630,7 @@ async function initializeServer() {
 
         callback({ success: true })
       } catch (error) {
-        console.error('[game:force-end] Error:', error)
+        Logger.error('[game:force-end] Error:', error)
         callback({ success: false, error: 'Failed to end game' })
       }
     })
@@ -641,23 +641,23 @@ async function initializeServer() {
     socket.on('chat:message', (data) => {
       try {
         const { roomCode, message } = data
-        console.log(`[chat:message] Room ${roomCode}, from ${socket.data.playerName}: ${message}`)
+        Logger.debug(`[chat:message] Room ${roomCode}, from ${socket.data.playerName}: ${message}`)
 
         // Validate message
         if (!message || message.trim().length === 0) {
-          console.log('[chat:message] Empty message, ignoring')
+          Logger.debug('[chat:message] Empty message, ignoring')
           return
         }
 
         if (message.length > 500) {
-          console.log('[chat:message] Message too long, ignoring')
+          Logger.debug('[chat:message] Message too long, ignoring')
           return
         }
 
         // Get room to verify player is in room
         const room = roomManager.getRoom(roomCode)
         if (!room) {
-          console.log('[chat:message] Room not found')
+          Logger.debug('[chat:message] Room not found')
           return
         }
 
@@ -666,7 +666,7 @@ async function initializeServer() {
         const isSpectator = room.spectators.some(s => s.socketId === socket.id)
 
         if (!isPlayer && !isSpectator) {
-          console.log('[chat:message] User not in room')
+          Logger.debug('[chat:message] User not in room')
           return
         }
 
@@ -680,9 +680,9 @@ async function initializeServer() {
 
         // Broadcast to room (including sender)
         io.to(roomCode).emit('chat:message', chatMessage)
-        console.log(`[chat:message] Broadcasted to room ${roomCode}`)
+        Logger.debug(`[chat:message] Broadcasted to room ${roomCode}`)
       } catch (error) {
-        console.error('[chat:message] Error:', error)
+        Logger.error('[chat:message] Error:', error)
       }
     })
 
@@ -690,7 +690,7 @@ async function initializeServer() {
      * Disconnect
      */
     socket.on('disconnect', () => {
-      console.log(`[Socket.io] Client disconnected: ${socket.id}`)
+      Logger.info(`Client disconnected: ${socket.id}`)
 
       // Try to remove as player first
       const roomCode = roomManager.removePlayer(socket.id)
@@ -719,6 +719,6 @@ async function initializeServer() {
 
 // Start server
 initializeServer().catch((error) => {
-  console.error('❌ Failed to start server:', error)
+  Logger.error('❌ Failed to start server:', error)
   process.exit(1)
 })

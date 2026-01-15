@@ -28,6 +28,7 @@ import {
   Direction,
   TILES_PER_PLAYER,
   DEFAULT_TIME_LIMIT,
+  Logger,
 } from '@kvizovka/shared'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -155,9 +156,9 @@ export class GameManager {
 
     this.games.set(gameId, gameState)
 
-    console.log(`[GameManager] Game created: ${gameId} (${player1Name} vs ${player2Name})`)
-    console.log(`[GameManager] Player 1 ID: ${player1.id}`)
-    console.log(`[GameManager] Player 2 ID: ${player2.id}`)
+    Logger.info(`[GameManager] Game created: ${gameId} (${player1Name} vs ${player2Name})`)
+    Logger.debug(`[GameManager] Player 1 ID: ${player1.id}`)
+    Logger.debug(`[GameManager] Player 2 ID: ${player2.id}`)
 
     return { gameId, gameState: this.sanitizeGameState(gameState, player1.id) }
   }
@@ -357,7 +358,7 @@ export class GameManager {
     // Check game end conditions
     this.checkGameEnd(game)
 
-    console.log(`[GameManager] ${currentPlayer.name} played word for ${scoreResult.totalScore} points`)
+    Logger.debug(`[GameManager] ${currentPlayer.name} played word for ${scoreResult.totalScore} points`)
 
     return { success: true, gameState: this.sanitizeGameState(game, playerId) }
   }
@@ -422,7 +423,7 @@ export class GameManager {
     // Check game end
     this.checkGameEnd(game)
 
-    console.log(`[GameManager] ${currentPlayer.name} skipped turn`)
+    Logger.debug(`[GameManager] ${currentPlayer.name} skipped turn`)
 
     return { success: true, gameState: this.sanitizeGameState(game, playerId) }
   }
@@ -519,7 +520,7 @@ export class GameManager {
     game.currentPlayerIndex = (game.currentPlayerIndex + 1) % 2 as 0 | 1
     game.updatedAt = now
 
-    console.log(`[GameManager] ${currentPlayer.name} exchanged ${tilesToExchange.length} tiles`)
+    Logger.debug(`[GameManager] ${currentPlayer.name} exchanged ${tilesToExchange.length} tiles`)
 
     return { success: true, gameState: this.sanitizeGameState(game, playerId) }
   }
@@ -565,12 +566,12 @@ export class GameManager {
     if (!isValid) {
       // Challenge succeeded - undo last move
       this.undoLastMove(game)
-      console.log(`[GameManager] Challenge succeeded - word was invalid`)
+      Logger.info(`[GameManager] Challenge succeeded - word was invalid`)
       return { success: true, challengeSucceeded: true, gameState: this.sanitizeGameState(game, playerId) }
     } else {
       // Challenge failed - penalize challenger
       currentPlayer.score = Math.max(0, currentPlayer.score - 10)
-      console.log(`[GameManager] Challenge failed - word was valid`)
+      Logger.info(`[GameManager] Challenge failed - word was valid`)
       return { success: true, challengeSucceeded: false, gameState: this.sanitizeGameState(game, playerId) }
     }
   }
@@ -661,7 +662,7 @@ export class GameManager {
     // Update metadata
     game.updatedAt = new Date()
 
-    console.log(`[GameManager] ${currentPlayer.name} stole a joker at (${row}, ${col}) with ${replacementTile.letter}`)
+    Logger.debug(`[GameManager] ${currentPlayer.name} stole a joker at (${row}, ${col}) with ${replacementTile.letter}`)
 
     return { success: true, gameState: this.sanitizeGameState(game, playerId) }
   }
@@ -785,12 +786,12 @@ export class GameManager {
 
     if (player1Penalty > 0) {
       player1.score -= player1Penalty
-      console.log(`[GameManager] ${player1.name} tile penalty: -${player1Penalty} (${player1.tiles.length} tiles left)`)
+      Logger.debug(`[GameManager] ${player1.name} tile penalty: -${player1Penalty} (${player1.tiles.length} tiles left)`)
     }
 
     if (player2Penalty > 0) {
       player2.score -= player2Penalty
-      console.log(`[GameManager] ${player2.name} tile penalty: -${player2Penalty} (${player2.tiles.length} tiles left)`)
+      Logger.debug(`[GameManager] ${player2.name} tile penalty: -${player2Penalty} (${player2.tiles.length} tiles left)`)
     }
 
     // Determine winner (after penalties applied)
@@ -801,8 +802,8 @@ export class GameManager {
     }
     // else: tie (winner stays null)
 
-    console.log(`[GameManager] Game ${game.id} ended: ${reason}`)
-    console.log(`[GameManager] Final scores (after penalties): ${player1.name} ${player1.score}, ${player2.name} ${player2.score}`)
+    Logger.info(`[GameManager] Game ${game.id} ended: ${reason}`)
+    Logger.info(`[GameManager] Final scores (after penalties): ${player1.name} ${player1.score}, ${player2.name} ${player2.score}`)
   }
 
   /**
@@ -812,6 +813,6 @@ export class GameManager {
    */
   deleteGame(gameId: string): void {
     this.games.delete(gameId)
-    console.log(`[GameManager] Game deleted: ${gameId}`)
+    Logger.debug(`[GameManager] Game deleted: ${gameId}`)
   }
 }

@@ -39,3 +39,4 @@ export * from './game-engine/index.js'
 
 // Re-export everything from utils
 export { Dictionary, dictionary } from './utils/dictionary.js'
+export { Logger, LogLevel } from './utils/logger.js'

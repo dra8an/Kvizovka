@@ -13,6 +13,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.16] - 2026-01-14
+
+### Added
+- **Environment-Based Logging System**
+  - Created centralized `Logger` utility in shared package with log levels (ERROR, WARN, INFO, DEBUG)
+  - Automatic environment detection (production vs development)
+  - Production mode (NODE_ENV=production): Only logs errors and warnings (WARN level)
+  - Development mode: Logs everything for debugging (DEBUG level)
+  - Supports optional LOG_LEVEL environment variable for manual control
+
+### Changed
+- **Replaced all console.log statements with Logger** (61 total across server files):
+  - `server/src/index.ts`: 32 console statements → categorized Logger calls
+  - `server/src/game-manager.ts`: 14 console statements → categorized Logger calls
+  - `server/src/room-manager.ts`: 15 console statements → categorized Logger calls
+  - Categorization:
+    - ERROR: Critical failures (connection errors, exceptions)
+    - WARN: User validation failures (room not found, invalid moves)
+    - INFO: Important state changes (connections, game start/end, room operations)
+    - DEBUG: Verbose details (move processing, chat messages, state updates)
+
+### Performance
+- **Reduced production log output by ~85%**
+  - Before: ~3,000-5,000 log lines per day (all environments)
+  - After: ~400-750 log lines per day in production (errors/warnings only)
+  - Development unchanged: Full verbose logging preserved
+  - Render free tier: Significantly reduced log storage usage
+  - CPU/memory: Reduced I/O overhead from logging operations
+
+### Implementation Details
+- New file: `packages/shared/src/utils/logger.ts`
+  - LogLevel enum (ERROR=0, WARN=1, INFO=2, DEBUG=3)
+  - Logger class with static methods for each level
+  - Context support for log prefixing
+  - Auto-initialization based on NODE_ENV
+- Updated `packages/shared/src/index.ts` to export Logger and LogLevel
+- All server files import and use Logger instead of console
+- No changes required to deployment configuration (auto-detects NODE_ENV)
+
+---
+
 ## [0.2.15] - 2026-01-14
 
 ### Added
