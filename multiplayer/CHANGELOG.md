@@ -13,6 +13,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.18] - 2026-01-14
+
+### Changed
+- **Key game activity logs now visible in production** (Logger.info → Logger.warn):
+  - Room creation: "Room created: {code} by {hostName}"
+  - Player joins room: "{guestName} joined room {code}"
+  - Spectator joins room: "Spectator {spectatorName} joined room {code}"
+  - Player/spectator leaves room: "Host/Guest/Spectator {name} left room {code}"
+  - Game creation: "Game created: {gameId} ({player1} vs {player2})"
+  - Game end: "Game {gameId} ended: {reason}" + final scores
+
+### Impact
+- Production logs now show room/game lifecycle events for tracking and monitoring
+- Can track abandoned rooms (host creates room then leaves before guest joins)
+- Can see which games were played and their outcomes
+- Debug logs (move processing, validation, etc.) still suppressed in production
+- Estimated production log volume: ~50-100 lines per day (vs 3,000-5,000 before)
+
+---
+
 ## [0.2.17] - 2026-01-14
 
 ### Changed

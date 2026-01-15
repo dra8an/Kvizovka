@@ -156,7 +156,7 @@ export class GameManager {
 
     this.games.set(gameId, gameState)
 
-    Logger.info(`[GameManager] Game created: ${gameId} (${player1Name} vs ${player2Name})`)
+    Logger.warn(`[GameManager] Game created: ${gameId} (${player1Name} vs ${player2Name})`)
     Logger.debug(`[GameManager] Player 1 ID: ${player1.id}`)
     Logger.debug(`[GameManager] Player 2 ID: ${player2.id}`)
 
@@ -802,8 +802,8 @@ export class GameManager {
     }
     // else: tie (winner stays null)
 
-    Logger.info(`[GameManager] Game ${game.id} ended: ${reason}`)
-    Logger.info(`[GameManager] Final scores (after penalties): ${player1.name} ${player1.score}, ${player2.name} ${player2.score}`)
+    Logger.warn(`[GameManager] Game ${game.id} ended: ${reason}`)
+    Logger.warn(`[GameManager] Final scores (after penalties): ${player1.name} ${player1.score}, ${player2.name} ${player2.score}`)
   }
 
   /**

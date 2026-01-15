@@ -90,7 +90,7 @@ export class RoomManager {
     this.rooms.set(code, room)
     this.playerToRoom.set(hostId, code)
 
-    Logger.info(`[RoomManager] Room created: ${code} by ${hostName}`)
+    Logger.warn(`[RoomManager] Room created: ${code} by ${hostName}`)
 
     return { code, room }
   }
@@ -121,7 +121,7 @@ export class RoomManager {
     room.guestName = guestName
     this.playerToRoom.set(guestId, room.code)
 
-    Logger.info(`[RoomManager] ${guestName} joined room ${room.code}`)
+    Logger.warn(`[RoomManager] ${guestName} joined room ${room.code}`)
 
     return room
   }
@@ -158,7 +158,7 @@ export class RoomManager {
     room.spectators.push({ socketId: spectatorId, name: spectatorName })
     this.playerToRoom.set(spectatorId, room.code)
 
-    Logger.info(`[RoomManager] Spectator ${spectatorName} joined room ${room.code}`)
+    Logger.warn(`[RoomManager] Spectator ${spectatorName} joined room ${room.code}`)
 
     return room
   }
@@ -194,7 +194,7 @@ export class RoomManager {
     room.spectators.splice(spectatorIndex, 1)
     this.playerToRoom.delete(socketId)
 
-    Logger.info(`[RoomManager] Spectator ${spectatorName} left room ${room.code}`)
+    Logger.warn(`[RoomManager] Spectator ${spectatorName} left room ${room.code}`)
 
     return { room, spectatorName }
   }
@@ -300,11 +300,11 @@ export class RoomManager {
 
     // Determine if player is host or guest
     if (room.hostId === socketId) {
-      Logger.info(`[RoomManager] Host ${room.hostName} left room ${room.code}`)
+      Logger.warn(`[RoomManager] Host ${room.hostName} left room ${room.code}`)
       // If host leaves, delete the entire room
       this.deleteRoom(roomCode)
     } else if (room.guestId === socketId) {
-      Logger.info(`[RoomManager] Guest ${room.guestName} left room ${room.code}`)
+      Logger.warn(`[RoomManager] Guest ${room.guestName} left room ${room.code}`)
       // If guest leaves, keep room but remove guest
       room.guestId = null
       room.guestName = null
