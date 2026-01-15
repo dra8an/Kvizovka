@@ -18,13 +18,13 @@
  *
  * // Listen for events
  * socketService.on('game:started', (data) => {
- *   console.log('Game started!', data)
+ *   Logger.debug('Game started!', data)
  * })
  *
  * // Emit events
  * socketService.emit('room:create', { playerName: 'Alice' }, (response) => {
  *   if (response.success) {
- *     console.log('Room created:', response.roomCode)
+ *     Logger.debug('Room created:', response.roomCode)
  *   }
  * })
  * ```
@@ -35,6 +35,7 @@ import type {
   ClientToServerEvents,
   ServerToClientEvents,
 } from '@kvizovka/shared'
+import { Logger } from '@kvizovka/shared'
 
 /**
  * Type for Socket.io with custom events
@@ -76,11 +77,11 @@ class SocketService {
    */
   connect(): void {
     if (this.socket?.connected) {
-      console.log('[Socket] Already connected')
+      Logger.debug('[Socket] Already connected')
       return
     }
 
-    console.log(`[Socket] Connecting to ${this.serverUrl}...`)
+    Logger.debug(`[Socket] Connecting to ${this.serverUrl}...`)
 
     // Create socket connection
     this.socket = io(this.serverUrl, {
@@ -93,23 +94,23 @@ class SocketService {
 
     // Connection event handlers
     this.socket.on('connect', () => {
-      console.log('[Socket] Connected:', this.socket?.id)
+      Logger.debug('[Socket] Connected:', this.socket?.id)
       this.onConnectCallbacks.forEach((cb) => cb())
     })
 
     this.socket.on('disconnect', (reason) => {
-      console.log('[Socket] Disconnected:', reason)
+      Logger.debug('[Socket] Disconnected:', reason)
       this.onDisconnectCallbacks.forEach((cb) => cb())
     })
 
     this.socket.on('connect_error', (error) => {
-      console.error('[Socket] Connection error:', error)
+      Logger.error('[Socket] Connection error:', error)
       this.onErrorCallbacks.forEach((cb) => cb(error))
     })
 
     // Server error events
     this.socket.on('error', (data) => {
-      console.error('[Socket] Server error:', data.message)
+      Logger.error('[Socket] Server error:', data.message)
       this.onErrorCallbacks.forEach((cb) => cb(new Error(data.message)))
     })
   }
@@ -119,7 +120,7 @@ class SocketService {
    */
   disconnect(): void {
     if (this.socket) {
-      console.log('[Socket] Disconnecting...')
+      Logger.debug('[Socket] Disconnecting...')
       this.socket.disconnect()
       this.socket = null
     }
@@ -151,11 +152,11 @@ class SocketService {
     ...args: Parameters<ClientToServerEvents[K]>
   ): void {
     if (!this.socket) {
-      console.error('[Socket] Cannot emit - not connected')
+      Logger.error('[Socket] Cannot emit - not connected')
       return
     }
 
-    console.log(`[Socket] Emit: ${event}`, args)
+    Logger.debug(`[Socket] Emit: ${event}`, args)
     this.socket.emit(event, ...args)
   }
 
@@ -170,11 +171,11 @@ class SocketService {
     handler: ServerToClientEvents[K]
   ): void {
     if (!this.socket) {
-      console.error('[Socket] Cannot listen - not connected')
+      Logger.error('[Socket] Cannot listen - not connected')
       return
     }
 
-    console.log(`[Socket] Listening for: ${event}`)
+    Logger.debug(`[Socket] Listening for: ${event}`)
     this.socket.on(event, handler as any)
   }
 
@@ -251,7 +252,7 @@ export const socketService = new SocketService()
  *   socketService.connect()
  *
  *   socketService.on('game:started', (data) => {
- *     console.log('Game started!', data.gameId)
+ *     Logger.debug('Game started!', data.gameId)
  *   })
  *
  *   return () => {
@@ -264,9 +265,9 @@ export const socketService = new SocketService()
  * const handleCreateRoom = () => {
  *   socketService.emit('room:create', { playerName: 'Alice' }, (response) => {
  *     if (response.success) {
- *       console.log('Room code:', response.roomCode)
+ *       Logger.debug('Room code:', response.roomCode)
  *     } else {
- *       console.error('Failed:', response.error)
+ *       Logger.error('Failed:', response.error)
  *     }
  *   })
  * }

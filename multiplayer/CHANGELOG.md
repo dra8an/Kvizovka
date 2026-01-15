@@ -13,6 +13,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.17] - 2026-01-14
+
+### Changed
+- **Extended Logger implementation to all game engine and client files** (139 total console statements replaced):
+  - Game engine files (packages/shared/src/game-engine/):
+    - `MoveValidator.ts`: 13 console.log → Logger.debug
+    - `ScoreCalculator.ts`: 14 console.log → Logger.debug
+    - `TileBag.ts`: 1 console.warn → Logger.warn
+    - `Board.ts`: 9 console.log → Logger.debug
+  - Client store files (packages/client/src/store/):
+    - `onlineGameStore.ts`: 41 console.log + 18 console.error → Logger.debug/Logger.error
+    - `gameStore.ts`: 19 console.log → Logger.debug
+  - Client service files (packages/client/src/services/):
+    - `socket.ts`: 16 console statements → Logger.debug/Logger.error
+  - Client components (packages/client/src/components/):
+    - `Board/Board.tsx`: 10 console statements → Logger.debug/Logger.error/Logger.warn
+    - `GameControls/GameControls.tsx`: 3 console.log → Logger.debug
+    - `TileRack/TileRack.tsx`: 4 console.log → Logger.debug
+    - `OnlineGame/OnlineGame.tsx`: 4 console.log → Logger.debug
+    - `OnlineMenu/OnlineMenu.tsx`: 1 console.error → Logger.error
+    - `App.tsx`: 1 console.log → Logger.debug
+
+### Performance
+- **Complete elimination of verbose debug logs in production**
+  - All game engine debug logs (scoring, validation, tile placement) now silent in production
+  - Client-side debug logs (move processing, state updates) now silent in production
+  - Production logs now limited to actual errors only (Logger.error/Logger.warn)
+  - Development environment: Full verbose logging preserved for debugging
+
+### Technical Details
+- All files now import Logger from `@kvizovka/shared`
+- Consistent logging pattern across entire codebase:
+  - `Logger.debug()` for verbose operational details (suppressed in production)
+  - `Logger.info()` for important state changes (suppressed in production)
+  - `Logger.warn()` for non-critical issues (shown in production)
+  - `Logger.error()` for critical failures (shown in production)
+- No behavior changes - only logging output control based on NODE_ENV
+
+---
+
 ## [0.2.16] - 2026-01-14
 
 ### Added

@@ -27,6 +27,7 @@ import {
   isValidPosition,
   getAdjacentPositions,
 } from '../constants/index.js'
+import { Logger } from '../utils/logger.js'
 
 /**
  * Board Class
@@ -331,9 +332,9 @@ export class Board {
       if (isValidPosition(first.row, beforeCol) && this.isEmpty(first.row, beforeCol)) {
         const blocker: BlockerTile = { type: 'BLOCKER', id: `blocker-${first.row}-${beforeCol}` }
         this.setTile(first.row, beforeCol, blocker)
-        console.log(`  🔲 Placed blocker at (${first.row},${beforeCol}) before word`)
+        Logger.debug(`  🔲 Placed blocker at (${first.row},${beforeCol}) before word`)
       } else {
-        console.log(`  ⚠️ Cannot place blocker at (${first.row},${beforeCol}) - not empty or invalid`)
+        Logger.debug(`  ⚠️ Cannot place blocker at (${first.row},${beforeCol}) - not empty or invalid`)
       }
 
       // Place blocker after last tile
@@ -341,9 +342,9 @@ export class Board {
       if (isValidPosition(last.row, afterCol) && this.isEmpty(last.row, afterCol)) {
         const blocker: BlockerTile = { type: 'BLOCKER', id: `blocker-${last.row}-${afterCol}` }
         this.setTile(last.row, afterCol, blocker)
-        console.log(`  🔲 Placed blocker at (${last.row},${afterCol}) after word`)
+        Logger.debug(`  🔲 Placed blocker at (${last.row},${afterCol}) after word`)
       } else {
-        console.log(`  ⚠️ Cannot place blocker at (${last.row},${afterCol}) - not empty or invalid`)
+        Logger.debug(`  ⚠️ Cannot place blocker at (${last.row},${afterCol}) - not empty or invalid`)
       }
     } else {
       // VERTICAL
@@ -351,18 +352,18 @@ export class Board {
       if (isValidPosition(beforeRow, first.col) && this.isEmpty(beforeRow, first.col)) {
         const blocker: BlockerTile = { type: 'BLOCKER', id: `blocker-${beforeRow}-${first.col}` }
         this.setTile(beforeRow, first.col, blocker)
-        console.log(`  🔲 Placed blocker at (${beforeRow},${first.col}) before word`)
+        Logger.debug(`  🔲 Placed blocker at (${beforeRow},${first.col}) before word`)
       } else {
-        console.log(`  ⚠️ Cannot place blocker at (${beforeRow},${first.col}) - not empty or invalid`)
+        Logger.debug(`  ⚠️ Cannot place blocker at (${beforeRow},${first.col}) - not empty or invalid`)
       }
 
       const afterRow = last.row + 1
       if (isValidPosition(afterRow, last.col) && this.isEmpty(afterRow, last.col)) {
         const blocker: BlockerTile = { type: 'BLOCKER', id: `blocker-${afterRow}-${last.col}` }
         this.setTile(afterRow, last.col, blocker)
-        console.log(`  🔲 Placed blocker at (${afterRow},${last.col}) after word`)
+        Logger.debug(`  🔲 Placed blocker at (${afterRow},${last.col}) after word`)
       } else {
-        console.log(`  ⚠️ Cannot place blocker at (${afterRow},${last.col}) - not empty or invalid`)
+        Logger.debug(`  ⚠️ Cannot place blocker at (${afterRow},${last.col}) - not empty or invalid`)
       }
     }
   }
@@ -445,7 +446,7 @@ export class Board {
 
       if (square && square.premiumField && !square.isUsed) {
         square.isUsed = true
-        console.log(`✅ Marked (${placed.row},${placed.col}) ${square.premiumField} as used`)
+        Logger.debug(`✅ Marked (${placed.row},${placed.col}) ${square.premiumField} as used`)
       }
     }
   }

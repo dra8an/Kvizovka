@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { dictionary } from '@kvizovka/shared'
+import { dictionary, Logger } from '@kvizovka/shared'
 import { Game } from './components/Game/Game'
 import { GameModeMenu, GameMode as GameModeType } from './components/GameModeMenu/GameModeMenu'
 import { OnlineGame } from './components/OnlineGame/OnlineGame'
@@ -33,7 +33,7 @@ function App() {
       try {
         await dictionary.load()
         setDictionaryLoaded(true)
-        console.log('Dictionary statistics:', dictionary.getCategoryCounts())
+        Logger.debug('Dictionary statistics:', dictionary.getCategoryCounts())
       } catch (error) {
         setDictionaryError(
           error instanceof Error ? error.message : 'Unknown error'

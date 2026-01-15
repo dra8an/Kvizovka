@@ -27,7 +27,7 @@ import { SpectatorControls } from '../SpectatorControls/SpectatorControls'
 import { Chat } from '../Chat/Chat'
 import { BonusFlash } from '../BonusFlash/BonusFlash'
 import { DirectionChoiceDialog } from '../DirectionChoiceDialog/DirectionChoiceDialog'
-import { GameStatus, PlacedTile, MoveValidationResult, MoveValidator, Board as BoardEngine, BOARD_SIZE } from '@kvizovka/shared'
+import { GameStatus, PlacedTile, MoveValidationResult, MoveValidator, Board as BoardEngine, BOARD_SIZE, Logger } from '@kvizovka/shared'
 
 export function OnlineGame() {
   const { t } = useTranslation(['online', 'common', 'dialogs'])
@@ -390,14 +390,14 @@ export function OnlineGame() {
 
   // Handle play word
   const handlePlayWord = () => {
-    console.log('[OnlineGame] Play Word clicked, selectedTiles:', selectedTiles.length)
+    Logger.debug('[OnlineGame] Play Word clicked, selectedTiles:', selectedTiles.length)
     if (selectedTiles.length === 0) {
-      console.log('[OnlineGame] No tiles selected, ignoring')
+      Logger.debug('[OnlineGame] No tiles selected, ignoring')
       return
     }
-    console.log('[OnlineGame] Calling makeMove with tiles:', selectedTiles)
+    Logger.debug('[OnlineGame] Calling makeMove with tiles:', selectedTiles)
     makeMove(selectedTiles)
-    console.log('[OnlineGame] makeMove called')
+    Logger.debug('[OnlineGame] makeMove called')
     // Don't clear selectedTiles here - wait for server response
     // Server will send game:state-update with new board state
   }

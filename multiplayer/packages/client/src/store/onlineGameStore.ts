@@ -24,6 +24,7 @@ import {
   ChatMessage,
   Board,
   MoveValidator,
+  Logger,
 } from '@kvizovka/shared'
 import { socketService } from '../services/socket'
 
@@ -341,24 +342,24 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   // ========================================
 
   connect: () => {
-    console.log('[OnlineStore] Connecting to server...')
+    Logger.debug('[OnlineStore] Connecting to server...')
 
     // Connect socket
     socketService.connect()
 
     // Setup connection event handlers
     socketService.onConnect(() => {
-      console.log('[OnlineStore] Connected!')
+      Logger.debug('[OnlineStore] Connected!')
       set({ isConnected: true, connectionError: null })
     })
 
     socketService.onDisconnect(() => {
-      console.log('[OnlineStore] Disconnected!')
+      Logger.debug('[OnlineStore] Disconnected!')
       set({ isConnected: false })
     })
 
     socketService.onError((error) => {
-      console.error('[OnlineStore] Connection error:', error)
+      Logger.error('[OnlineStore] Connection error:', error)
       set({ connectionError: error.message })
     })
 
@@ -367,7 +368,7 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   },
 
   disconnect: () => {
-    console.log('[OnlineStore] Disconnecting...')
+    Logger.debug('[OnlineStore] Disconnecting...')
     socketService.disconnect()
     set({ isConnected: false })
   },
@@ -377,14 +378,14 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   // ========================================
 
   createRoom: (playerName: string) => {
-    console.log('[OnlineStore] Creating room...', playerName)
+    Logger.debug('[OnlineStore] Creating room...', playerName)
     set({ isLoading: true, gameError: null })
 
     socketService.emit('room:create', { playerName }, (response) => {
       set({ isLoading: false })
 
       if (response.success && response.roomCode) {
-        console.log('[OnlineStore] Room created:', response.roomCode)
+        Logger.debug('[OnlineStore] Room created:', response.roomCode)
         set({
           roomCode: response.roomCode,
           playerName,
@@ -392,21 +393,21 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
           view: 'waiting',
         })
       } else {
-        console.error('[OnlineStore] Failed to create room:', response.error)
+        Logger.error('[OnlineStore] Failed to create room:', response.error)
         set({ gameError: response.error || 'Failed to create room' })
       }
     })
   },
 
   joinRoom: (roomCode: string, playerName: string) => {
-    console.log('[OnlineStore] Joining room...', roomCode, playerName)
+    Logger.debug('[OnlineStore] Joining room...', roomCode, playerName)
     set({ isLoading: true, gameError: null })
 
     socketService.emit('room:join', { roomCode, playerName }, (response) => {
       set({ isLoading: false })
 
       if (response.success) {
-        console.log('[OnlineStore] Joined room:', roomCode)
+        Logger.debug('[OnlineStore] Joined room:', roomCode)
         set({
           roomCode,
           playerName,
@@ -415,21 +416,21 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
           view: 'waiting',
         })
       } else {
-        console.error('[OnlineStore] Failed to join room:', response.error)
+        Logger.error('[OnlineStore] Failed to join room:', response.error)
         set({ gameError: response.error || 'Failed to join room' })
       }
     })
   },
 
   joinRoomAsSpectator: (roomCode: string, spectatorName: string) => {
-    console.log('[OnlineStore] Joining room as spectator...', roomCode, spectatorName)
+    Logger.debug('[OnlineStore] Joining room as spectator...', roomCode, spectatorName)
     set({ isLoading: true, gameError: null })
 
     socketService.emit('room:join-spectator', { roomCode, spectatorName }, (response) => {
       set({ isLoading: false })
 
       if (response.success) {
-        console.log('[OnlineStore] Joined room as spectator:', roomCode)
+        Logger.debug('[OnlineStore] Joined room as spectator:', roomCode)
         set({
           roomCode,
           playerName: spectatorName,
@@ -441,7 +442,7 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
           view: 'waiting',
         })
       } else {
-        console.error('[OnlineStore] Failed to join as spectator:', response.error)
+        Logger.error('[OnlineStore] Failed to join as spectator:', response.error)
         set({ gameError: response.error || 'Failed to join as spectator' })
       }
     })
@@ -451,14 +452,14 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     const { roomCode } = get()
     if (!roomCode) return
 
-    console.log('[OnlineStore] Marking ready...')
+    Logger.debug('[OnlineStore] Marking ready...')
     set({ isLoading: true, gameError: null })
 
     socketService.emit('room:ready', { roomCode }, (response) => {
       set({ isLoading: false })
 
       if (!response.success) {
-        console.error('[OnlineStore] Failed to ready:', response.error)
+        Logger.error('[OnlineStore] Failed to ready:', response.error)
         set({ gameError: response.error || 'Failed to start game' })
       }
       // Server will send game:started event
@@ -471,15 +472,15 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
 
   makeMove: (placedTiles: PlacedTile[]) => {
     const { gameId, gameState } = get()
-    console.log('[OnlineStore] makeMove called, gameId:', gameId, 'tiles:', placedTiles.length)
+    Logger.debug('[OnlineStore] makeMove called, gameId:', gameId, 'tiles:', placedTiles.length)
 
     if (!gameId) {
-      console.error('[OnlineStore] ERROR: No gameId, cannot make move')
+      Logger.error('[OnlineStore] ERROR: No gameId, cannot make move')
       return
     }
 
     if (!gameState) {
-      console.error('[OnlineStore] ERROR: No gameState, cannot validate move')
+      Logger.error('[OnlineStore] ERROR: No gameState, cannot validate move')
       return
     }
 
@@ -491,17 +492,17 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     const validator = new MoveValidator(board)
     const validation = validator.validateMove(placedTiles)
 
-    console.log('[OnlineStore] Client-side validation result:', validation)
+    Logger.debug('[OnlineStore] Client-side validation result:', validation)
 
     if (!validation.isValid) {
-      console.error('[OnlineStore] Invalid move (client-side):', validation.reason)
+      Logger.error('[OnlineStore] Invalid move (client-side):', validation.reason)
       set({ gameError: validation.reason || 'Invalid move' })
       return
     }
 
     // Check if direction choice is needed
     if (validation.needsDirectionChoice && validation.horizontalOption && validation.verticalOption) {
-      console.log('[OnlineStore] Direction choice needed, showing dialog')
+      Logger.debug('[OnlineStore] Direction choice needed, showing dialog')
       get().showDirectionChoice(
         placedTiles,
         validation.horizontalOption.wordText,
@@ -510,8 +511,8 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
       return // Don't send to server yet, wait for user choice
     }
 
-    console.log('[OnlineStore] Socket connected:', socketService.isConnected())
-    console.log('[OnlineStore] Emitting game:make-move event...')
+    Logger.debug('[OnlineStore] Socket connected:', socketService.isConnected())
+    Logger.debug('[OnlineStore] Emitting game:make-move event...')
     set({ gameError: null })
 
     // Calculate time taken for this move
@@ -519,12 +520,12 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     const timeTaken = turnStartTime ? Date.now() - turnStartTime : 0
 
     socketService.emit('game:make-move', { gameId, placedTiles, timeTaken }, (response) => {
-      console.log('[OnlineStore] Received response from server:', response)
+      Logger.debug('[OnlineStore] Received response from server:', response)
       if (!response.success) {
-        console.error('[OnlineStore] Move failed:', response.error)
+        Logger.error('[OnlineStore] Move failed:', response.error)
         set({ gameError: response.error || 'Invalid move' })
       } else {
-        console.log('[OnlineStore] Move accepted by server')
+        Logger.debug('[OnlineStore] Move accepted by server')
       }
       // Server will send game:state-update event if successful
     })
@@ -534,7 +535,7 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     const { gameId, turnStartTime } = get()
     if (!gameId) return
 
-    console.log('[OnlineStore] Skipping turn...')
+    Logger.debug('[OnlineStore] Skipping turn...')
     set({ gameError: null })
 
     // Calculate time taken for this turn
@@ -542,7 +543,7 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
 
     socketService.emit('game:skip-turn', { gameId, timeTaken }, (response) => {
       if (!response.success) {
-        console.error('[OnlineStore] Skip failed:', response.error)
+        Logger.error('[OnlineStore] Skip failed:', response.error)
         set({ gameError: response.error || 'Failed to skip turn' })
       }
       // Server will send game:state-update event
@@ -553,7 +554,7 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     const { gameId, turnStartTime } = get()
     if (!gameId) return
 
-    console.log('[OnlineStore] Exchanging tiles...', tileIds)
+    Logger.debug('[OnlineStore] Exchanging tiles...', tileIds)
     set({ gameError: null })
 
     // Calculate time taken for this turn
@@ -561,7 +562,7 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
 
     socketService.emit('game:exchange-tiles', { gameId, tileIds, timeTaken }, (response) => {
       if (!response.success) {
-        console.error('[OnlineStore] Exchange failed:', response.error)
+        Logger.error('[OnlineStore] Exchange failed:', response.error)
         set({ gameError: response.error || 'Failed to exchange tiles' })
       }
       // Server will send game:state-update event
@@ -572,12 +573,12 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     const { gameId } = get()
     if (!gameId) return
 
-    console.log('[OnlineStore] Challenging word...')
+    Logger.debug('[OnlineStore] Challenging word...')
     set({ gameError: null })
 
     socketService.emit('game:challenge', { gameId }, (response) => {
       if (!response.success) {
-        console.error('[OnlineStore] Challenge failed:', response.error)
+        Logger.error('[OnlineStore] Challenge failed:', response.error)
         set({ gameError: response.error || 'Failed to challenge' })
       }
       // Server will send game:state-update event
@@ -588,12 +589,12 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     const { gameId } = get()
     if (!gameId) return
 
-    console.log('[OnlineStore] Stealing joker...', { row, col, replacementTileId })
+    Logger.debug('[OnlineStore] Stealing joker...', { row, col, replacementTileId })
     set({ gameError: null })
 
     socketService.emit('game:steal-joker', { gameId, row, col, replacementTileId }, (response) => {
       if (!response.success) {
-        console.error('[OnlineStore] Steal failed:', response.error)
+        Logger.error('[OnlineStore] Steal failed:', response.error)
         set({ gameError: response.error || 'Failed to steal joker' })
       }
       // Server will send game:state-update event
@@ -608,12 +609,12 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     const { gameId } = get()
     if (!gameId) return
 
-    console.log('[OnlineStore] Force ending game (test mode)...')
+    Logger.debug('[OnlineStore] Force ending game (test mode)...')
     set({ gameError: null })
 
     socketService.emit('game:force-end', { gameId }, (response) => {
       if (!response.success) {
-        console.error('[OnlineStore] Force end failed:', response.error)
+        Logger.error('[OnlineStore] Force end failed:', response.error)
         set({ gameError: response.error || 'Failed to end game' })
       }
       // Server will send game:state-update event with COMPLETED status
@@ -627,11 +628,11 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   sendChatMessage: (message: string) => {
     const { roomCode } = get()
     if (!roomCode) {
-      console.error('[OnlineStore] Cannot send message: not in a room')
+      Logger.error('[OnlineStore] Cannot send message: not in a room')
       return
     }
 
-    console.log('[OnlineStore] Sending chat message:', message)
+    Logger.debug('[OnlineStore] Sending chat message:', message)
     socketService.emit('chat:message', { roomCode, message })
   },
 
@@ -669,12 +670,12 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     const { directionChoice, gameId } = get()
 
     if (!directionChoice) {
-      console.error('No direction choice available')
+      Logger.error('No direction choice available')
       return
     }
 
     if (!gameId) {
-      console.error('No gameId')
+      Logger.error('No gameId')
       return
     }
 
@@ -684,20 +685,20 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
     // Clear the dialog
     set({ directionChoice: null, gameError: null })
 
-    console.log('[OnlineStore] Sending move with chosen direction:', direction)
-    console.log('[OnlineStore] Emitting game:make-move event with direction...')
+    Logger.debug('[OnlineStore] Sending move with chosen direction:', direction)
+    Logger.debug('[OnlineStore] Emitting game:make-move event with direction...')
 
     // Calculate time taken for this move
     const timeTaken = turnStartTime ? Date.now() - turnStartTime : 0
 
     // Send move to server with the chosen direction
     socketService.emit('game:make-move', { gameId, placedTiles, timeTaken, direction }, (response) => {
-      console.log('[OnlineStore] Received response from server:', response)
+      Logger.debug('[OnlineStore] Received response from server:', response)
       if (!response.success) {
-        console.error('[OnlineStore] Move failed:', response.error)
+        Logger.error('[OnlineStore] Move failed:', response.error)
         set({ gameError: response.error || 'Invalid move' })
       } else {
-        console.log('[OnlineStore] Move accepted by server')
+        Logger.debug('[OnlineStore] Move accepted by server')
       }
       // Server will send game:state-update event if successful
     })
@@ -712,7 +713,7 @@ export const useOnlineGameStore = create<OnlineGameStore>((set, get) => ({
   // ========================================
 
   reset: () => {
-    console.log('[OnlineStore] Resetting state and disconnecting...')
+    Logger.debug('[OnlineStore] Resetting state and disconnecting...')
     socketService.removeAllListeners()
     socketService.disconnect()
     set(initialState)
@@ -730,25 +731,25 @@ function setupGameEventHandlers(
 ) {
   // Player joined room
   socketService.on('room:player-joined', (data) => {
-    console.log('[OnlineStore] Player joined:', data.playerName)
+    Logger.debug('[OnlineStore] Player joined:', data.playerName)
     set({ opponentName: data.playerName })
   })
 
   // Spectator joined room
   socketService.on('room:spectator-joined', (data) => {
-    console.log('[OnlineStore] Spectator joined:', data.spectatorName)
+    Logger.debug('[OnlineStore] Spectator joined:', data.spectatorName)
     set({ spectators: data.spectators })
   })
 
   // Spectator left room
   socketService.on('room:spectator-left', (data) => {
-    console.log('[OnlineStore] Spectator left:', data.spectatorName)
+    Logger.debug('[OnlineStore] Spectator left:', data.spectatorName)
     set({ spectators: data.spectators })
   })
 
   // Game started
   socketService.on('game:started', (data) => {
-    console.log('[OnlineStore] Game started!', data.gameId)
+    Logger.debug('[OnlineStore] Game started!', data.gameId)
 
     // Check if it's your turn and set turnStartTime (only for players, not spectators)
     const isYourTurn = data.yourPlayerId && data.gameState.players[data.gameState.currentPlayerIndex].id === data.yourPlayerId
@@ -768,8 +769,8 @@ function setupGameEventHandlers(
 
   // Game state update
   socketService.on('game:state-update', (data) => {
-    console.log('[OnlineStore] State update received')
-    console.log('[OnlineStore] Game status:', data.gameState.status)
+    Logger.debug('[OnlineStore] State update received')
+    Logger.debug('[OnlineStore] Game status:', data.gameState.status)
 
     const previousState = get().gameState
     const yourPlayerId = get().yourPlayerId
@@ -792,39 +793,39 @@ function setupGameEventHandlers(
 
       // Show bonus flash if long word bonus was awarded
       if (latestMove.scoreBreakdown?.longWordBonus && latestMove.scoreBreakdown.longWordBonus > 0) {
-        console.log('[OnlineStore] Long word bonus detected:', latestMove.scoreBreakdown.longWordBonus)
+        Logger.debug('[OnlineStore] Long word bonus detected:', latestMove.scoreBreakdown.longWordBonus)
         get().showBonusFlash(latestMove.scoreBreakdown.longWordBonus)
       }
     }
 
     // Check if game is finished
     if (data.gameState.status === GameStatus.COMPLETED) {
-      console.log('[OnlineStore] Game completed! Setting view to finished')
+      Logger.debug('[OnlineStore] Game completed! Setting view to finished')
       set({ view: 'finished' })
     }
   })
 
   // Opponent disconnected
   socketService.on('game:opponent-disconnected', () => {
-    console.log('[OnlineStore] Opponent disconnected!')
+    Logger.debug('[OnlineStore] Opponent disconnected!')
     set({ gameError: 'Opponent disconnected from game' })
   })
 
   // Opponent reconnected
   socketService.on('game:opponent-reconnected', () => {
-    console.log('[OnlineStore] Opponent reconnected!')
+    Logger.debug('[OnlineStore] Opponent reconnected!')
     set({ gameError: null })
   })
 
   // Game ended
   socketService.on('game:ended', (data) => {
-    console.log('[OnlineStore] Game ended!', data)
+    Logger.debug('[OnlineStore] Game ended!', data)
     set({ view: 'finished' })
   })
 
   // Chat message received
   socketService.on('chat:message', (chatMessage) => {
-    console.log('[OnlineStore] Chat message received:', chatMessage)
+    Logger.debug('[OnlineStore] Chat message received:', chatMessage)
     const currentMessages = get().chatMessages
     set({ chatMessages: [...currentMessages, chatMessage] })
   })

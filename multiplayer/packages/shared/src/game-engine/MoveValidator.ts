@@ -18,6 +18,7 @@ import { Board } from './Board.js'
 import { WordValidator } from './WordValidator.js'
 import { PlacedTile, Direction, BoardSquare } from '../types/index.js'
 import { MIN_WORD_LENGTH } from '../constants/index.js'
+import { Logger } from '../utils/logger.js'
 
 /**
  * Move Validation Result
@@ -187,7 +188,7 @@ export class MoveValidator {
     }
 
     // DEBUG: Log move details
-    console.log('🔍 Move Validation:', {
+    Logger.debug('🔍 Move Validation:', {
       placedTilesCount: placedTiles.length,
       positions: placedTiles.map(t => `(${t.row},${t.col})`).join(', '),
       letters: placedTiles.map(t => {
@@ -218,7 +219,7 @@ export class MoveValidator {
     // so we must validate while tiles are still on the board
     const wordText = this.wordValidator.extractWordFromSquares(mainWord)
 
-    console.log('📝 Found main word:', {
+    Logger.debug('📝 Found main word:', {
       direction: direction,
       length: mainWord.length,
       word: wordText,
@@ -246,7 +247,7 @@ export class MoveValidator {
         return true
       }).length
 
-      console.log('🔀 Direction ambiguity check:', {
+      Logger.debug('🔀 Direction ambiguity check:', {
         horizontalLength: horizontalTileCount,
         verticalLength: verticalTileCount,
         bothValid: horizontalTileCount >= MIN_WORD_LENGTH && verticalTileCount >= MIN_WORD_LENGTH
@@ -416,7 +417,7 @@ export class MoveValidator {
     // If both directions have neighbors, we need to determine which forms the main word
     // We ALWAYS check word lengths instead of using the "both sides" heuristic
     if (hasHorizontalNeighbor && hasVerticalNeighbor) {
-      console.log('🔍 Both directions have neighbors - scanning to find longer word')
+      Logger.debug('🔍 Both directions have neighbors - scanning to find longer word')
 
       // Temporarily place the tile to check word lengths
       this.board.setTile(row, col, tile.tile)
@@ -424,7 +425,7 @@ export class MoveValidator {
       const horizontalWord = this.board.getTilesInLine(row, col, 'HORIZONTAL')
       const verticalWord = this.board.getTilesInLine(row, col, 'VERTICAL')
 
-      console.log('🔍 Word lengths:', {
+      Logger.debug('🔍 Word lengths:', {
         position: `(${row},${col})`,
         horizontal: horizontalWord.length,
         vertical: verticalWord.length
@@ -436,13 +437,13 @@ export class MoveValidator {
       // Choose the direction with more tiles (likely the main word)
       // If both have same length, prefer vertical
       if (verticalWord.length > horizontalWord.length) {
-        console.log('🔍 → Choosing VERTICAL (longer)')
+        Logger.debug('🔍 → Choosing VERTICAL (longer)')
         return 'VERTICAL'
       } else if (horizontalWord.length > verticalWord.length) {
-        console.log('🔍 → Choosing HORIZONTAL (longer)')
+        Logger.debug('🔍 → Choosing HORIZONTAL (longer)')
         return 'HORIZONTAL'
       } else {
-        console.log('🔍 → Choosing VERTICAL (equal length, default)')
+        Logger.debug('🔍 → Choosing VERTICAL (equal length, default)')
         return 'VERTICAL' // Default to vertical when equal
       }
     }

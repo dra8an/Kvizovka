@@ -35,6 +35,7 @@ import {
   DEFAULT_TIME_LIMIT,
   BoardSquare,
   Direction,
+  Logger,
 } from '@kvizovka/shared'
 
 /**
@@ -394,7 +395,7 @@ export const useGameStore = create<GameStoreState>()(
         const { game, boardInstance, tileBagInstance } = state
 
         if (!game || !boardInstance || !tileBagInstance) {
-          console.error('No active game')
+          Logger.error('No active game')
           return false
         }
 
@@ -405,7 +406,7 @@ export const useGameStore = create<GameStoreState>()(
         set({ lastValidation: validation })
 
         if (!validation.isValid) {
-          console.error('Invalid move:', validation.reason)
+          Logger.error('Invalid move:', validation.reason)
           return false
         }
 
@@ -423,7 +424,7 @@ export const useGameStore = create<GameStoreState>()(
         // Place blockers around the main word (including reused letters)
         if (validation.direction && validation.wordsFormed && validation.wordsFormed.length > 0) {
           const mainWord = validation.wordsFormed[0] // First word is the main word
-          console.log('🔲 Placing blockers for main word:', {
+          Logger.debug('🔲 Placing blockers for main word:', {
             direction: validation.direction,
             wordLength: mainWord.length,
             positions: mainWord.map(sq => `(${sq.row},${sq.col})`).join(', ')
@@ -443,7 +444,7 @@ export const useGameStore = create<GameStoreState>()(
         const tilesRemainingAfterMove = currentPlayer.tiles.length - placedTiles.length + tilesDrawn
 
         // DEBUG: Log bonus calculation parameters
-        console.log('🎯 BONUS CALCULATION PARAMS:', {
+        Logger.debug('🎯 BONUS CALCULATION PARAMS:', {
           isFirstMove,
           tilesUsedCount: placedTiles.length,
           tilesRemainingAfterMove,
@@ -461,7 +462,7 @@ export const useGameStore = create<GameStoreState>()(
         )
 
         // DEBUG: Log score breakdown
-        console.log('🎯 SCORE BREAKDOWN:', scoreBreakdown)
+        Logger.debug('🎯 SCORE BREAKDOWN:', scoreBreakdown)
 
         // Show bonus flash if long word bonus awarded
         if (scoreBreakdown.longWordBonus > 0) {
@@ -586,7 +587,7 @@ export const useGameStore = create<GameStoreState>()(
 
         // Can't exchange if tile bag is empty
         if (tileBagInstance.isEmpty()) {
-          console.error('Cannot exchange: tile bag is empty')
+          Logger.error('Cannot exchange: tile bag is empty')
           return false
         }
 
@@ -658,7 +659,7 @@ export const useGameStore = create<GameStoreState>()(
         const lastPlayerMove = playerMoves[playerMoves.length - 1]
 
         if (lastPlayerMove && lastPlayerMove.type === MoveType.EXCHANGE) {
-          console.error('Cannot exchange tiles two moves in a row')
+          Logger.error('Cannot exchange tiles two moves in a row')
           return false
         }
 
@@ -937,12 +938,12 @@ export const useGameStore = create<GameStoreState>()(
 
         if (result.success) {
           // Challenge successful - word is invalid
-          console.log('Challenge successful! Word was invalid:', lastPlayedWord.word)
+          Logger.debug('Challenge successful! Word was invalid:', lastPlayedWord.word)
 
           // Get the invalid move from history
           const invalidMove = game.moveHistory[lastPlayedWord.moveIndex]
           if (!invalidMove || invalidMove.type !== MoveType.PLACE_TILES) {
-            console.error('Cannot undo: invalid move not found or not a tile placement')
+            Logger.error('Cannot undo: invalid move not found or not a tile placement')
             set({ lastPlayedWord: null })
             return result
           }
@@ -953,7 +954,7 @@ export const useGameStore = create<GameStoreState>()(
 
           // 1. Deduct points from challenged player's score
           challengedPlayer.score -= invalidMove.score
-          console.log(`Deducted ${invalidMove.score} points from ${challengedPlayer.name}`)
+          Logger.debug(`Deducted ${invalidMove.score} points from ${challengedPlayer.name}`)
 
           // 2. Remove tiles from board and blockers
           if (invalidMove.placedTiles && boardInstance) {
@@ -1027,14 +1028,14 @@ export const useGameStore = create<GameStoreState>()(
             challengedPlayer.tiles = challengedPlayer.tiles.filter(
               (tile) => !drawnTileIds.has(tile.id)
             )
-            console.log(`Removed ${invalidMove.drawnTileIds.length} tiles that were drawn during invalid move`)
+            Logger.debug(`Removed ${invalidMove.drawnTileIds.length} tiles that were drawn during invalid move`)
           }
 
           // 4. Return placed tiles to challenged player's hand
           if (invalidMove.placedTiles) {
             const tilesToReturn = invalidMove.placedTiles.map(pt => pt.tile)
             challengedPlayer.tiles.push(...tilesToReturn)
-            console.log(`Returned ${tilesToReturn.length} tiles to ${challengedPlayer.name}'s hand`)
+            Logger.debug(`Returned ${tilesToReturn.length} tiles to ${challengedPlayer.name}'s hand`)
           }
 
           // 5. Remove the move from history
@@ -1045,7 +1046,7 @@ export const useGameStore = create<GameStoreState>()(
 
           // 7. Switch turn back to challenged player (they get to play again)
           game.currentPlayerIndex = challengedPlayerIndex as 0 | 1
-          console.log(`Turn switched back to ${challengedPlayer.name}`)
+          Logger.debug(`Turn switched back to ${challengedPlayer.name}`)
 
           // Update game state
           set({
@@ -1065,7 +1066,7 @@ export const useGameStore = create<GameStoreState>()(
           const currentPlayer = game.players[game.currentPlayerIndex]
           currentPlayer.timeRemaining = Math.max(0, currentPlayer.timeRemaining - 180)
 
-          console.log(`Challenge failed! Word "${lastPlayedWord.word}" is valid. Challenger penalized 3 minutes.`)
+          Logger.debug(`Challenge failed! Word "${lastPlayedWord.word}" is valid. Challenger penalized 3 minutes.`)
 
           // Clear the last played word and update game state
           set({
@@ -1099,7 +1100,7 @@ export const useGameStore = create<GameStoreState>()(
 
         // Condition 1: Both players completed 10 rounds
         if (player1.roundsPlayed >= 10 && player2.roundsPlayed >= 10) {
-          console.log('Game ending: Both players completed 10 rounds')
+          Logger.debug('Game ending: Both players completed 10 rounds')
           game.endReason = 'rounds_completed'
           get().endGame()
           return
@@ -1112,7 +1113,7 @@ export const useGameStore = create<GameStoreState>()(
 
           // If current player has no tiles, they can't make a move
           if (currentPlayer.tiles.length === 0) {
-            console.log('Game ending: Tile bag empty and current player has no tiles')
+            Logger.debug('Game ending: Tile bag empty and current player has no tiles')
             game.endReason = 'no_tiles'
             get().endGame()
             return
@@ -1304,7 +1305,7 @@ export const useGameStore = create<GameStoreState>()(
         const { directionChoice, boardInstance } = state
 
         if (!directionChoice || !boardInstance) {
-          console.error('No direction choice or board instance')
+          Logger.error('No direction choice or board instance')
           return false
         }
 
@@ -1318,7 +1319,7 @@ export const useGameStore = create<GameStoreState>()(
         set({ directionChoice: null })
 
         if (!validation.isValid) {
-          console.error('Invalid move with direction:', validation.reason)
+          Logger.error('Invalid move with direction:', validation.reason)
           return false
         }
 
@@ -1378,7 +1379,7 @@ export const useGameStore = create<GameStoreState>()(
  *   const handlePlayWord = () => {
  *     const success = makeMove(selectedTiles)
  *     if (success) {
- *       console.log('Move accepted!')
+ *       Logger.debug('Move accepted!')
  *     }
  *   }
  *

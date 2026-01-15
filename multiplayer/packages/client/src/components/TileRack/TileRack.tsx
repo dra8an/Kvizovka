@@ -17,7 +17,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useGameStore } from '../../store/gameStore'
 import { Tile } from './Tile'
-import { Tile as TileType, PlacedTile } from '@kvizovka/shared'
+import { Tile as TileType, PlacedTile, Logger } from '@kvizovka/shared'
 
 /**
  * TileRack Component Props (for online mode)
@@ -166,7 +166,7 @@ export function TileRack(props: TileRackProps = {}) {
     setDraggedFromIndex(index)
     // Notify parent for joker stealing tooltip
     props.onTileDragStart?.(tile)
-    console.log('Started dragging tile:', tile.letter, 'from index', index)
+    Logger.debug('Started dragging tile:', tile.letter, 'from index', index)
   }
 
   /**
@@ -180,7 +180,7 @@ export function TileRack(props: TileRackProps = {}) {
     setDropTargetIndex(null)
     // Notify parent for joker stealing tooltip
     props.onTileDragEnd?.()
-    console.log('Stopped dragging')
+    Logger.debug('Stopped dragging')
   }
 
   /**
@@ -203,7 +203,7 @@ export function TileRack(props: TileRackProps = {}) {
 
       // Remove tile from board (selectedTiles)
       unselectTile(row, col)
-      console.log(`Returned tile from board ${row},${col} to hand`)
+      Logger.debug(`Returned tile from board ${row},${col} to hand`)
     }
   }
 
@@ -227,7 +227,7 @@ export function TileRack(props: TileRackProps = {}) {
 
       if (fromIndex !== toIndex && fromIndex >= 0 && toIndex >= 0) {
         reorderPlayerTiles(fromIndex, toIndex)
-        console.log(`Reordered tile from index ${fromIndex} to ${toIndex}`)
+        Logger.debug(`Reordered tile from index ${fromIndex} to ${toIndex}`)
       }
     }
 

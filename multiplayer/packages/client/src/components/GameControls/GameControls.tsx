@@ -16,7 +16,7 @@
 
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import { GameStatus, MoveType } from '@kvizovka/shared'
+import { GameStatus, MoveType, Logger } from '@kvizovka/shared'
 
 /**
  * GameControls Component
@@ -76,9 +76,9 @@ export function GameControls() {
 
     if (!success) {
       // Error message will be shown via lastValidation display
-      console.log('Move rejected by validation')
+      Logger.debug('Move rejected by validation')
     } else {
-      console.log('Move accepted!')
+      Logger.debug('Move accepted!')
     }
   }
 
@@ -158,7 +158,7 @@ export function GameControls() {
     const success = exchangeTiles(tilesForExchange)
 
     if (success) {
-      console.log('Tiles exchanged successfully!')
+      Logger.debug('Tiles exchanged successfully!')
     } else {
       setErrorMessage('Failed to exchange tiles. Please try again.')
     }

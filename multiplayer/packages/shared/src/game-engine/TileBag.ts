@@ -15,6 +15,7 @@
 
 import { Tile } from '../types/index.js'
 import { TILE_DISTRIBUTION, TOTAL_TILES } from '../constants/index.js'
+import { Logger } from '../utils/logger.js'
 
 /**
  * TileBag Class
@@ -84,7 +85,7 @@ export class TileBag {
 
     // Verify we have exactly 238 tiles
     if (this.tiles.length !== TOTAL_TILES) {
-      console.warn(
+      Logger.warn(
         `⚠️ Tile count mismatch! Expected ${TOTAL_TILES}, got ${this.tiles.length}`
       )
     }

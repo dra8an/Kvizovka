@@ -17,7 +17,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useGameStore } from '../../store/gameStore'
 import { Square } from './Square'
-import { BOARD_SIZE, Tile as TileType, BoardType, PlacedTile, TilePlacementState, MoveValidator, Board as BoardEngine, MoveValidationResult } from '@kvizovka/shared'
+import { BOARD_SIZE, Tile as TileType, BoardType, PlacedTile, TilePlacementState, MoveValidator, Board as BoardEngine, MoveValidationResult, Logger } from '@kvizovka/shared'
 import { JokerLetterDialog } from '../JokerLetterDialog/JokerLetterDialog'
 
 /**
@@ -277,7 +277,7 @@ export function Board(props: BoardProps = {}) {
     // Get drag data
     const dragData = event.dataTransfer.getData('text/plain')
     if (!dragData) {
-      console.error('No drag data')
+      Logger.error('No drag data')
       return
     }
 
@@ -295,7 +295,7 @@ export function Board(props: BoardProps = {}) {
       if (tileAtOldPos) {
         unselectTile(fromRow, fromCol)
         selectTile(tileAtOldPos.tile, row, col)
-        console.log(`Moved tile from ${fromRow},${fromCol} to ${row},${col}`)
+        Logger.debug(`Moved tile from ${fromRow},${fromCol} to ${row},${col}`)
       }
       return
     }
@@ -318,7 +318,7 @@ export function Board(props: BoardProps = {}) {
     const tile = playerTiles.find((t) => t.id === tileId)
 
     if (!tile) {
-      console.error('Tile not found in player hand')
+      Logger.error('Tile not found in player hand')
       return
     }
 
@@ -342,7 +342,7 @@ export function Board(props: BoardProps = {}) {
           return
         } else {
           // Invalid steal - tile doesn't match
-          console.log(`Cannot steal joker: need ${stealableJoker.assignedLetter}, have ${tile.letter}`)
+          Logger.debug(`Cannot steal joker: need ${stealableJoker.assignedLetter}, have ${tile.letter}`)
           return
         }
       }
@@ -350,14 +350,14 @@ export function Board(props: BoardProps = {}) {
 
     // Check if valid drop for regular placement
     if (!isValidDropTarget(row, col)) {
-      console.log('Invalid drop target')
+      Logger.debug('Invalid drop target')
       return
     }
 
     // Add tile to selectedTiles
     selectTile(tile, row, col)
 
-    console.log(`Placed ${tile.isJoker ? 'Joker' : tile.letter} at ${row}, ${col}`)
+    Logger.debug(`Placed ${tile.isJoker ? 'Joker' : tile.letter} at ${row}, ${col}`)
 
     // If joker, show letter selection dialog
     if (tile.isJoker) {
@@ -379,7 +379,7 @@ export function Board(props: BoardProps = {}) {
   const handleJokerLetterSelected = (letter: string) => {
     if (jokerDialog.tile) {
       setJokerLetter(jokerDialog.row, jokerDialog.col, letter)
-      console.log(`Joker at ${jokerDialog.row},${jokerDialog.col} set to ${letter}`)
+      Logger.debug(`Joker at ${jokerDialog.row},${jokerDialog.col} set to ${letter}`)
     }
 
     // Close dialog
@@ -393,7 +393,7 @@ export function Board(props: BoardProps = {}) {
     // Remove the joker from board
     if (jokerDialog.tile) {
       unselectTile(jokerDialog.row, jokerDialog.col)
-      console.log(`Cancelled joker placement at ${jokerDialog.row},${jokerDialog.col}`)
+      Logger.debug(`Cancelled joker placement at ${jokerDialog.row},${jokerDialog.col}`)
     }
 
     // Close dialog
@@ -414,7 +414,7 @@ export function Board(props: BoardProps = {}) {
         // Local mode - call store
         // Note: stealJoker should be added to gameStore for local mode
         // For now, this will only work in online mode
-        console.warn('Joker stealing in local mode not yet implemented in multiplayer client')
+        Logger.warn('Joker stealing in local mode not yet implemented in multiplayer client')
       }
     }
 
@@ -459,7 +459,7 @@ export function Board(props: BoardProps = {}) {
    * Called when user starts dragging a tile that's already on the board (selectedTiles).
    */
   const handleTileDragStart = (row: number, col: number) => {
-    console.log(`Started dragging tile from board at ${row}, ${col}`)
+    Logger.debug(`Started dragging tile from board at ${row}, ${col}`)
   }
 
   /**

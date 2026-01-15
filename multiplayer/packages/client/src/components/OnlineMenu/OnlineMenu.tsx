@@ -15,6 +15,7 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useOnlineGameStore } from '../../store/onlineGameStore'
 import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher'
+import { Logger } from '@kvizovka/shared'
 
 type MenuView = 'choice' | 'create' | 'join'
 
@@ -84,7 +85,7 @@ export function OnlineMenu() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000) // Reset after 2 seconds
     } catch (err) {
-      console.error('Failed to copy room code:', err)
+      Logger.error('Failed to copy room code:', err)
     }
   }
 

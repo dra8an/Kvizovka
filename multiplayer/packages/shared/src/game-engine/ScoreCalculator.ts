@@ -19,6 +19,7 @@ import {
   ALL_TILES_BONUS,
   getLongWordBonus,
 } from '../constants/index.js'
+import { Logger } from '../utils/logger.js'
 
 /**
  * ScoreCalculator Class
@@ -85,7 +86,7 @@ export class ScoreCalculator {
       )
 
       // DEBUG: Log scoring details
-      console.log('💰 Score calculation for tile:', {
+      Logger.debug('💰 Score calculation for tile:', {
         position: `(${square.row},${square.col})`,
         letter: 'letter' in tile ? tile.letter : '?',
         value: tileValue,
@@ -100,21 +101,21 @@ export class ScoreCalculator {
         switch (square.premiumField) {
           case 'DOUBLE_LETTER':
             baseScore += tileValue * MULTIPLIERS.DOUBLE_LETTER
-            console.log(`  ✅ Applied DOUBLE_LETTER: ${tileValue} × 2 = ${tileValue * 2}`)
+            Logger.debug(`  ✅ Applied DOUBLE_LETTER: ${tileValue} × 2 = ${tileValue * 2}`)
             break
           case 'TRIPLE_LETTER':
             baseScore += tileValue * MULTIPLIERS.TRIPLE_LETTER
-            console.log(`  ✅ Applied TRIPLE_LETTER: ${tileValue} × 3 = ${tileValue * 3}`)
+            Logger.debug(`  ✅ Applied TRIPLE_LETTER: ${tileValue} × 3 = ${tileValue * 3}`)
             break
           case 'QUADRUPLE_LETTER':
             baseScore += tileValue * MULTIPLIERS.QUADRUPLE_LETTER
-            console.log(`  ✅ Applied QUADRUPLE_LETTER: ${tileValue} × 4 = ${tileValue * 4}`)
+            Logger.debug(`  ✅ Applied QUADRUPLE_LETTER: ${tileValue} × 4 = ${tileValue * 4}`)
             break
           case 'WORD_MULTIPLIER':
             // Word multiplier applies to whole word
             baseScore += tileValue
             wordMultiplier *= MULTIPLIERS.WORD_MULTIPLIER
-            console.log(`  ✅ Applied WORD_MULTIPLIER: word × 2`)
+            Logger.debug(`  ✅ Applied WORD_MULTIPLIER: word × 2`)
             break
           case 'CENTER':
             // Center is just a normal square (no multiplier)
@@ -126,7 +127,7 @@ export class ScoreCalculator {
       } else {
         // No multiplier - just add tile value
         baseScore += tileValue
-        console.log(`  ➖ No multiplier applied, added ${tileValue}`)
+        Logger.debug(`  ➖ No multiplier applied, added ${tileValue}`)
       }
     }
 
@@ -134,7 +135,7 @@ export class ScoreCalculator {
     const finalScore = baseScore * wordMultiplier
 
     // DEBUG: Log final score calculation
-    console.log('💰 Final score for word "' + word + '":', {
+    Logger.debug('💰 Final score for word "' + word + '":', {
       baseScore,
       wordMultiplier,
       finalScore
@@ -202,7 +203,7 @@ export class ScoreCalculator {
         return true
       }).length
 
-      console.log(`🎁 Checking word ${i + 1} for long word bonus:`, {
+      Logger.debug(`🎁 Checking word ${i + 1} for long word bonus:`, {
         tileCount,
         isFirstMove,
         tilesUsedCount,
@@ -216,13 +217,13 @@ export class ScoreCalculator {
         tilesRemainingAfterMove
       )
 
-      console.log(`  → Bonus: ${bonus}`)
+      Logger.debug(`  → Bonus: ${bonus}`)
 
       if (bonus > longWordBonus) {
         longWordBonus = bonus // Use highest bonus if multiple long words
       }
     }
-    console.log(`🎁 Final long word bonus: ${longWordBonus}`)
+    Logger.debug(`🎁 Final long word bonus: ${longWordBonus}`)
     totalScore += longWordBonus
 
     return {
