@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Mobile Board Zoom** (2026-01-19)
+  - Auto-zoom 2.5x when first tile is placed on mobile, centering on the placed tile
+  - Makes subsequent tile placements easier on small screens
+  - Pan gesture support (Google Maps-style): touch and drag on empty board space to navigate when zoomed
+  - Pan constrained to board edges (can't scroll past the board)
+  - Reset zoom button appears when zoomed, allowing quick return to full board view
+  - Zoom automatically resets when all tiles are recalled
+  - New `useBoardZoom` hook manages zoom/pan state with smooth CSS transitions
+  - `useTouchDrag` hook updated to work correctly with CSS transforms
+  - **Files Created**: `multiplayer/packages/client/src/hooks/useBoardZoom.ts`
+  - **Files Modified**:
+    - `multiplayer/packages/client/src/hooks/useTouchDrag.ts` (added TransformParams support)
+    - `multiplayer/packages/client/src/components/OnlineGame/MobileOnlineGame.tsx` (integrated zoom)
+
 - **Direction Choice Dialog UI** (2026-01-12)
   - Implemented visual dialog for choosing word direction when single tile forms valid words in both directions
   - **DirectionChoiceDialog Component** (`src/components/DirectionChoiceDialog/DirectionChoiceDialog.tsx`):
@@ -1393,6 +1407,6 @@ Following [Semantic Versioning](https://semver.org/):
 
 ---
 
-**Last Updated:** 2026-01-10
+**Last Updated:** 2026-01-19
 **Current Version:** 0.7.0 (Full Internationalization - English & Serbian with Cyrillic)
 **Next Milestone:** Step 9 - Game Flow Completion & Online Multiplayer

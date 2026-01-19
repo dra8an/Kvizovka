@@ -8,6 +8,12 @@
 import { useState, useCallback, useRef } from 'react'
 import { Tile as TileType } from '@kvizovka/shared'
 
+export interface TransformParams {
+  scale: number
+  panX: number
+  panY: number
+}
+
 export interface TouchDragState {
   isDragging: boolean
   tile: TileType | null
@@ -29,8 +35,8 @@ export interface UseTouchDragReturn {
   dragState: TouchDragState
   handleTouchStart: (e: React.TouchEvent, tile: TileType, index: number) => void
   handleTouchStartFromBoard: (e: React.TouchEvent, tile: TileType, row: number, col: number) => void
-  handleTouchMove: (e: React.TouchEvent, boardRef?: React.RefObject<HTMLElement>) => void
-  handleTouchEnd: (e: React.TouchEvent, onDrop: (row: number, col: number, tile: TileType, index: number, fromBoard: boolean, fromRow: number | null, fromCol: number | null) => void, boardRef: React.RefObject<HTMLElement>) => void
+  handleTouchMove: (e: React.TouchEvent, boardRef?: React.RefObject<HTMLElement>, transform?: TransformParams) => void
+  handleTouchEnd: (e: React.TouchEvent, onDrop: (row: number, col: number, tile: TileType, index: number, fromBoard: boolean, fromRow: number | null, fromCol: number | null) => void, boardRef: React.RefObject<HTMLElement>, transform?: TransformParams) => void
   handleTouchCancel: () => void
 }
 
@@ -96,7 +102,7 @@ export function useTouchDrag(): UseTouchDragReturn {
     })
   }, [])
 
-  const handleTouchMove = useCallback((e: React.TouchEvent, boardRef?: React.RefObject<HTMLElement>) => {
+  const handleTouchMove = useCallback((e: React.TouchEvent, boardRef?: React.RefObject<HTMLElement>, _transform?: TransformParams) => {
     if (!dragState.isDragging) return
 
     // Prevent scrolling while dragging
@@ -115,7 +121,8 @@ export function useTouchDrag(): UseTouchDragReturn {
       const boardElement = boardGrid || boardRef.current
       const boardRect = boardElement.getBoundingClientRect()
 
-      // Check if touch is within board bounds (with some tolerance)
+      // getBoundingClientRect() returns transformed bounds (already includes scale/pan)
+      // So we can use simple calculation - the cell sizes are already scaled
       const tolerance = 10 // pixels outside board still counts
       if (
         touchX >= boardRect.left - tolerance &&
@@ -149,7 +156,8 @@ export function useTouchDrag(): UseTouchDragReturn {
   const handleTouchEnd = useCallback((
     e: React.TouchEvent,
     onDrop: (row: number, col: number, tile: TileType, index: number, fromBoard: boolean, fromRow: number | null, fromCol: number | null) => void,
-    boardRef: React.RefObject<HTMLElement>
+    boardRef: React.RefObject<HTMLElement>,
+    _transform?: TransformParams
   ) => {
     if (!dragState.isDragging || !dragState.tile) {
       setDragState(initialState)
@@ -171,14 +179,14 @@ export function useTouchDrag(): UseTouchDragReturn {
 
       const boardRect = boardElement.getBoundingClientRect()
 
-      // Check if drop is within board bounds
+      // getBoundingClientRect() returns transformed bounds (already includes scale/pan)
+      // So we can use simple calculation - the cell sizes are already scaled
       if (
         dropX >= boardRect.left &&
         dropX <= boardRect.right &&
         dropY >= boardRect.top &&
         dropY <= boardRect.bottom
       ) {
-        // Calculate grid position (17x17 board)
         const relativeX = dropX - boardRect.left
         const relativeY = dropY - boardRect.top
         const cellWidth = boardRect.width / 17

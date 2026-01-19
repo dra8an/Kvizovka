@@ -32,6 +32,7 @@ import { MobileScoreHeader } from './MobileScoreHeader'
 import { MobileActionBar } from './MobileActionBar'
 import { DragOverlay } from '../DragOverlay/DragOverlay'
 import { useTouchDrag } from '../../hooks/useTouchDrag'
+import { useBoardZoom } from '../../hooks/useBoardZoom'
 import { GameStatus, PlacedTile, MoveValidationResult, MoveValidator, Board as BoardEngine, BOARD_SIZE, Tile as TileType, Logger } from '@kvizovka/shared'
 
 export function MobileOnlineGame() {
@@ -63,6 +64,9 @@ export function MobileOnlineGame() {
   // Touch drag-and-drop
   const { dragState, handleTouchStart, handleTouchStartFromBoard, handleTouchMove, handleTouchEnd, handleTouchCancel } = useTouchDrag()
   const boardRef = useRef<HTMLDivElement>(null)
+
+  // Board zoom for mobile
+  const { zoomPan, handlePanStart, handlePanMove, handlePanEnd, resetZoom } = useBoardZoom(selectedTiles, boardRef as React.RefObject<HTMLElement>)
 
   // Local state for error display
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -338,14 +342,37 @@ export function MobileOnlineGame() {
     Logger.debug('[MobileOnlineGame] Touch started on board tile at:', row, col)
   }
 
-  // Wrapper for touch move that provides board ref for target calculation
+  // Get transform params for touch calculations
+  const transformParams = { scale: zoomPan.scale, panX: zoomPan.panX, panY: zoomPan.panY }
+
+  // Wrapper for touch move that handles dragging or panning
   const onTouchMove = (e: React.TouchEvent) => {
-    handleTouchMove(e, boardRef as React.RefObject<HTMLElement>)
+    if (dragState.isDragging) {
+      handleTouchMove(e, boardRef as React.RefObject<HTMLElement>, transformParams)
+    } else if (zoomPan.scale > 1 && zoomPan.isPanning) {
+      handlePanMove(e)
+    }
   }
 
-  // Wrapper for touch end that provides the drop callback and board ref
+  // Wrapper for touch end that handles dragging or panning
   const onTouchEnd = (e: React.TouchEvent) => {
-    handleTouchEnd(e, handleTouchDrop, boardRef as React.RefObject<HTMLElement>)
+    if (dragState.isDragging) {
+      handleTouchEnd(e, handleTouchDrop, boardRef as React.RefObject<HTMLElement>, transformParams)
+    } else if (zoomPan.isPanning) {
+      handlePanEnd()
+    }
+  }
+
+  // Handle touch start on board area (for panning when zoomed)
+  const onBoardTouchStart = (e: React.TouchEvent) => {
+    // Only start pan if zoomed and not starting on a tile
+    if (zoomPan.scale > 1 && !dragState.isDragging) {
+      const target = e.target as HTMLElement
+      // Don't pan if touching a tile
+      if (!target.closest('[data-tile]')) {
+        handlePanStart(e)
+      }
+    }
   }
 
   return (
@@ -374,24 +401,44 @@ export function MobileOnlineGame() {
       {/* Board area - takes available space */}
       <div
         ref={boardRef}
-        className="flex-1 flex flex-col items-center justify-center p-1 overflow-hidden min-h-0"
+        className="flex-1 flex flex-col items-center justify-center p-1 overflow-hidden min-h-0 relative"
+        onTouchStart={onBoardTouchStart}
       >
-        <Board
-          boardState={gameState.board}
-          playerTiles={you.tiles}
-          selectedTiles={selectedTiles}
-          onTilePlaced={handleTilePlaced}
-          onTileRemoved={handleTileRemoved}
-          onJokerLetterSet={handleJokerLetterSet}
-          onJokerSteal={handleJokerSteal}
-          gameState={gameState}
-          disabled={!isYourTurn || isSpectator}
-          hideLegend={true}
-          compact={true}
-          touchTargetSquare={dragState.isDragging && dragState.targetRow !== null ? { row: dragState.targetRow, col: dragState.targetCol! } : null}
-          onBoardTileTouchStart={handleBoardTileTouchStart}
-          draggingFromSquare={dragState.isDragging && dragState.fromBoard && dragState.fromRow !== null ? { row: dragState.fromRow, col: dragState.fromCol! } : null}
-        />
+        <div
+          style={{
+            transform: `translate(${zoomPan.panX}px, ${zoomPan.panY}px) scale(${zoomPan.scale})`,
+            transformOrigin: '0 0',
+            transition: zoomPan.isPanning ? 'none' : 'transform 0.3s ease-out',
+            willChange: 'transform',
+          }}
+        >
+          <Board
+            boardState={gameState.board}
+            playerTiles={you.tiles}
+            selectedTiles={selectedTiles}
+            onTilePlaced={handleTilePlaced}
+            onTileRemoved={handleTileRemoved}
+            onJokerLetterSet={handleJokerLetterSet}
+            onJokerSteal={handleJokerSteal}
+            gameState={gameState}
+            disabled={!isYourTurn || isSpectator}
+            hideLegend={true}
+            compact={true}
+            touchTargetSquare={dragState.isDragging && dragState.targetRow !== null ? { row: dragState.targetRow, col: dragState.targetCol! } : null}
+            onBoardTileTouchStart={handleBoardTileTouchStart}
+            draggingFromSquare={dragState.isDragging && dragState.fromBoard && dragState.fromRow !== null ? { row: dragState.fromRow, col: dragState.fromCol! } : null}
+          />
+        </div>
+
+        {/* Reset zoom button */}
+        {zoomPan.scale > 1 && (
+          <button
+            onClick={resetZoom}
+            className="absolute bottom-2 right-2 bg-white/90 text-gray-700 px-3 py-1.5 rounded-lg shadow-md text-sm font-medium border border-gray-200 active:bg-gray-100"
+          >
+            {t('common:resetZoom', 'Reset')}
+          </button>
+        )}
       </div>
 
       {/* Tile Rack - compact mode for mobile with touch drag */}
