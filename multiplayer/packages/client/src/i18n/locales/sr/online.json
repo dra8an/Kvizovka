@@ -65,7 +65,8 @@
     "backToMenu": "Назад на мени",
     "roundsPlayed": "Одиграно рунди:",
     "tilesCount": "Плочице:",
-    "errorPlayerNotFound": "Грешка: Подаци о играчу нису пронађени"
+    "errorPlayerNotFound": "Грешка: Подаци о играчу нису пронађени",
+    "theirTurn": "Њихов потез"
   },
   "controls": {
     "playWord": "Одиграј реч",

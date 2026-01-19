@@ -74,6 +74,42 @@ interface BoardProps {
    * Disabled state (for online mode when not your turn)
    */
   disabled?: boolean
+
+  /**
+   * Callback when a square is clicked (for mobile click-to-place mode)
+   */
+  onSquareClick?: (row: number, col: number) => void
+
+  /**
+   * Currently selected tile for placement (mobile click-to-place mode)
+   * Used for visual feedback on valid drop targets
+   */
+  selectedTileForPlacement?: TileType | null
+
+  /**
+   * Hide the board legend (for mobile to save space)
+   */
+  hideLegend?: boolean
+
+  /**
+   * Compact mode for mobile - smaller squares and tiles
+   */
+  compact?: boolean
+
+  /**
+   * Touch drag target square (for mobile visual feedback)
+   */
+  touchTargetSquare?: { row: number; col: number } | null
+
+  /**
+   * Called when touch drag starts on a tile already on the board (for mobile)
+   */
+  onBoardTileTouchStart?: (e: React.TouchEvent, row: number, col: number) => void
+
+  /**
+   * Position of tile currently being dragged from board (to fade it)
+   */
+  draggingFromSquare?: { row: number; col: number } | null
 }
 
 /**
@@ -524,12 +560,13 @@ export function Board(props: BoardProps = {}) {
       <div className="bg-white p-2 lg:p-3 rounded-lg shadow-lg">
         {/* 17×17 CSS Grid */}
         <div
-          className="grid gap-0.5 bg-gray-300 p-0.5 rounded"
+          className={`grid ${props.compact ? 'gap-[1px]' : 'gap-0.5'} bg-gray-300 p-0.5 rounded`}
           style={{
             gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
             gridTemplateRows: `repeat(${BOARD_SIZE}, 1fr)`,
-            width: 'min(90vw, 70vh, 1400px)', // Max 1400px, 90% width or 70% height
-            height: 'min(90vw, 70vh, 1400px)',
+            // Mobile: use almost full width, Desktop: constrained by height
+            width: props.compact ? 'min(96vw, 96vw)' : 'min(90vw, 70vh, 1400px)',
+            height: props.compact ? 'min(96vw, 96vw)' : 'min(90vw, 70vh, 1400px)',
           }}
         >
           {/* Map each square */}
@@ -557,6 +594,15 @@ export function Board(props: BoardProps = {}) {
                 hoveredSquare.col === colIndex &&
                 !displaySquare.tile // Only show preview on empty squares
 
+              // Determine if this square is a valid click target (for click-to-place mode)
+              const isClickTarget = !!props.selectedTileForPlacement && !displaySquare.tile
+
+              // Determine if this square is the current touch drag target
+              const isTouchTarget = props.touchTargetSquare?.row === rowIndex && props.touchTargetSquare?.col === colIndex
+
+              // Determine if a tile is being dragged from this square
+              const isDraggingFromHere = props.draggingFromSquare?.row === rowIndex && props.draggingFromSquare?.col === colIndex
+
               return (
                 <Square
                   key={`${rowIndex}-${colIndex}`}
@@ -569,6 +615,12 @@ export function Board(props: BoardProps = {}) {
                   placementState={getTileState(rowIndex, colIndex)}
                   isHighlightedLine={isInHighlightedLine(rowIndex, colIndex)}
                   previewTile={shouldShowPreview ? currentDraggedTile : null}
+                  onClick={props.onSquareClick ? (row, col) => props.onSquareClick!(row, col) : undefined}
+                  isClickTarget={isClickTarget}
+                  compact={props.compact}
+                  isTouchTarget={isTouchTarget}
+                  onTileTouchStart={props.onBoardTileTouchStart}
+                  isDraggingFromHere={isDraggingFromHere}
                 />
               )
             })
@@ -576,29 +628,31 @@ export function Board(props: BoardProps = {}) {
         </div>
       </div>
 
-      {/* Board legend */}
-      <div className="flex flex-wrap gap-3 text-xs">
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-premium-yellow rounded"></div>
-          <span>{t('board.legend.doubleLetter')}</span>
+      {/* Board legend (hidden on mobile) */}
+      {!props.hideLegend && (
+        <div className="flex flex-wrap gap-3 text-xs">
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 bg-premium-yellow rounded"></div>
+            <span>{t('board.legend.doubleLetter')}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 bg-premium-green rounded"></div>
+            <span>{t('board.legend.tripleLetter')}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 bg-premium-red rounded"></div>
+            <span>{t('board.legend.quadrupleLetter')}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 bg-premium-blue rounded"></div>
+            <span>{t('board.legend.wordMultiplier')}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 bg-yellow-400 rounded"></div>
+            <span>{t('board.legend.center')}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-premium-green rounded"></div>
-          <span>{t('board.legend.tripleLetter')}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-premium-red rounded"></div>
-          <span>{t('board.legend.quadrupleLetter')}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-premium-blue rounded"></div>
-          <span>{t('board.legend.wordMultiplier')}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-yellow-400 rounded"></div>
-          <span>{t('board.legend.center')}</span>
-        </div>
-      </div>
+      )}
 
       {/* Tooltip for joker stealing */}
       {(() => {

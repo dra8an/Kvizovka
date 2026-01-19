@@ -73,6 +73,38 @@ interface SquareProps {
    * Shows a semi-transparent preview of where the tile will land
    */
   previewTile?: Tile | null
+
+  /**
+   * Called when user clicks on this square (for mobile click-to-place mode)
+   */
+  onClick?: (row: number, col: number) => void
+
+  /**
+   * Whether this square is a valid click target for tile placement
+   * Used to show visual feedback for valid placement targets
+   */
+  isClickTarget?: boolean
+
+  /**
+   * Compact mode for mobile - minimal padding, smaller text
+   */
+  compact?: boolean
+
+  /**
+   * Whether this square is the current touch drag target
+   * Used to show visual feedback during mobile drag
+   */
+  isTouchTarget?: boolean
+
+  /**
+   * Called when touch drag starts on a tile in this square (for mobile)
+   */
+  onTileTouchStart?: (e: React.TouchEvent, row: number, col: number) => void
+
+  /**
+   * Whether tile in this square is currently being dragged (to fade it)
+   */
+  isDraggingFromHere?: boolean
 }
 
 /**
@@ -96,7 +128,13 @@ export function Square({
   onTileDragStart,
   placementState = TilePlacementState.NEUTRAL,
   isHighlightedLine = false,
-  previewTile = null
+  previewTile = null,
+  onClick,
+  isClickTarget = false,
+  compact = false,
+  isTouchTarget = false,
+  onTileTouchStart,
+  isDraggingFromHere = false
 }: SquareProps) {
   const { i18n } = useTranslation()
 
@@ -245,32 +283,51 @@ export function Square({
       onTileDragStart?.(square.row, square.col)
     }
 
+    // Handle touch start for tile (mobile)
+    const handleTileTouchStart = (e: React.TouchEvent) => {
+      if (!isDraggable) return
+      e.stopPropagation() // Prevent parent handlers
+      onTileTouchStart?.(e, square.row, square.col)
+    }
+
     return (
       <div
         draggable={isDraggable}
         onDragStart={handleTileDragStart}
-        className={`absolute inset-1 rounded shadow-md flex flex-col items-center justify-center border-2 transition-all duration-200 ${
+        onTouchStart={handleTileTouchStart}
+        className={`absolute ${compact ? 'inset-0' : 'inset-1'} rounded ${compact ? 'shadow-sm' : 'shadow-md'} flex flex-col items-center justify-center ${compact ? 'border' : 'border-2'} transition-all duration-200 ${
           getTileStateClass(isJoker)
         } ${
           isDraggable ? 'cursor-grab active:cursor-grabbing' : ''
+        } ${
+          isDraggingFromHere ? 'opacity-30' : ''
         }`}
       >
-        {/* Joker icon (top-left corner) */}
-        {isJoker && (
+        {/* Joker icon (top-left corner) - hidden in compact */}
+        {isJoker && !compact && (
           <div className="absolute top-0 left-0.5 text-xs">🃏</div>
         )}
 
         {/* Letter */}
-        <div className={`text-xl font-bold ${isJoker ? 'text-purple-900' : 'text-gray-900'}`}>
+        <div className={`${compact ? 'text-xs' : 'text-xl'} font-bold ${isJoker ? 'text-purple-900' : 'text-gray-900'}`}>
           {letter || '?'}
         </div>
 
-        {/* Value (bottom-right corner) - smaller and more in corner */}
-        <div className={`absolute bottom-0 right-0 text-[8px] font-semibold leading-none ${isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
-          {value}
-        </div>
+        {/* Value (bottom-right corner) - hidden in compact for space */}
+        {!compact && (
+          <div className={`absolute bottom-0 right-0 text-[8px] font-semibold leading-none ${isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
+            {value}
+          </div>
+        )}
       </div>
     )
+  }
+
+  // Handle click (for mobile click-to-place mode)
+  const handleClick = () => {
+    if (onClick && !square.tile) {
+      onClick(square.row, square.col)
+    }
   }
 
   return (
@@ -279,11 +336,14 @@ export function Square({
         relative w-full h-full border border-gray-300
         ${getPremiumClass()}
         ${isValidDrop ? 'ring-2 ring-green-500 ring-inset' : ''}
-        ${isHighlightedLine ? 'bg-cyan-50' : ''}
-        transition-all
+        ${isClickTarget && !square.tile ? 'ring-2 ring-blue-400 ring-inset cursor-pointer bg-blue-50/50' : ''}
+        ${isTouchTarget && !square.tile ? 'scale-150 z-30 ring-2 ring-blue-500 bg-blue-100 shadow-xl rounded-sm' : ''}
+        ${isHighlightedLine && !isTouchTarget ? 'bg-cyan-50' : ''}
+        transition-transform duration-75
       `}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      onClick={handleClick}
     >
       {/* Premium field label (when no tile placed) */}
       {!square.tile && (
@@ -297,24 +357,26 @@ export function Square({
 
       {/* Preview tile (when dragging over) */}
       {previewTile && !square.tile && (
-        <div className="absolute inset-1 rounded shadow-md flex flex-col items-center justify-center border-2 border-dashed border-blue-400 bg-blue-50 opacity-60 pointer-events-none transition-all duration-100">
-          {/* Joker icon (top-left corner) */}
-          {previewTile.isJoker && (
+        <div className={`absolute ${compact ? 'inset-0' : 'inset-1'} rounded ${compact ? 'shadow-sm' : 'shadow-md'} flex flex-col items-center justify-center ${compact ? 'border' : 'border-2'} border-dashed border-blue-400 bg-blue-50 opacity-60 pointer-events-none transition-all duration-100`}>
+          {/* Joker icon (top-left corner) - hidden in compact */}
+          {previewTile.isJoker && !compact && (
             <div className="absolute top-0 left-0.5 text-xs">🃏</div>
           )}
 
           {/* Letter */}
-          <div className={`text-xl font-bold ${previewTile.isJoker ? 'text-purple-900' : 'text-gray-900'}`}>
+          <div className={`${compact ? 'text-xs' : 'text-xl'} font-bold ${previewTile.isJoker ? 'text-purple-900' : 'text-gray-900'}`}>
             {previewTile.isJoker
               ? (previewTile.jokerLetter ? latinToCyrillic(previewTile.jokerLetter, i18n.language) : '?')
               : latinToCyrillic(previewTile.letter, i18n.language)
             }
           </div>
 
-          {/* Value (bottom-right corner) */}
-          <div className={`absolute bottom-0 right-0 text-[8px] font-semibold leading-none ${previewTile.isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
-            {previewTile.value}
-          </div>
+          {/* Value (bottom-right corner) - hidden in compact */}
+          {!compact && (
+            <div className={`absolute bottom-0 right-0 text-[8px] font-semibold leading-none ${previewTile.isJoker ? 'text-purple-700' : 'text-gray-600'}`}>
+              {previewTile.value}
+            </div>
+          )}
         </div>
       )}
 

@@ -62,6 +62,32 @@ interface TileRackProps {
    * Disabled state (for online mode when not your turn)
    */
   disabled?: boolean
+
+  /**
+   * Callback when tile is clicked for placement (mobile click-to-place mode)
+   */
+  onTileClickForPlacement?: (tile: TileType, index: number) => void
+
+  /**
+   * Currently selected tile for placement (mobile click-to-place mode)
+   * Used to highlight the selected tile
+   */
+  selectedTileForPlacement?: TileType | null
+
+  /**
+   * Compact mode for mobile - smaller tiles, horizontal scroll, no header
+   */
+  compact?: boolean
+
+  /**
+   * Callback when touch drag starts (for mobile touch drag-and-drop)
+   */
+  onTouchDragStart?: (e: React.TouchEvent, tile: TileType, index: number) => void
+
+  /**
+   * ID of the tile currently being dragged (to hide it in rack)
+   */
+  draggingTileId?: string
 }
 
 /**
@@ -265,14 +291,25 @@ export function TileRack(props: TileRackProps = {}) {
   }
 
   /**
-   * Handle tile click for exchange mode
+   * Handle tile click for exchange mode or click-to-place mode
    *
    * When in exchange mode, clicking a tile toggles its selection.
+   * When in click-to-place mode (mobile), clicking selects tile for placement.
    */
-  const handleTileClick = (tile: TileType) => {
+  const handleTileClick = (tile: TileType, index: number) => {
     if (isExchangeMode) {
       toggleTileForExchange(tile)
+    } else if (props.onTileClickForPlacement) {
+      // Click-to-place mode (mobile)
+      props.onTileClickForPlacement(tile, index)
     }
+  }
+
+  /**
+   * Check if a tile is selected for placement (click-to-place mode)
+   */
+  const isTileSelectedForPlacement = (tile: TileType): boolean => {
+    return props.selectedTileForPlacement?.id === tile.id
   }
 
   /**
@@ -282,52 +319,69 @@ export function TileRack(props: TileRackProps = {}) {
     return tilesForExchange.some((t) => t.id === tile.id)
   }
 
+  // Compact mode for mobile
+  const isCompact = props.compact
+
   return (
-    <div className="flex flex-col gap-1.5">
-      {/* Player info */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-baseline gap-2">
-          <h3 className="text-base font-bold text-gray-800">{t('game:tileRack.playerTiles', { playerName })}</h3>
-          <p className="text-xs text-gray-600">
-            {t('game:tileRack.tilesInHand', { count: availableTiles.length })}
-            {selectedTiles.length > 0 && (
-              <span className="ml-2 text-blue-600 font-semibold">
-                {t('game:tileRack.tilesPlaced', { count: selectedTiles.length })}
-              </span>
-            )}
-          </p>
-        </div>
-        {!disabled && (
-          <div className="text-xs text-gray-600">
-            <p className="font-semibold">{t('common:labels.yourTurn')}</p>
+    <div className={isCompact ? '' : 'flex flex-col gap-1.5'}>
+      {/* Player info (hidden in compact mode) */}
+      {!isCompact && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-base font-bold text-gray-800">{t('game:tileRack.playerTiles', { playerName })}</h3>
+            <p className="text-xs text-gray-600">
+              {t('game:tileRack.tilesInHand', { count: availableTiles.length })}
+              {selectedTiles.length > 0 && (
+                <span className="ml-2 text-blue-600 font-semibold">
+                  {t('game:tileRack.tilesPlaced', { count: selectedTiles.length })}
+                </span>
+              )}
+            </p>
           </div>
-        )}
-      </div>
+          {!disabled && (
+            <div className="text-xs text-gray-600">
+              <p className="font-semibold">{t('common:labels.yourTurn')}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tile rack container */}
       <div
-        className="bg-gradient-to-b from-amber-700 to-amber-800 py-2 px-3 rounded-lg shadow-lg"
+        className={`bg-gradient-to-b from-amber-700 to-amber-800 rounded-lg shadow-lg ${
+          isCompact ? 'py-1.5 px-2' : 'py-2 px-3'
+        }`}
         onDrop={handleDropOnRack}
         onDragOver={handleDragOverRack}
       >
 
-        {/* Tiles */}
-        <div className="flex gap-1.5 justify-center flex-wrap">
+        {/* Tiles - horizontal scroll in compact mode */}
+        <div className={`flex gap-1.5 ${
+          isCompact
+            ? 'overflow-x-auto pb-1 scrollbar-hide'
+            : 'justify-center flex-wrap'
+        }`}>
           {availableTiles.length > 0 ? (
             availableTiles.map((tile, index) => {
               const isSelectedForExchange = isTileSelectedForExchange(tile)
+              const isSelectedForPlace = isTileSelectedForPlacement(tile)
+              const hasClickToPlace = !!props.onTileClickForPlacement
+              const isBeingDragged = props.draggingTileId === tile.id
               return (
                 <div
                   key={tile.id}
                   onDrop={(e) => handleDropOnTile(e, index)}
                   onDragOver={(e) => handleDragOverTile(e, index)}
                   onDragLeave={handleDragLeaveTile}
-                  onClick={() => handleTileClick(tile)}
+                  onClick={() => handleTileClick(tile, index)}
+                  onTouchStart={(e) => props.onTouchDragStart?.(e, tile, index)}
                   className={`
-                    relative transition-all duration-200
+                    relative transition-all duration-200 flex-shrink-0
                     ${dropTargetIndex === index && draggedFromIndex !== index ? 'scale-110' : ''}
-                    ${isExchangeMode ? 'cursor-pointer' : ''}
+                    ${isExchangeMode || hasClickToPlace ? 'cursor-pointer' : ''}
                     ${isSelectedForExchange ? 'animate-bounce-once scale-105' : ''}
+                    ${isSelectedForPlace ? 'scale-105 z-10' : ''}
+                    ${isBeingDragged ? 'opacity-30' : ''}
                   `}
                 >
                   {/* Slightly darker overlay during exchange mode */}
@@ -340,11 +394,16 @@ export function TileRack(props: TileRackProps = {}) {
                     <div className="absolute inset-0 bg-black/60 rounded-lg pointer-events-none z-10" />
                   )}
 
-                  {/* Red X overlay for selected tiles */}
+                  {/* Red X overlay for exchange selected tiles */}
                   {isSelectedForExchange && (
                     <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center shadow-lg z-20">
                       <span className="text-white text-sm font-bold">✕</span>
                     </div>
+                  )}
+
+                  {/* Blue ring for click-to-place selected tile */}
+                  {isSelectedForPlace && (
+                    <div className="absolute inset-0 ring-2 ring-blue-500 rounded-lg pointer-events-none z-10" />
                   )}
 
                   <Tile
@@ -355,6 +414,7 @@ export function TileRack(props: TileRackProps = {}) {
                     isDragging={draggedTile?.id === tile.id}
                     isWithinRack={true}
                     disabled={isExchangeMode || disabled}
+                    compact={isCompact}
                   />
                 </div>
               )
@@ -369,15 +429,17 @@ export function TileRack(props: TileRackProps = {}) {
           )}
         </div>
 
-        {/* Rack info */}
-        <div className="mt-1.5 text-center">
-          <p className={`text-xs ${isExchangeMode ? 'text-purple-200' : 'text-amber-200'}`}>
-            {isExchangeMode
-              ? t('game:tileRack.selectForExchange')
-              : t('game:tileRack.dragToBoard')
-            }
-          </p>
-        </div>
+        {/* Rack info (hidden in compact mode) */}
+        {!isCompact && (
+          <div className="mt-1.5 text-center">
+            <p className={`text-xs ${isExchangeMode ? 'text-purple-200' : 'text-amber-200'}`}>
+              {isExchangeMode
+                ? t('game:tileRack.selectForExchange')
+                : t('game:tileRack.dragToBoard')
+              }
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Debug info (can be removed later) */}

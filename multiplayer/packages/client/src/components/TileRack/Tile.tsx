@@ -57,6 +57,11 @@ interface TileProps {
    * Whether the tile is disabled (can't be dragged)
    */
   disabled?: boolean
+
+  /**
+   * Compact mode for mobile - smaller tile size
+   */
+  compact?: boolean
 }
 
 /**
@@ -73,7 +78,7 @@ interface TileProps {
  * />
  * ```
  */
-export function Tile({ tile, tileIndex, isWithinRack, onDragStart, onDragEnd, isDragging, disabled }: TileProps) {
+export function Tile({ tile, tileIndex, isWithinRack, onDragStart, onDragEnd, isDragging, disabled, compact }: TileProps) {
   const { i18n } = useTranslation()
 
   /**
@@ -151,8 +156,9 @@ export function Tile({ tile, tileIndex, isWithinRack, onDragStart, onDragEnd, is
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       className={`
-        relative w-16 h-16 rounded-lg shadow-md border-2
+        relative rounded-lg shadow-md border-2
         flex flex-col items-center justify-center
+        ${compact ? 'w-7 h-7' : 'w-16 h-16'}
         ${getTileClass()}
         ${isDragging ? 'opacity-50 cursor-grabbing' : 'cursor-grab'}
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:scale-105'}
@@ -161,15 +167,19 @@ export function Tile({ tile, tileIndex, isWithinRack, onDragStart, onDragEnd, is
       `}
     >
       {/* Letter */}
-      <div className="text-2xl font-bold text-gray-900">{getDisplayLetter()}</div>
-
-      {/* Value (bottom-right corner) */}
-      <div className="absolute bottom-0.5 right-1 text-[10px] font-semibold leading-none text-gray-600">
-        {getDisplayValue()}
+      <div className={`font-bold text-gray-900 ${compact ? 'text-xs' : 'text-2xl'}`}>
+        {getDisplayLetter()}
       </div>
 
-      {/* Joker indicator (top-left) */}
-      {tile.isJoker && (
+      {/* Value (bottom-right corner) - hidden in compact for space */}
+      {!compact && (
+        <div className="absolute bottom-0 right-0.5 font-semibold leading-none text-gray-600 text-[10px]">
+          {getDisplayValue()}
+        </div>
+      )}
+
+      {/* Joker indicator (top-left) - hidden in compact mode */}
+      {tile.isJoker && !compact && (
         <div className="absolute top-0.5 left-1 text-[10px] font-bold text-purple-600">
           JOKER
         </div>

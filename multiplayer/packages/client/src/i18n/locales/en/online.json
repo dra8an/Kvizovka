@@ -65,7 +65,8 @@
     "backToMenu": "Back to Menu",
     "roundsPlayed": "Rounds played:",
     "tilesCount": "Tiles:",
-    "errorPlayerNotFound": "Error: Player data not found"
+    "errorPlayerNotFound": "Error: Player data not found",
+    "theirTurn": "Their turn"
   },
   "controls": {
     "playWord": "Play Word",

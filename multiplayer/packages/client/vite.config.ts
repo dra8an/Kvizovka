@@ -8,14 +8,23 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Point directly to the shared package source for HMR
+      '@kvizovka/shared': path.resolve(__dirname, '../shared/src/index.ts'),
     },
   },
   optimizeDeps: {
-    include: ['@kvizovka/shared'],
+    // Exclude local workspace package from pre-bundling to avoid stale cache
+    exclude: ['@kvizovka/shared'],
+  },
+  server: {
+    // Watch the shared package for changes
+    watch: {
+      ignored: ['!**/node_modules/@kvizovka/shared/**'],
+    },
   },
   build: {
     commonjsOptions: {
-      include: [/@kvizovka\/shared/, /node_modules/],
+      include: [/node_modules/],
       transformMixedEsModules: true,
     },
   },

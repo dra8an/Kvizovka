@@ -25,7 +25,13 @@
     "dragToBoard": "Drag tiles to the board to place them",
     "selectForExchange": "Click tiles to select for exchange",
     "exchangeMode": "Exchange Mode: Click tiles to select",
-    "dragging": "Dragging: {{letter}} (value: {{value}})"
+    "dragging": "Dragging: {{letter}} (value: {{value}})",
+    "tapBoardToPlace": "Tap the board to place {{letter}}"
+  },
+  "controls": {
+    "recall": "Recall",
+    "play": "Play",
+    "skip": "Skip"
   },
   "rackInfo": {
     "clickToSelect": "Click tiles in your rack to select them for exchange."

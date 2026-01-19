@@ -13,6 +13,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-01-19
+
+### Added
+- **Mobile Optimization - Touch Support for Tile Placement**
+  - Full touch-based drag-and-drop for mobile devices
+  - Created `useTouchDrag` hook for handling touch events
+  - Created `DragOverlay` component (ghost tile that follows finger)
+  - Touch support for moving tiles already placed on board
+  - Tiles can be returned to rack by dropping outside board
+
+- **Separate Mobile/Desktop Layouts**
+  - Created device detection utilities (`src/utils/device-detection.ts`)
+  - `OnlineGame.tsx` now routes to `MobileOnlineGame.tsx` or `DesktopOnlineGame.tsx` based on device
+  - Mobile layout: vertical stack (Score Header → Board → Tile Rack → Action Bar)
+  - Desktop layout: 3-column (unchanged)
+
+- **Compact Mode for Mobile Components**
+  - Added `compact` prop to `Board`, `Square`, `TileRack`, and `Tile` components
+  - Mobile tiles: 28px × 28px (w-7 h-7)
+  - Mobile board: 96% viewport width, 1px gaps
+  - Hidden elements in compact mode: tile values, joker indicators, board legend
+
+- **Touch Target Visual Feedback (Pop-up Effect)**
+  - Target square highlights and scales 150% while dragging
+  - Real-time tracking of finger position over board
+  - Visual shadow and z-index elevation for target square
+  - 10px tolerance around board edges
+
+- **New Mobile Components**
+  - `MobileOnlineGame.tsx` - Main mobile game container
+  - `MobileScoreHeader.tsx` - Compact score display
+  - `MobileActionBar.tsx` - Action buttons for mobile
+  - `DesktopOnlineGame.tsx` - Extracted desktop-specific layout
+  - `DragOverlay.tsx` - Visual tile following finger
+
+- **Mobile-specific translations**
+  - Added translations to `en/online.json` and `sr/online.json`
+
+### Fixed
+- **Vite cache issue with local workspace package**
+  - Changed `@kvizovka/shared` from `optimizeDeps.include` to `optimizeDeps.exclude`
+  - Added alias to point directly to shared package source
+  - Eliminates stale cache issues when shared package changes
+
+### Technical Details
+- Touch drag state includes: tile, position, target row/col, source info (from rack or board)
+- Board position calculated from touch coordinates relative to grid element
+- Fading effect (30% opacity) on original tile position while dragging from board
+- Drop outside board returns tile to rack (for tiles placed from rack to board)
+
+### Files Created
+- `src/utils/device-detection.ts`
+- `src/components/OnlineGame/MobileOnlineGame.tsx`
+- `src/components/OnlineGame/MobileScoreHeader.tsx`
+- `src/components/OnlineGame/MobileActionBar.tsx`
+- `src/components/OnlineGame/DesktopOnlineGame.tsx`
+- `src/hooks/useTouchDrag.ts`
+- `src/components/DragOverlay/DragOverlay.tsx`
+- `Docs/MOBILE-OPTIMIZATION-PROGRESS.md`
+
+### Files Modified
+- `src/components/OnlineGame/OnlineGame.tsx` (now a device router)
+- `src/components/Board/Board.tsx` (compact, touchTargetSquare, onBoardTileTouchStart props)
+- `src/components/Board/Square.tsx` (compact, isTouchTarget, onTileTouchStart, isDraggingFromHere props)
+- `src/components/TileRack/TileRack.tsx` (compact, onTouchDragStart, draggingTileId props)
+- `src/components/TileRack/Tile.tsx` (compact prop)
+- `src/i18n/locales/en/online.json`
+- `src/i18n/locales/sr/online.json`
+- `src/i18n/locales/en/game.json`
+- `src/i18n/locales/sr/game.json`
+- `src/index.css`
+- `packages/client/index.html`
+- `packages/client/vite.config.ts`
+
+### Known Issues (To Be Addressed)
+- Board zoom after tile placement not yet implemented
+- PWA support not yet implemented
+- Small touch targets on 17×17 board remain challenging on small screens
+
+---
+
 ## [0.2.19] - 2026-01-14
 
 ### Fixed
