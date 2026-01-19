@@ -2,32 +2,59 @@
  * Board Zoom Hook
  *
  * Manages zoom/pan state for the mobile board view.
- * Auto-zooms when tiles are placed, allows panning when zoomed (like Google Maps).
+ * - Auto-zooms when tiles are placed
+ * - Allows panning when zoomed (single finger drag)
+ * - Supports pinch-to-zoom gesture (two finger pinch)
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { PlacedTile } from '@kvizovka/shared'
 
 export interface ZoomPanState {
-  scale: number      // 1 = no zoom, 2.5+ = zoomed
+  scale: number      // 1 = no zoom, up to MAX_SCALE
   panX: number       // translate X in pixels
   panY: number       // translate Y in pixels
   isPanning: boolean // currently panning (for gesture detection)
+  isPinching: boolean // currently pinching (for gesture detection)
 }
 
 export interface UseBoardZoomReturn {
   zoomPan: ZoomPanState
-  handlePanStart: (e: React.TouchEvent) => void
-  handlePanMove: (e: React.TouchEvent) => void
-  handlePanEnd: () => void
+  handleGestureStart: (e: React.TouchEvent) => void
+  handleGestureMove: (e: React.TouchEvent) => void
+  handleGestureEnd: () => void
   resetZoom: () => void
 }
+
+const MIN_SCALE = 1
+const MAX_SCALE = 4
+const AUTO_ZOOM_SCALE = 2.5
 
 const initialState: ZoomPanState = {
   scale: 1,
   panX: 0,
   panY: 0,
   isPanning: false,
+  isPinching: false,
+}
+
+/**
+ * Calculate distance between two touch points
+ */
+function getTouchDistance(touches: React.TouchList): number {
+  const dx = touches[0].clientX - touches[1].clientX
+  const dy = touches[0].clientY - touches[1].clientY
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
+/**
+ * Calculate midpoint between two touch points
+ */
+function getTouchMidpoint(touches: React.TouchList): { x: number; y: number } {
+  return {
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2,
+  }
 }
 
 /**
@@ -38,10 +65,60 @@ export function useBoardZoom(
   boardRef: React.RefObject<HTMLElement>
 ): UseBoardZoomReturn {
   const [zoomPan, setZoomPan] = useState<ZoomPanState>(initialState)
+
+  // Pan gesture refs
   const panStartRef = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null)
+
+  // Pinch gesture refs
+  const pinchStartRef = useRef<{
+    distance: number
+    scale: number
+    panX: number
+    panY: number
+    midpoint: { x: number; y: number }
+  } | null>(null)
+
   const prevTileCountRef = useRef<number>(0)
   // Store original board dimensions (before any zoom)
   const originalBoardSizeRef = useRef<{ width: number; height: number } | null>(null)
+
+  /**
+   * Constrain pan values to keep board within viewport
+   */
+  const constrainPan = useCallback((panX: number, panY: number, scale: number): { panX: number; panY: number } => {
+    const boardElement = boardRef.current
+    const originalSize = originalBoardSizeRef.current
+
+    if (!boardElement || !originalSize) {
+      return { panX, panY }
+    }
+
+    const containerRect = boardElement.getBoundingClientRect()
+    const viewportWidth = containerRect.width
+    const viewportHeight = containerRect.height
+
+    const scaledWidth = originalSize.width * scale
+    const scaledHeight = originalSize.height * scale
+
+    // If board is smaller than viewport at this scale, center it
+    if (scaledWidth <= viewportWidth) {
+      panX = (viewportWidth - scaledWidth) / 2
+    } else {
+      const minPanX = viewportWidth - scaledWidth
+      const maxPanX = 0
+      panX = Math.max(minPanX, Math.min(maxPanX, panX))
+    }
+
+    if (scaledHeight <= viewportHeight) {
+      panY = (viewportHeight - scaledHeight) / 2
+    } else {
+      const minPanY = viewportHeight - scaledHeight
+      const maxPanY = 0
+      panY = Math.max(minPanY, Math.min(maxPanY, panY))
+    }
+
+    return { panX, panY }
+  }, [boardRef])
 
   // Auto-zoom when tiles are placed
   useEffect(() => {
@@ -88,9 +165,7 @@ export function useBoardZoom(
       const centerRow = (minRow + maxRow) / 2 + 0.5
       const centerCol = (minCol + maxCol) / 2 + 0.5
 
-      // Target: show ~8x10 cells around the placed tiles
-      // We'll use 2.5x as a good balance for visibility
-      const scale = 2.5
+      const scale = AUTO_ZOOM_SCALE
 
       // Calculate cell size (original, unscaled)
       const cellWidth = boardRect.width / 17
@@ -101,105 +176,157 @@ export function useBoardZoom(
       const tileCenterY = centerRow * cellHeight
 
       // Pan so that the tile center is at viewport center
-      // After scaling with transformOrigin: '0 0', position = originalPosition * scale + pan
-      // We want: tileCenterX * scale + panX = viewportWidth / 2
-      // So: panX = viewportWidth / 2 - tileCenterX * scale
       let panX = viewportWidth / 2 - tileCenterX * scale
       let panY = viewportHeight / 2 - tileCenterY * scale
 
-      // Constrain pan to keep board within viewport
-      const scaledWidth = boardRect.width * scale
-      const scaledHeight = boardRect.height * scale
-
-      // Pan limits: board edges should not go past viewport edges
-      // Left edge of board (at panX) should not go past right edge of viewport
-      // Right edge of board (at panX + scaledWidth) should not go past left edge (0) of viewport... wait, reversed
-      // Actually: maxPanX = 0 (board's left edge at viewport's left edge)
-      //           minPanX = viewportWidth - scaledWidth (board's right edge at viewport's right edge)
-      const minPanX = viewportWidth - scaledWidth
-      const maxPanX = 0
-      const minPanY = viewportHeight - scaledHeight
-      const maxPanY = 0
-
-      panX = Math.max(minPanX, Math.min(maxPanX, panX))
-      panY = Math.max(minPanY, Math.min(maxPanY, panY))
+      // Constrain pan
+      const constrained = constrainPan(panX, panY, scale)
 
       setZoomPan({
         scale,
-        panX,
-        panY,
+        panX: constrained.panX,
+        panY: constrained.panY,
         isPanning: false,
+        isPinching: false,
       })
     }
 
     prevTileCountRef.current = selectedTiles.length
-  }, [selectedTiles, boardRef])
+  }, [selectedTiles, boardRef, constrainPan])
 
-  // Handle pan start
-  const handlePanStart = useCallback((e: React.TouchEvent) => {
-    if (zoomPan.scale <= 1) return
+  // Handle gesture start (pan or pinch)
+  const handleGestureStart = useCallback((e: React.TouchEvent) => {
+    // Two fingers = pinch
+    if (e.touches.length === 2) {
+      // Store original board size if not already stored (for pinch from scale 1)
+      if (!originalBoardSizeRef.current) {
+        const boardElement = boardRef.current
+        if (boardElement) {
+          const boardGrid = boardElement.querySelector('.grid') as HTMLElement
+          const boardEl = boardGrid || boardElement
+          const boardRect = boardEl.getBoundingClientRect()
+          originalBoardSizeRef.current = {
+            width: boardRect.width / zoomPan.scale,
+            height: boardRect.height / zoomPan.scale,
+          }
+        }
+      }
 
-    const touch = e.touches[0]
-    panStartRef.current = {
-      x: touch.clientX,
-      y: touch.clientY,
-      panX: zoomPan.panX,
-      panY: zoomPan.panY,
+      const distance = getTouchDistance(e.touches)
+      const midpoint = getTouchMidpoint(e.touches)
+
+      pinchStartRef.current = {
+        distance,
+        scale: zoomPan.scale,
+        panX: zoomPan.panX,
+        panY: zoomPan.panY,
+        midpoint,
+      }
+      panStartRef.current = null
+
+      setZoomPan(prev => ({ ...prev, isPinching: true, isPanning: false }))
+      return
     }
 
-    setZoomPan(prev => ({ ...prev, isPanning: true }))
-  }, [zoomPan.scale, zoomPan.panX, zoomPan.panY])
+    // One finger = pan (only if already zoomed)
+    if (e.touches.length === 1 && zoomPan.scale > 1) {
+      const touch = e.touches[0]
+      panStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        panX: zoomPan.panX,
+        panY: zoomPan.panY,
+      }
+      pinchStartRef.current = null
 
-  // Handle pan move
-  const handlePanMove = useCallback((e: React.TouchEvent) => {
-    if (!panStartRef.current || zoomPan.scale <= 1) return
+      setZoomPan(prev => ({ ...prev, isPanning: true, isPinching: false }))
+    }
+  }, [zoomPan.scale, zoomPan.panX, zoomPan.panY, boardRef])
 
+  // Handle gesture move (pan or pinch)
+  const handleGestureMove = useCallback((e: React.TouchEvent) => {
     e.preventDefault()
 
-    const touch = e.touches[0]
-    const deltaX = touch.clientX - panStartRef.current.x
-    const deltaY = touch.clientY - panStartRef.current.y
+    // Pinch gesture (two fingers)
+    if (e.touches.length === 2 && pinchStartRef.current) {
+      const currentDistance = getTouchDistance(e.touches)
+      const currentMidpoint = getTouchMidpoint(e.touches)
 
-    let newPanX = panStartRef.current.panX + deltaX
-    let newPanY = panStartRef.current.panY + deltaY
+      // Calculate new scale based on distance ratio
+      const distanceRatio = currentDistance / pinchStartRef.current.distance
+      let newScale = pinchStartRef.current.scale * distanceRatio
+      newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale))
 
-    // Constrain pan using original board dimensions and container viewport
-    const boardElement = boardRef.current
-    const originalSize = originalBoardSizeRef.current
+      // Get board position for zoom centering
+      const boardElement = boardRef.current
+      if (!boardElement) return
 
-    if (boardElement && originalSize) {
-      // Get viewport (container) dimensions
       const containerRect = boardElement.getBoundingClientRect()
-      const viewportWidth = containerRect.width
-      const viewportHeight = containerRect.height
 
-      // Calculate scaled board dimensions
-      const scaledWidth = originalSize.width * zoomPan.scale
-      const scaledHeight = originalSize.height * zoomPan.scale
+      // Calculate the point we're zooming around (midpoint relative to container)
+      const midpointRelX = currentMidpoint.x - containerRect.left
+      const midpointRelY = currentMidpoint.y - containerRect.top
 
-      // Pan limits: board should stay within viewport bounds
-      // maxPanX = 0: board's left edge at viewport's left edge (can't pan further right)
-      // minPanX = viewportWidth - scaledWidth: board's right edge at viewport's right edge (can't pan further left)
-      const minPanX = viewportWidth - scaledWidth
-      const maxPanX = 0
-      const minPanY = viewportHeight - scaledHeight
-      const maxPanY = 0
+      // Calculate new pan to keep the midpoint stationary
+      // The board position at midpoint before zoom: (midpointRelX - panX) / scale
+      // After zoom, we want: boardPosAtMidpoint * newScale + newPanX = midpointRelX
+      // So: newPanX = midpointRelX - boardPosAtMidpoint * newScale
+      const boardPosAtMidpointX = (midpointRelX - pinchStartRef.current.panX) / pinchStartRef.current.scale
+      const boardPosAtMidpointY = (midpointRelY - pinchStartRef.current.panY) / pinchStartRef.current.scale
 
-      newPanX = Math.max(minPanX, Math.min(maxPanX, newPanX))
-      newPanY = Math.max(minPanY, Math.min(maxPanY, newPanY))
+      let newPanX = midpointRelX - boardPosAtMidpointX * newScale
+      let newPanY = midpointRelY - boardPosAtMidpointY * newScale
+
+      // Also account for midpoint movement (panning while pinching)
+      const midpointDeltaX = currentMidpoint.x - pinchStartRef.current.midpoint.x
+      const midpointDeltaY = currentMidpoint.y - pinchStartRef.current.midpoint.y
+      newPanX += midpointDeltaX
+      newPanY += midpointDeltaY
+
+      // Constrain pan
+      const constrained = constrainPan(newPanX, newPanY, newScale)
+
+      setZoomPan(prev => ({
+        ...prev,
+        scale: newScale,
+        panX: constrained.panX,
+        panY: constrained.panY,
+      }))
+      return
     }
 
-    setZoomPan(prev => ({
-      ...prev,
-      panX: newPanX,
-      panY: newPanY,
-    }))
-  }, [zoomPan.scale, boardRef])
+    // Pan gesture (one finger)
+    if (e.touches.length === 1 && panStartRef.current && zoomPan.scale > 1) {
+      const touch = e.touches[0]
+      const deltaX = touch.clientX - panStartRef.current.x
+      const deltaY = touch.clientY - panStartRef.current.y
 
-  // Handle pan end
-  const handlePanEnd = useCallback(() => {
+      let newPanX = panStartRef.current.panX + deltaX
+      let newPanY = panStartRef.current.panY + deltaY
+
+      const constrained = constrainPan(newPanX, newPanY, zoomPan.scale)
+
+      setZoomPan(prev => ({
+        ...prev,
+        panX: constrained.panX,
+        panY: constrained.panY,
+      }))
+    }
+  }, [zoomPan.scale, boardRef, constrainPan])
+
+  // Handle gesture end
+  const handleGestureEnd = useCallback(() => {
     panStartRef.current = null
-    setZoomPan(prev => ({ ...prev, isPanning: false }))
+    pinchStartRef.current = null
+
+    setZoomPan(prev => {
+      // If zoomed out to 1x, reset everything
+      if (prev.scale <= 1) {
+        originalBoardSizeRef.current = null
+        return initialState
+      }
+      return { ...prev, isPanning: false, isPinching: false }
+    })
   }, [])
 
   // Reset zoom
@@ -210,9 +337,9 @@ export function useBoardZoom(
 
   return {
     zoomPan,
-    handlePanStart,
-    handlePanMove,
-    handlePanEnd,
+    handleGestureStart,
+    handleGestureMove,
+    handleGestureEnd,
     resetZoom,
   }
 }

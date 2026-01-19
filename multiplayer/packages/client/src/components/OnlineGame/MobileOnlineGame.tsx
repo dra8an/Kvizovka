@@ -65,8 +65,8 @@ export function MobileOnlineGame() {
   const { dragState, handleTouchStart, handleTouchStartFromBoard, handleTouchMove, handleTouchEnd, handleTouchCancel } = useTouchDrag()
   const boardRef = useRef<HTMLDivElement>(null)
 
-  // Board zoom for mobile
-  const { zoomPan, handlePanStart, handlePanMove, handlePanEnd, resetZoom } = useBoardZoom(selectedTiles, boardRef as React.RefObject<HTMLElement>)
+  // Board zoom for mobile (pan + pinch-to-zoom)
+  const { zoomPan, handleGestureStart, handleGestureMove, handleGestureEnd, resetZoom } = useBoardZoom(selectedTiles, boardRef as React.RefObject<HTMLElement>)
 
   // Local state for error display
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -345,32 +345,46 @@ export function MobileOnlineGame() {
   // Get transform params for touch calculations
   const transformParams = { scale: zoomPan.scale, panX: zoomPan.panX, panY: zoomPan.panY }
 
-  // Wrapper for touch move that handles dragging or panning
+  // Wrapper for touch move that handles dragging, panning, or pinch-zoom
   const onTouchMove = (e: React.TouchEvent) => {
+    // Pinch gesture (two fingers) - always handle for zoom
+    if (e.touches.length === 2) {
+      handleGestureMove(e)
+      return
+    }
+
+    // Single finger - either drag tile or pan board
     if (dragState.isDragging) {
       handleTouchMove(e, boardRef as React.RefObject<HTMLElement>, transformParams)
-    } else if (zoomPan.scale > 1 && zoomPan.isPanning) {
-      handlePanMove(e)
+    } else if (zoomPan.isPanning || zoomPan.isPinching) {
+      handleGestureMove(e)
     }
   }
 
-  // Wrapper for touch end that handles dragging or panning
+  // Wrapper for touch end that handles dragging, panning, or pinch-zoom
   const onTouchEnd = (e: React.TouchEvent) => {
     if (dragState.isDragging) {
       handleTouchEnd(e, handleTouchDrop, boardRef as React.RefObject<HTMLElement>, transformParams)
-    } else if (zoomPan.isPanning) {
-      handlePanEnd()
+    }
+    if (zoomPan.isPanning || zoomPan.isPinching) {
+      handleGestureEnd()
     }
   }
 
-  // Handle touch start on board area (for panning when zoomed)
+  // Handle touch start on board area (for panning/pinching)
   const onBoardTouchStart = (e: React.TouchEvent) => {
-    // Only start pan if zoomed and not starting on a tile
-    if (zoomPan.scale > 1 && !dragState.isDragging) {
+    // Two fingers = pinch-to-zoom (always allow)
+    if (e.touches.length === 2) {
+      handleGestureStart(e)
+      return
+    }
+
+    // One finger on empty space when zoomed = pan
+    if (!dragState.isDragging) {
       const target = e.target as HTMLElement
       // Don't pan if touching a tile
       if (!target.closest('[data-tile]')) {
-        handlePanStart(e)
+        handleGestureStart(e)
       }
     }
   }
@@ -408,7 +422,7 @@ export function MobileOnlineGame() {
           style={{
             transform: `translate(${zoomPan.panX}px, ${zoomPan.panY}px) scale(${zoomPan.scale})`,
             transformOrigin: '0 0',
-            transition: zoomPan.isPanning ? 'none' : 'transform 0.3s ease-out',
+            transition: (zoomPan.isPanning || zoomPan.isPinching) ? 'none' : 'transform 0.3s ease-out',
             willChange: 'transform',
           }}
         >
